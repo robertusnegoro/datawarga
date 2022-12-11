@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Data Warga{% endblock %}
+{% block pagetitle %}Data Warga{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}  
+<form method="post" enctype="multipart/form-data" id="warga-form">
+    {% csrf_token %}
+
+    
+    {{ form.nik | as_crispy_field }}
+    {{ form.no_kk | as_crispy_field }}
+    {{ form.nama_lengkap | as_crispy_field }}
+
+    {{ form.jenis_kelamin | as_crispy_field }}
+    {{ form.agama | as_crispy_field }}
+
+    {{ form.no_hp | as_crispy_field }}
+    {{ form.tanggal_lahir | as_crispy_field }}
+    {{ form.tempat_lahir | as_crispy_field }}
+
+    {{ form.alamat | as_crispy_field }}
+    {{ form.rt | as_crispy_field }}
+    {{ form.rw | as_crispy_field }}
+    {{ form.kelurahan | as_crispy_field }}
+    {{ form.kecamatan | as_crispy_field }}
+    {{ form.kota | as_crispy_field }}
+    {{ form.provinsi | as_crispy_field }}
+    {{ form.kode_pos | as_crispy_field }}
+
+    {{ form.pekerjaan | as_crispy_field }}
+    {{ form.status | as_crispy_field }}
+    {{ form.kewarganegaraan | as_crispy_field }}
+
+    {{ form.email | as_crispy_field }}
+    {{ form.foto_path | as_crispy_field }}
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}
