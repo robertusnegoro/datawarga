@@ -21,7 +21,7 @@ class Warga(models.Model):
     kode_pos = models.CharField(max_length=8, null=True, blank=True)
     kota = models.CharField(max_length=150, default=settings.KOTA)
     nama_lengkap = models.CharField(max_length=254)
-    nik = models.CharField(max_length=64)
+    nik = models.CharField(max_length=64, unique=True)
     no_hp = models.CharField(max_length=15)
     no_kk = models.CharField(max_length=64, null=True, blank=True)
     provinsi = models.CharField(max_length=150, default=settings.PROVINSI)

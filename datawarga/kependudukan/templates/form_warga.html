@@ -3,7 +3,7 @@
 {% block pagetitle %}Data Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}  
-<form method="post" enctype="multipart/form-data" id="warga-form">
+<form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:formWargaSimpan' %}">
     {% csrf_token %}
 
     
@@ -33,6 +33,10 @@
 
     {{ form.email | as_crispy_field }}
     {{ form.foto_path | as_crispy_field }}
+
+    {% if idwarga > 0 %}
+    <input type="hidden" id="idwarga" name="idwarga" value="{{ idwarga }}" >
+    {% endif %}
 
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>

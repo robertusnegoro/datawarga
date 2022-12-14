@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Daftar Warga{% endblock %}
+{% block pagetitle %}Daftar Warga{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}  
+
+{% if message != "" %}
+<p>{{ message }}</p>
+{% endif %}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nama Lengkap</th>
+            <th>NIK</th>
+            <th>No KK</th>
+            <th>No HP</th>
+            <th>Alamat</th>
+            <th>Opsi</th>
+        </tr>
+    </thead>
+    
+    {% for w in list_warga %}
+    <tr>
+        <td>{{ w.nama_lengkap }}</td>
+        <td>{{ w.nik }}</td>
+        <td>{{ w.no_kk }}</td>
+        <td>{{ w.no_hp }}</td>
+        <td>{{ w.alamat }}</td>
+        <td><a href="{% url 'kependudukan:formWarga' w.id %}">Ubah</a> | <a href="{% url 'kependudukan:deleteformWarga' w.id %}">Hapus</a></td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="6">Kosong</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
