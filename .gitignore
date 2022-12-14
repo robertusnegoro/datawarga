@@ -172,7 +172,7 @@ cython_debug/
 # Built Visual Studio Code Extensions
 *.vsix
 
-playground/media/images/*
+datawarga/media/uploads/*
 
 *.svg
 
