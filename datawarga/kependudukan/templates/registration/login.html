@@ -1,0 +1,74 @@
+{% load static %}
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>DataWarga | {% block title %}{% endblock %}</title>
+        <link href='{% static "dashboard/css/bootstrap.min.css" %}' rel="stylesheet">
+        <link href='{% static "dashboard/dashboard.css" %}' rel="stylesheet">
+    </head>
+    <body>
+        <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">Project : DataWarga; Apps : Kependudukan</a>
+            <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </header>
+
+        <div class="container-fluid">
+            <div class="row">
+                <main class="col-md-12 ms-sm-auto">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Login</h1>    
+                    </div>
+                    <div class="panel-body">
+						<form action="{% url 'login' %}" method="post">
+							{% csrf_token %}
+							<div class="form-group mb-lg">
+								<label>Username</label>
+								<div class="input-group input-group-icon">
+									<input name="username" type="text" class="form-control input-lg" />
+									<span class="input-group-addon">
+										<span class="icon icon-lg">
+											<i class="fa fa-user"></i>
+										</span>
+									</span>
+								</div>
+							</div>
+
+							<div class="form-group mb-lg">
+                                <label>Password</label>
+								<div class="input-group input-group-icon">
+									<input name="password" type="password" class="form-control input-lg" />
+									<span class="input-group-addon">
+										<span class="icon icon-lg">
+											<i class="fa fa-lock"></i>
+										</span>
+									</span>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-sm-4 text-right">
+									<button type="submit" class="btn btn-primary btn-block btn-md mt-md" value="login">Sign In</button>
+									<input type="hidden" name="next" value="{{ next }}">
+								</div>
+							</div>
+						</form>
+					</div>
+
+                    <div class="footer mt-auto py-3 bg-light">
+                        <div class="container">
+                          <span class="text-muted"><a href="https://github.com/robertusnegoro">Github</a></span>
+                        </div>
+                    </div>
+                </main>
+                
+            </div>
+        </div>
+        
+        
+        <script src='{% static "dashboard/js/bootstrap.bundle.min.js" %}'></script>
+        <script src="https://code.jquery.com/jquery-3.6.2.slim.min.js" integrity="sha256-E3P3OaTZH+HlEM7f1gdAT3lHAn4nWBZXuYe89DFg2d0=" crossorigin="anonymous"></script>
+    </body>
+</html>

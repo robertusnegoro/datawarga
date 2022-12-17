@@ -19,6 +19,13 @@
     {{ form.tempat_lahir | as_crispy_field }}
 
     {{ form.alamat | as_crispy_field }}
+    {{ form.alamat_blok | as_crispy_field }}
+    {{ form.alamat_nomor | as_crispy_field }}
+
+    {{ form.alamat_ktp }}
+
+    {{ form.status_tinggal | as_crispy_field }}
+
     {{ form.rt | as_crispy_field }}
     {{ form.rw | as_crispy_field }}
     {{ form.kelurahan | as_crispy_field }}
@@ -37,6 +44,8 @@
     {% if idwarga > 0 %}
     <input type="hidden" id="idwarga" name="idwarga" value="{{ idwarga }}" >
     {% endif %}
+
+    <hr>
 
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>

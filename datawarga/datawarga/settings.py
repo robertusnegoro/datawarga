@@ -16,7 +16,8 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -182,5 +183,7 @@ KOTA = os.getenv("WG_KOTA", "TANGERANG SELATAN")
 PROVINSI = os.getenv("WG_PROVINSI", "BANTEN")
 RUKUNTANGGA = os.getenv("WG_RT", "006")
 RUKUNWARGA = os.getenv("WG_RW", "012")
+ALAMAT = os.getenv("WG_ALAMAT", "Jalan Nirwana")
+
 
 TIME_ZONE = "Asia/Jakarta"

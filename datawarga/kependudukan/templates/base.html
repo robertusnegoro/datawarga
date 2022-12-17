@@ -6,16 +6,17 @@
         <title>DataWarga | {% block title %}{% endblock %}</title>
         <link href='{% static "dashboard/css/bootstrap.min.css" %}' rel="stylesheet">
         <link href='{% static "dashboard/dashboard.css" %}' rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
     </head>
     <body>
         <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">Project : DataWarga; Apps : Kependudukan</a>
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">Hello, {{request.user.username}}</a>
             <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
         <div class="navbar-nav">
             <div class="nav-item text-nowrap">
-                <a class="nav-link px-3" href="#">Sign out</a>
+                <a class="nav-link px-3" href="{% url 'logout' %}">Sign out</a>
             </div>
         </div>
         </header>
@@ -38,7 +39,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:listWarga' %}">
+                                <a class="nav-link" href="{% url 'kependudukan:listWargaView' %}">
                                     <span class="align-text-bottom"></span>
                                     Daftar Warga
                                 </a>
@@ -63,7 +64,11 @@
         
         
         <script src='{% static "dashboard/js/bootstrap.bundle.min.js" %}'></script>
-
+        <script src="https://code.jquery.com/jquery-3.6.2.slim.min.js" integrity="sha256-E3P3OaTZH+HlEM7f1gdAT3lHAn4nWBZXuYe89DFg2d0=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+        
         <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
+        <script src='{% static "utility.js" %}'></script>
+        {% block jscript %}{% endblock %}
     </body>
 </html>
