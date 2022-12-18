@@ -7,7 +7,15 @@
 {% if message != "" %}
 <p>{{ message }}</p>
 {% endif %}
-<form method="get" action="{% url 'kependudukan:listWargaView' %}"> <input name="search" type="text" id="search"><button type="submit" id="submitBtn">Cari</button></form>
+<form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-3">
+    <div class="col-auto">
+        <input name="search" type="text" class="form-control" id="search">
+    </div> 
+    <div class="col-auto">
+        <button type="submit" id="submitBtn" class="btn btn-info">Cari</button>
+    </div>
+    
+</form>
 <table class="table">
     <thead>
         <tr>

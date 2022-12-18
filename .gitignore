@@ -176,7 +176,7 @@ datawarga/media/uploads/*
 
 *.svg
 
-.env.sh
+.env*
 
 # General
 .DS_Store
