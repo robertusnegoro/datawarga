@@ -87,7 +87,7 @@ def deleteFormWarga(request, idwarga=0):
             "Deleting data warga with id : %s , name : %s"
             % (idwarga, warga_record.nama_lengkap)
         )
-        base_url = reverse("kependudukan:listWarga")
+        base_url = reverse("kependudukan:listWargaView")
         payload = urlencode(
             {"message": "data %s was deleted!" % (warga_record.nama_lengkap)}
         )
