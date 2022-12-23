@@ -2,3 +2,4 @@ datawarga/media/*
 datawarga/static/*
 .env*
 media/*
+static/*
