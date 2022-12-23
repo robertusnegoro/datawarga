@@ -1,15 +1,16 @@
 from .forms import WargaForm
 from .models import Warga
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, Http404, JsonResponse, FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
-from django.template.loader import render_to_string
+from django.views.static import serve
 from urllib.parse import urlencode
-from django.conf import settings
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import io
@@ -131,3 +132,7 @@ def listWargaReport(request):
     font_config = FontConfiguration()
     HTML(string=html).write_pdf(response, font_config=font_config)
     return response
+
+@login_required
+def protected_serve(request, path, document_root=None, show_indexes=False):
+    return serve(request, path, document_root, show_indexes)
