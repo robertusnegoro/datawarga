@@ -1,14 +1,19 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.http import HttpResponse, Http404, JsonResponse
-from django.views.generic import ListView
-from django.urls import reverse
-from django.db.models import Q
 from .forms import WargaForm
 from .models import Warga
-import logging
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.http import HttpResponse, Http404, JsonResponse, FileResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView
+from django.template.loader import render_to_string
 from urllib.parse import urlencode
+from django.conf import settings
+from weasyprint import HTML
+from weasyprint.text.fonts import FontConfiguration
+import io
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +21,7 @@ logger = logging.getLogger(__name__)
 @login_required
 def index(request):
     return render(request=request, template_name="index.html")
+
 
 @login_required
 def formWarga(request, idwarga=0):
@@ -30,6 +36,7 @@ def formWarga(request, idwarga=0):
         template_name="form_warga.html",
         context={"form": form, "idwarga": int(idwarga)},
     )
+
 
 @login_required
 def formWargaSimpan(request):
@@ -55,7 +62,8 @@ def formWargaSimpan(request):
     else:
         return Http404()
 
-@method_decorator(login_required, name='dispatch')
+
+@method_decorator(login_required, name="dispatch")
 class WargaListView(ListView):
     paginate_by = 50
     template_name = "list_warga_view.html"
@@ -77,6 +85,7 @@ class WargaListView(ListView):
                 | Q(nik__icontains=search_keyword)
             )
         return queryset
+
 
 @login_required
 def deleteFormWarga(request, idwarga=0):
@@ -103,3 +112,22 @@ def deleteFormWarga(request, idwarga=0):
 
 def testView(request):
     return render(request=request, template_name="registration/login.html")
+
+
+@login_required
+def listWargaReport(request):
+    dataWarga = Warga.objects.all()
+    report_data = {"data": dataWarga}
+    report_data["alamat"] = settings.ALAMAT
+    report_data["rt"] = settings.RUKUNTANGGA
+    report_data["rw"] = settings.RUKUNWARGA
+    report_data["kelurahan"] = settings.KELURAHAN
+    report_data["kecamatan"] = settings.KECAMATAN
+    report_data["kota"] = settings.KOTA
+    report_data["provinsi"] = settings.PROVINSI
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "inline; filename=daftar-warga.pdf"
+    html = render_to_string("daftar-warga-pdf.html", report_data)
+    font_config = FontConfiguration()
+    HTML(string=html).write_pdf(response, font_config=font_config)
+    return response

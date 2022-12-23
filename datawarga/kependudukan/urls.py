@@ -14,4 +14,5 @@ urlpatterns = [
     path("form-warga-simpan", views.formWargaSimpan, name="formWargaSimpan"),
     path("list-warga-view", views.WargaListView.as_view(), name="listWargaView"),
     path("test-view", views.testView, name="testView"),
+    path("data-warga-pdf", views.listWargaReport, name="dataWargaPDF"),
 ]
