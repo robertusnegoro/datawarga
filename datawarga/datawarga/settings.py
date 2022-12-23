@@ -29,8 +29,15 @@ SECRET_KEY = os.getenv("DATA_WARGA_SECRET", "")
 WG_ENV = os.getenv("WG_ENV", "dev")
 if WG_ENV == "dev":
     DEBUG = True
+    # Static files (CSS, JavaScript, Images)
+    # https://docs.djangoproject.com/en/4.1/howto/static-files/
+
+    STATIC_URL = "static/"
+    STATIC_ROOT = BASE_DIR / "static"
 else:
     DEBUG = False
+    STATIC_URL = os.getenv("STATIC_URL")
+    STATIC_ROOT = os.getenv("STATIC_ROOT")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -101,7 +108,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -131,13 +137,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "static"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
