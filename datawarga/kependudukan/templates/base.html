@@ -16,7 +16,7 @@
             </button>
         <div class="navbar-nav">
             <div class="nav-item text-nowrap">
-                <a class="nav-link px-3" href="{% url 'logout' %}">Sign out</a>
+                <a class="nav-link px-3 d-sm-none d-md-block d-none d-sm-block" href="{% url 'logout' %}">Log out</a>
             </div>
         </div>
         </header>
@@ -42,6 +42,12 @@
                                 <a class="nav-link" href="{% url 'kependudukan:listWargaView' %}">
                                     <span class="align-text-bottom"></span>
                                     Daftar Warga
+                                </a>
+                            </li>
+                            <li class="nav-item d-sm-none">
+                                <a class="nav-link" href="{% url 'logout' %}">
+                                    <span class="align-text-bottom"></span>
+                                    Logout
                                 </a>
                             </li>
                         </ul>
