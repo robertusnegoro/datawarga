@@ -133,6 +133,7 @@ def listWargaReport(request):
     HTML(string=html).write_pdf(response, font_config=font_config)
     return response
 
+
 @login_required
 def protected_serve(request, path, document_root=None, show_indexes=False):
     return serve(request, path, document_root, show_indexes)

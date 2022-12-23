@@ -15,5 +15,9 @@ urlpatterns = [
     path("list-warga-view", views.WargaListView.as_view(), name="listWargaView"),
     path("test-view", views.testView, name="testView"),
     path("data-warga-pdf", views.listWargaReport, name="dataWargaPDF"),
-    re_path(r'^%s(?P<path>.*)$' % settings.MEDIA_URL[1:], views.protected_serve, {'document_root': settings.MEDIA_ROOT}),
+    re_path(
+        r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
+        views.protected_serve,
+        {"document_root": settings.MEDIA_ROOT},
+    ),
 ]
