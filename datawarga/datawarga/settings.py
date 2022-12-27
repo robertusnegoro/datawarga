@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+from  distutils.util import strtobool
 import sys
 import os
 
@@ -96,6 +97,7 @@ DB_NAME = os.getenv("DB_NAME", "ngantridb")
 DB_PASS = os.getenv("DB_PASS", "")
 DB_PORT = int(os.getenv("DB_PORT", 5432))
 DB_USER = os.getenv("DB_USER", "robi")
+DB_SSL = strtobool(os.getenv("DB_SSL", "False"))
 
 DATABASES = {
     "default": {
@@ -107,6 +109,9 @@ DATABASES = {
         "PASSWORD": DB_PASS,
     }
 }
+
+if DB_SSL:
+    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

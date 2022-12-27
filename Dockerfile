@@ -1,12 +1,6 @@
-FROM python:3.10-alpine
+FROM python:3.11-slim
 
-RUN apk --update --upgrade --no-cache add py3-pip gcc musl-dev \
-    python3-dev pango zlib-dev jpeg-dev openjpeg-dev g++ \
-    libffi-dev fontconfig ttf-freefont font-noto terminus-font \
-    libpq
-
-RUN fc-cache -f \ 
-   && fc-list | sort 
+RUN apt update && apt install -y libpq-dev libpango-1.0-0 libpangoft2-1.0-0
 
 RUN mkdir /app/
 COPY requirements.txt /app/
@@ -15,8 +9,6 @@ RUN pip install -Ur /app/requirements.txt
 ADD datawarga /app/datawarga
 
 WORKDIR /app/datawarga
-
-RUN python manage.py collectstatic
 
 COPY entrypoint.sh /app/datawarga/
 RUN chmod +x /app/datawarga/entrypoint.sh
