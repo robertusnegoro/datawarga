@@ -28,6 +28,7 @@ SECRET_KEY = os.getenv("DATA_WARGA_SECRET", "")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 WG_ENV = os.getenv("WG_ENV", "dev")
+WG_TRUSTED = os.getenv("WG_TRUSTED", "")
 if WG_ENV == "dev":
     DEBUG = True
     # Static files (CSS, JavaScript, Images)
@@ -39,6 +40,7 @@ else:
     DEBUG = False
     STATIC_URL = os.getenv("STATIC_URL")
     STATIC_ROOT = os.getenv("STATIC_ROOT")
+    CSRF_TRUSTED_ORIGINS = [WG_TRUSTED]
 
 ALLOWED_HOSTS = ["*"]
 
