@@ -21,3 +21,6 @@ urlpatterns = [
         {"document_root": settings.MEDIA_ROOT},
     ),
 ]
+
+if settings.WG_ENV == "dev":
+    urlpatterns.append(path("generate", views.generate_data_warga))

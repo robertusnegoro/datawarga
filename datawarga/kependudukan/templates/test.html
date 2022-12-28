@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+{% block content %}
+<p>Test only</p>
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-center text-white bg-primary mb-3">
+            <div class="card-header">Total Data Warga</div>
+            <div class="card-body">
+                <h1 class="card-title">150</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center mb-3">
+            <div class="card-header">Total Data Warga</div>
+            <div class="card-body">
+                <canvas id="pie-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+{% block jscript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
+<script>
+    
+    const data = {
+        labels: ['Red', 'Orange', 'Yellow', 'Green', 'Blue'],
+        datasets: [
+        {
+            data: [10, 20, 45, 5, 100],
+            backgroundColor: [
+            '#696969', '#808080', '#A9A9A9', '#C0C0C0', '#D3D3D3'
+          ],
+        }
+    ]
+    };
+    const config = {
+        type: 'pie',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Chart.js Pie Chart'
+            }
+            }
+        },
+    };
+
+    var ctx = document.getElementById('pie-chart').getContext('2d');
+    new Chart(ctx, config);
+</script>
+
+{% endblock %}

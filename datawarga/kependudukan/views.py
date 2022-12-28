@@ -13,8 +13,8 @@ from django.views.static import serve
 from urllib.parse import urlencode
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
-import io
 import logging
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ def deleteFormWarga(request, idwarga=0):
 
 
 def testView(request):
-    return render(request=request, template_name="registration/login.html")
+    return render(request=request, template_name="test.html")
 
 
 @login_required
@@ -137,3 +137,34 @@ def listWargaReport(request):
 @login_required
 def protected_serve(request, path, document_root=None, show_indexes=False):
     return serve(request, path, document_root, show_indexes)
+
+
+@login_required
+def generate_data_warga(request):
+    count = 250
+    counter = 0
+
+    first_name = ("Tatang", "Midun", "Yuni", "Yana", "Ucup", "Jule", "Nunung")
+    last_name = ("Batagor", "Siomay", "Cilok", "Buryam", "Sambel", "Terasi")
+    tempat_lahir = ("Malang", "Payakumbuh", "Medan", "Magelang")
+
+    while counter < count:
+        nama_lengkap = "%s %s" % (random.choice(first_name), random.choice(last_name))
+        data_warga = Warga.objects.create(
+            nama_lengkap=nama_lengkap,
+            nik=random.randint(100000000, 200000000),
+            agama=random.choice(Warga.RELIGIONS)[0],
+            kode_pos=15315,
+            no_hp=random.randint(1000000, 2000000),
+            no_kk=random.randint(100000000, 200000000),
+            pekerjaan=random.choice(Warga.PEKERJAAN)[0],
+            status=random.choice(Warga.STATUS_KAWIN)[0],
+            tanggal_lahir="%s-08-10" % (random.randint(1960, 1990)),
+            tempat_lahir=random.choice(tempat_lahir),
+            jenis_kelamin=random.choice(Warga.JENIS_KELAMIN)[0],
+            alamat_blok="A-%s" % (random.randint(1, 5)),
+            alamat_nomor=random.randint(1, 100),
+            status_tinggal=random.choice(Warga.STATUS_TINGGAL)[0],
+        )
+        counter += 1
+    return HttpResponse("generated %s data" % (counter))

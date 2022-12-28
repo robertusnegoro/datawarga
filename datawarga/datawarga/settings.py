@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-from  distutils.util import strtobool
+from distutils.util import strtobool
 import sys
 import os
 
@@ -113,7 +113,7 @@ DATABASES = {
 }
 
 if DB_SSL:
-    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
+    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
