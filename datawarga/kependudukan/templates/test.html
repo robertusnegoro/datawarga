@@ -33,15 +33,13 @@
 <script>
     
     const data = {
-        labels: ['Red', 'Orange', 'Yellow', 'Green', 'Blue'],
+        labels: {{ legend | safe }},
         datasets: [
-        {
-            data: [10, 20, 45, 5, 100],
-            backgroundColor: [
-            '#696969', '#808080', '#A9A9A9', '#C0C0C0', '#D3D3D3'
-          ],
-        }
-    ]
+            {
+                data: [10, 20, 45, 5, 100],
+                backgroundColor: ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51'],
+            }
+        ]
     };
     const config = {
         type: 'pie',
@@ -49,13 +47,13 @@
         options: {
             responsive: true,
             plugins: {
-            legend: {
-                position: 'top',
-            },
-            title: {
-                display: true,
-                text: 'Chart.js Pie Chart'
-            }
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Chart.js Pie Chart'
+                }
             }
         },
     };

@@ -112,7 +112,8 @@ def deleteFormWarga(request, idwarga=0):
 
 
 def testView(request):
-    return render(request=request, template_name="test.html")
+    context = {"legend": ["One", "Two", "Three", "Four", "Five"]}
+    return render(request=request, template_name="test.html", context=context)
 
 
 @login_required
@@ -168,3 +169,32 @@ def generate_data_warga(request):
         )
         counter += 1
     return HttpResponse("generated %s data" % (counter))
+
+
+@login_required
+def dashboard_warga(request):
+    total_warga = Warga.objects.all().count()
+    jenkel_laki = Warga.objects.filter(jenis_kelamin="Laki-laki").count()
+    jenkel_perempuan = Warga.objects.filter(jenis_kelamin="Perempuan").count()
+    data_agama = []
+    for agama in Warga.RELIGIONS:
+        data_agama.append(Warga.objects.filter(agama=agama[0]).count())
+
+    data_status_tinggal = []
+    for status_tinggal in Warga.STATUS_TINGGAL:
+        data_status_tinggal.append(
+            Warga.objects.filter(status_tinggal=status_tinggal[0]).count()
+        )
+
+    context = {
+        "legend_agama": [agama[0] for agama in Warga.RELIGIONS],
+        "legend_jenkel": [jk[0] for jk in Warga.JENIS_KELAMIN],
+        "legend_status_tinggal": [
+            status_tinggal[0] for status_tinggal in Warga.STATUS_TINGGAL
+        ],
+        "data_jenkel": [jenkel_laki, jenkel_perempuan],
+        "data_agama": data_agama,
+        "data_status_tinggal": data_status_tinggal,
+        "total_warga": total_warga,
+    }
+    return render(request=request, template_name="dashboard.html", context=context)

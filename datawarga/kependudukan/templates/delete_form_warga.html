@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Hapus Data Warga{% endblock %}
-{% block pagetitle %}Hapus Data Warga{% endblock %}
+{% block title %}<i class="bi bi-trash"></i> Hapus Data Warga{% endblock %}
+{% block pagetitle %}<i class="bi bi-trash"></i> Hapus Data Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}  
 <form method="post" enctype="multipart/form-data" id="delete-warga-form" action="{% url 'kependudukan:deleteformWarga' idwarga %}">
@@ -9,6 +9,6 @@
     <p>NIK : {{ warga.nik }}</p>
     <p>No KK : {{ warga.no_kk }}</p>
     <p>Alamat : {{ warga.alamat }} | RT: {{ warga.rt }} | RW: {{ warga.rw }}</p>
-    <button type="submit" class="btn btn-danger">Delete</button>
+    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</button>
 </form>
 {% endblock %}

@@ -39,7 +39,7 @@
         <td>{{ w.alamat }}</td>
         <td>{{ w.alamat_blok }}</td>
         <td>{{ w.alamat_nomor }}</td>
-        <td><a href="{% url 'kependudukan:formWarga' w.id %}">Ubah</a> | <a href="{% url 'kependudukan:deleteformWarga' w.id %}">Hapus</a></td>
+        <td><a class="btn btn-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}"> <i class="bi bi-pencil"></i> Ubah</a> &nbsp; <a class="btn btn-danger btn-sm" href="{% url 'kependudukan:deleteformWarga' w.id %}"><i class="bi bi-trash"></i> Hapus</a></td>
     </tr>
     {% empty %}
     <tr>

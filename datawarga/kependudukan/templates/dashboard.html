@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-center text-white bg-primary mb-3">
+            <div class="card-header">Total Data Warga</div>
+            <div class="card-body">
+                <h1 class="card-title">{{ total_warga }}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center mb-3">
+            <div class="card-header">Jenis Kelamin</div>
+            <div class="card-body">
+                <canvas id="jenkel-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center mb-3">
+            <div class="card-header">Agama</div>
+            <div class="card-body">
+                <canvas id="agama-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center mb-3">
+            <div class="card-header">Status Tinggal</div>
+            <div class="card-body">
+                <canvas id="status-tinggal-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+{% block jscript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
+<script>
+    
+    const data = {
+        labels: {{ legend_jenkel | safe }},
+        datasets: [
+            {
+                data: {{ data_jenkel | safe }},
+                backgroundColor: ['#264653', '#e76f51'],
+            }
+        ]
+    };
+    const config = {
+        type: 'pie',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    var chart_jenis_kelamin = document.getElementById('jenkel-chart').getContext('2d');
+    new Chart(chart_jenis_kelamin, config);
+
+    const data_agama = {
+        labels: {{ legend_agama | safe }},
+        datasets: [
+            {
+                data: {{ data_agama | safe }},
+                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
+            }
+        ]
+    };
+    const config_agama = {
+        type: 'pie',
+        data: data_agama,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    var chart_agama = document.getElementById('agama-chart').getContext('2d');
+    new Chart(chart_agama, config_agama);
+
+    const data_status_tinggal = {
+        labels: {{ legend_status_tinggal | safe }},
+        datasets: [
+            {
+                data: {{ data_status_tinggal | safe }},
+                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
+            }
+        ]
+    };
+
+    const config_status_tinggal = {
+        type: 'pie',
+        data: data_status_tinggal,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    
+    var ctx = document.getElementById("status-tinggal-chart").getContext('2d');
+    new Chart(ctx, config_status_tinggal);
+
+    
+</script>
+
+{% endblock %}
