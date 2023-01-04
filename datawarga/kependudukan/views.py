@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 @login_required
 def index(request):
-    return render(request=request, template_name="index.html")
+    return redirect(reverse('kependudukan:dashboardWarga'))
 
 
 @login_required
@@ -141,8 +141,7 @@ def protected_serve(request, path, document_root=None, show_indexes=False):
 
 
 @login_required
-def generate_data_warga(request):
-    count = 250
+def generate_data_warga(request, count=10):
     counter = 0
 
     first_name = ("Tatang", "Midun", "Yuni", "Yana", "Ucup", "Jule", "Nunung")
@@ -198,3 +197,7 @@ def dashboard_warga(request):
         "total_warga": total_warga,
     }
     return render(request=request, template_name="dashboard.html", context=context)
+
+
+def kompleks_form(request):
+    return render(request=request, template_name="form_kompleks.html")

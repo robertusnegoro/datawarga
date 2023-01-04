@@ -16,6 +16,7 @@ urlpatterns = [
     path("test-view", views.testView, name="testView"),
     path("data-warga-pdf", views.listWargaReport, name="dataWargaPDF"),
     path("dashboard-report", views.dashboard_warga, name="dashboardWarga"),
+    path("form-kompleks", views.kompleks_form, name="kompleksForm"),
     re_path(
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
         views.protected_serve,
@@ -24,4 +25,4 @@ urlpatterns = [
 ]
 
 if settings.WG_ENV == "dev":
-    urlpatterns.append(path("generate", views.generate_data_warga))
+    urlpatterns.append(path("generate/<int:count>", views.generate_data_warga))
