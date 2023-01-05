@@ -17,6 +17,7 @@ urlpatterns = [
     path("data-warga-pdf", views.listWargaReport, name="dataWargaPDF"),
     path("dashboard-report", views.dashboard_warga, name="dashboardWarga"),
     path("form-kompleks", views.kompleks_form, name="kompleksForm"),
+    path("generate-kompleks-exec", views.generate_kompleks, name="generateKompleks"),
     re_path(
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
         views.protected_serve,

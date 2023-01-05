@@ -1,5 +1,5 @@
-from .forms import WargaForm
-from .models import Warga
+from .forms import WargaForm, GenerateKompleksForm
+from .models import Warga, Kompleks
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 @login_required
 def index(request):
-    return redirect(reverse('kependudukan:dashboardWarga'))
+    return redirect(reverse("kependudukan:dashboardWarga"))
 
 
 @login_required
@@ -199,5 +199,34 @@ def dashboard_warga(request):
     return render(request=request, template_name="dashboard.html", context=context)
 
 
+@login_required
 def kompleks_form(request):
-    return render(request=request, template_name="form_kompleks.html")
+    context = {"rt": settings.RUKUNTANGGA, "rw": settings.RUKUNWARGA}
+    return render(request=request, template_name="form_kompleks.html", context=context)
+
+
+@login_required
+def generate_kompleks(request):
+    if request.POST:
+        form = GenerateKompleksForm(request.POST)
+        
+        if form.is_valid():
+            cluster = str(request.POST["cluster"])
+            blok = str(request.POST["blok"])
+            rt = str(request.POST["rt"])
+            rw = str(request.POST["rw"])
+            total_num = int(request.POST["total_num"])
+
+            counter = 0
+            while counter <= total_num:
+                counter += 1
+                Kompleks.objects.create(
+                    cluster=cluster, blok=blok, rt=rt, rw=rw, nomor=counter
+                )
+                logger.info("%s, %s, %s is saved to db" % (cluster, blok, counter))
+            return HttpResponse("%s data is saved" % (counter))
+        else:
+            logger.info(form.errors)
+            return HttpResponse("form is not valid %s" % (form.errors))
+    else:
+        return Http404()

@@ -74,7 +74,7 @@ class Warga(models.Model):
         max_length=30, choices=STATUS_TINGGAL, default="TETAP"
     )
     alamat_ktp = models.CharField(max_length=255, null=True, blank=True)
-    kompleks = models.ForeignKey('Kompleks', on_delete=models.SET_NULL, null=True)
+    kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.nama_lengkap
