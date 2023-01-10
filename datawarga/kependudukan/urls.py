@@ -18,6 +18,13 @@ urlpatterns = [
     path("dashboard-report", views.dashboard_warga, name="dashboardWarga"),
     path("form-kompleks", views.kompleks_form, name="kompleksForm"),
     path("generate-kompleks-exec", views.generate_kompleks, name="generateKompleks"),
+    path(
+        "list-kompleks-view", views.KompleksListView.as_view(), name="listKompleksView"
+    ),
+    path("delete-blok-form", views.delete_blok_form, name="deleteBlokForm"),
+    path(
+        "detail-kompleks/<int:idkompleks>", views.detail_kompleks, name="detailKompleks"
+    ),
     re_path(
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
         views.protected_serve,

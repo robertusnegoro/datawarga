@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %} Hapus Blok Rumah {% endblock %}
+{% block pagetitle %}  <i class="bi bi-geo"></i> </i> Hapus Per Blok Rumah {% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}  
+<form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:deleteBlokForm' %}">
+    {% csrf_token %}
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="blok" class="form-label">Blok</label>
+            <input type="text" class="form-control" id="blok" name="blok" aria-describedby="blokHelp" maxlength="10" required>
+            <div id="blokHelp" class="form-text">Nama Blok saja.</div>
+        </div>
+        <button type="submit" class="btn btn-danger">Submit</button>
+    </div>
+    
+</form>
+
+
+{% endblock %}
