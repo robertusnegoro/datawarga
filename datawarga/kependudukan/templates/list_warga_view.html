@@ -4,8 +4,11 @@
 {% block content %}
 {% load crispy_forms_tags %}  
 
-{% if message != "" %}
-<p>{{ message }}</p>
+{% if message %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 {% endif %}
 <form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-3">
     <div class="col-auto">
@@ -20,12 +23,10 @@
     <thead>
         <tr>
             <th>Nama Lengkap</th>
-            <th>NIK</th>
-            <th>No KK</th>
+            <th>NIK / KK</th>
             <th>No HP</th>
             <th>Alamat</th>
-            <th>Blok</th>
-            <th>No</th>
+            <th>Blok / No</th>
             <th>Opsi</th>
         </tr>
     </thead>
@@ -33,13 +34,11 @@
     {% for w in page_obj %}
     <tr>
         <td>{{ w.nama_lengkap }}</td>
-        <td>{{ w.nik }}</td>
-        <td>{{ w.no_kk }}</td>
+        <td>{{ w.nik }} / {{ w.no_kk }}</td>
         <td>{{ w.no_hp }}</td>
         <td>{{ w.alamat }}</td>
-        <td>{{ w.alamat_blok }}</td>
-        <td>{{ w.alamat_nomor }}</td>
-        <td><a class="btn btn-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}"> <i class="bi bi-pencil"></i> Ubah</a> &nbsp; <a class="btn btn-danger btn-sm" href="{% url 'kependudukan:deleteformWarga' w.id %}"><i class="bi bi-trash"></i> Hapus</a></td>
+        <td>{{ w.alamat_blok }} / {{ w.alamat_nomor }}</td>
+        <td><a class="btn btn-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}"> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href="{% url 'kependudukan:deleteformWarga' w.id %}"><i class="bi bi-trash"></i> </a></td>
     </tr>
     {% empty %}
     <tr>
