@@ -2,6 +2,7 @@ from .forms import WargaForm, GenerateKompleksForm
 from .models import Warga, Kompleks
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core import serializers
 from django.db.models import Q
 from django.http import HttpResponse, Http404, JsonResponse, FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,6 +16,7 @@ from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import logging
 import random
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -310,6 +312,7 @@ def detail_kompleks(request, idkompleks):
         logger.info(context["message"])
 
     context["data"] = data_kompleks
+    context["load_url"] = reverse("kependudukan:wargaRumah", kwargs={'idkompleks':idkompleks})
     return render(
         request=request, template_name="form_kompleks_detail.html", context=context
     )
@@ -319,5 +322,6 @@ def detail_kompleks(request, idkompleks):
 def warga_rumah(request, idkompleks):
     data_warga = Warga.objects.filter(kompleks=idkompleks)
     total_warga = len(data_warga)
-    response = {"data": data_warga, "total": total_warga}
+    data = serializers.serialize('json', data_warga)
+    response = {"data": json.loads(data), "total": total_warga}
     return JsonResponse(response)

@@ -56,6 +56,8 @@
 
 {% block jscript %}
 <script>
-    
+    $.getJSON("{{ load_url }}", function(data) {
+        console.log(data);
+    });
 </script>
 {% endblock %}
