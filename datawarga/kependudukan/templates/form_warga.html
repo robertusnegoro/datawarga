@@ -18,9 +18,10 @@
     {{ form.tanggal_lahir | as_crispy_field }}
     {{ form.tempat_lahir | as_crispy_field }}
 
+    
+
     {{ form.alamat | as_crispy_field }}
-    {{ form.alamat_blok | as_crispy_field }}
-    {{ form.alamat_nomor | as_crispy_field }}
+    {{ form.kompleks | as_crispy_field }}
 
     {{ form.alamat_ktp | as_crispy_field }}
 
@@ -47,6 +48,6 @@
 
     <hr>
 
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
 </form>
 {% endblock %}

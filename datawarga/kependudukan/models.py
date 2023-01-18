@@ -40,7 +40,7 @@ class Warga(models.Model):
     )
     JENIS_KELAMIN = (("Laki-laki", "laki-laki"), ("Perempuan", "perempuan"))
     agama = models.CharField(max_length=50, choices=RELIGIONS, default="")
-    alamat = models.CharField(max_length=255, default=settings.ALAMAT)
+    alamat = models.CharField(max_length=255, default=settings.ALAMAT, null=True, blank=True)
     email = models.EmailField(max_length=200, null=True, blank=True)
     foto_path = models.ImageField(upload_to="uploads/", blank=True)
     kecamatan = models.CharField(max_length=150, default=settings.KECAMATAN)
@@ -68,12 +68,23 @@ class Warga(models.Model):
     kewarganegaraan = models.CharField(
         max_length=250, null=True, blank=True, default="Indonesia/WNI"
     )
-    alamat_blok = models.CharField(max_length=10, blank=True, null=True)
-    alamat_nomor = models.CharField(max_length=10, blank=True, null=True)
     status_tinggal = models.CharField(
         max_length=30, choices=STATUS_TINGGAL, default="TETAP"
     )
     alamat_ktp = models.CharField(max_length=255, null=True, blank=True)
+    kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.nama_lengkap
+
+
+class Kompleks(models.Model):
+    cluster = models.CharField(max_length=50, blank=True, null=True)
+    blok = models.CharField(max_length=10, blank=True, null=True)
+    nomor = models.CharField(max_length=10, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    rt = models.CharField(max_length=4, default=settings.RUKUNTANGGA)
+    rw = models.CharField(max_length=4, default=settings.RUKUNWARGA)
+
+    def __str__(self):
+        return "%s / %s" % (self.blok, self.nomor)

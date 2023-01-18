@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %} Form Kompleks Rumah {% endblock %}
+{% block pagetitle %}  <i class="bi bi-geo"></i> </i> Generate Blok Kompleks Rumah {% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}  
+<form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:generateKompleks' %}">
+    {% csrf_token %}
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="cluster" class="form-label">Nama Cluster</label>
+            <input type="text" class="form-control" id="cluster" name="cluster" maxlength="150">
+        </div>
+        <div class="mb-3">
+            <label for="blok" class="form-label">Blok</label>
+            <input type="text" class="form-control" id="blok" name="blok" aria-describedby="blokHelp" maxlength="10" required>
+            <div id="blokHelp" class="form-text">Nama Blok saja.</div>
+        </div>
+        <div class="mb-3">
+            <label for="rt" class="form-label">RT</label>
+            <input type="text" class="form-control" id="rt" name="rt" maxlength="4" required value="{{ rt }}">
+        </div>
+        <div class="mb-3">
+            <label for="rw" class="form-label">RW</label>
+            <input type="text" class="form-control" id="rw" name="rw" maxlength="4" required value="{{ rw }}">
+        </div>
+        <div class="mb-3">
+            <label for="total_num" class="form-label">Jumlah Nomor</label>
+            <input type="number" class="form-control" id="total_num" name="total_num" aria-describedby="totNumHelp" maxlength="3" required>
+            <div id="totNumHelp" class="form-text">Isi dengan jumlah nomor yang ingin di-generate dalam 1 blok di atas, nomor dimulai dari 1.</div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
+    </div>
+    
+</form>
+
+
+{% endblock %}
