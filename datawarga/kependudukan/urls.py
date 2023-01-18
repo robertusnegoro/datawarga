@@ -26,6 +26,7 @@ urlpatterns = [
         "warga/detail-kompleks/<int:idkompleks>", views.detail_kompleks, name="detailKompleks"
     ),
     path("warga/warga-rumah/<int:idkompleks>", views.warga_rumah, name="wargaRumah"),
+    path("warga/form-warga-rumah/<int:idkompleks>", views.form_warga_rumah, name="formWargaRumah"),
     re_path(
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
         views.protected_serve,

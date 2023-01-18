@@ -325,3 +325,25 @@ def warga_rumah(request, idkompleks):
     data = serializers.serialize('json', data_warga)
     response = {"data": json.loads(data), "total": total_warga}
     return JsonResponse(response)
+
+@login_required
+def form_warga_rumah(request, idkompleks):
+    data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
+    context = {'data_kompleks': data_kompleks}
+    if request.POST:
+        logger.info("insert mode")
+        form = WargaForm(request.POST, request.FILES)
+        if form.is_valid():
+            logger.info("Form warga is valid")
+            warga = form.save()
+            base_url = reverse("kependudukan:detailKompleks", kwargs={'idkompleks': idkompleks})
+            payload = urlencode({"message": "data saved!"})
+            url_redir = "{}?{}".format(base_url, payload)
+            return redirect(url_redir)
+        else:
+            logger.info(form.errors)
+            return HttpResponse("form is not valid %s" % (form.errors))
+    context['form'] = WargaForm()
+    return render(request=request, template_name="form_warga_rumah.html", context=context)
+
+    

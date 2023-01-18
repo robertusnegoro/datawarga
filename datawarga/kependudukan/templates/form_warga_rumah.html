@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Data Warga Rumah{% endblock %}
+{% block pagetitle %}Tambah Data Warga Rumah{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}  
+<div class="col-lg-8 border-bottom">
+    <div class="py-2">
+        <p>Tambah warga penghuni blok {{ data_kompleks.blok }} / No. {{ data_kompleks.nomor }}</p>
+        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:formWargaRumah' data_kompleks.id %}">
+            {% csrf_token %}
+        
+            
+            {{ form.nik | as_crispy_field }}
+            {{ form.no_kk | as_crispy_field }}
+            {{ form.nama_lengkap | as_crispy_field }}
+        
+            {{ form.jenis_kelamin | as_crispy_field }}
+            {{ form.agama | as_crispy_field }}
+        
+            {{ form.no_hp | as_crispy_field }}
+            {{ form.tanggal_lahir | as_crispy_field }}
+            {{ form.tempat_lahir | as_crispy_field }}
+        
+            
+        
+            {{ form.alamat | as_crispy_field }}
+            
+        
+            {{ form.alamat_ktp | as_crispy_field }}
+        
+            {{ form.status_tinggal | as_crispy_field }}
+        
+            {{ form.rt | as_crispy_field }}
+            {{ form.rw | as_crispy_field }}
+            {{ form.kelurahan | as_crispy_field }}
+            {{ form.kecamatan | as_crispy_field }}
+            {{ form.kota | as_crispy_field }}
+            {{ form.provinsi | as_crispy_field }}
+            {{ form.kode_pos | as_crispy_field }}
+        
+            {{ form.pekerjaan | as_crispy_field }}
+            {{ form.status | as_crispy_field }}
+            {{ form.kewarganegaraan | as_crispy_field }}
+        
+            {{ form.email | as_crispy_field }}
+            {{ form.foto_path | as_crispy_field }}
+        
+            
+            <input type="hidden" id="id_kompleks" name="kompleks" value="{{ data_kompleks.id }}" >
+            
+        
+            <hr>
+        
+            <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
