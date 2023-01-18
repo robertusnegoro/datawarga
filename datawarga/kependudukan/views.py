@@ -219,6 +219,10 @@ def generate_kompleks(request):
             rw = str(request.POST["rw"])
             total_num = int(request.POST["total_num"])
 
+            if total_num > 500:
+                logger.error("user is trying to generate more than 500 data kompleks rumah.")
+                return HttpResponse("Error. User seharusnya tidak mengenerate lebih dari 500 nomor rumah. Merasa membutuhkan lebih? Berikan feedback.")
+
             counter = 0
             while counter < total_num:
                 counter += 1
