@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Hapus Data Rumah{% endblock %}
+{% block pagetitle %}<i class="bi bi-trash"></i> Hapus Data Rumah{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}  
+<form method="post" enctype="multipart/form-data" id="delete-rumah-form" action="{% url 'kependudukan:deleteRumahForm' data_kompleks.id %}">
+    {% csrf_token %}
+    <p>Cluster : {{ data_kompleks.cluster }}</p>
+    <p>Blok / No : {{ data_kompleks.blok }} / {{ data_kompleks.nomor }}</p>
+    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</button>
+</form>
+{% endblock %}

@@ -7,6 +7,30 @@
     {% csrf_token %}
     <div class="col-md-4">
         <div class="mb-3">
+            <label for="alamat" class="form-label">Alamat</label>
+            <input type="text" class="form-control" id="alamat" name="alamat" maxlength="255" value="{{ alamat }}">
+        </div>
+        <div class="mb-3">
+            <label for="kelurahan" class="form-label">Kelurahan</label>
+            <input type="text" class="form-control" id="kelurahan" name="kelurahan" maxlength="150" value="{{ kelurahan }}">
+        </div>
+        <div class="mb-3">
+            <label for="kecamatan" class="form-label">Kecamatan</label>
+            <input type="text" class="form-control" id="kecamatan" name="kecamatan" maxlength="150" value="{{ kecamatan }}">
+        </div>
+        <div class="mb-3">
+            <label for="kota" class="form-label">Kota</label>
+            <input type="text" class="form-control" id="kota" name="kota" maxlength="150" value="{{ kota }}">
+        </div>
+        <div class="mb-3">
+            <label for="provinsi" class="form-label">Provinsi</label>
+            <input type="text" class="form-control" id="provinsi" name="provinsi" maxlength="150" value="{{ provinsi }}">
+        </div>
+        <div class="mb-3">
+            <label for="kode_pos" class="form-label">Kode Pos</label>
+            <input type="text" class="form-control" id="kode_pos" name="kode_pos" maxlength="150">
+        </div>
+        <div class="mb-3">
             <label for="cluster" class="form-label">Nama Cluster</label>
             <input type="text" class="form-control" id="cluster" name="cluster" maxlength="150">
         </div>
@@ -24,9 +48,12 @@
             <input type="text" class="form-control" id="rw" name="rw" maxlength="4" required value="{{ rw }}">
         </div>
         <div class="mb-3">
-            <label for="total_num" class="form-label">Jumlah Nomor</label>
-            <input type="number" class="form-control" id="total_num" name="total_num" aria-describedby="totNumHelp" maxlength="3" required>
-            <div id="totNumHelp" class="form-text">Isi dengan jumlah nomor yang ingin di-generate dalam 1 blok di atas, nomor dimulai dari 1.</div>
+            <label for="start_num" class="form-label">Nomor Awal</label>
+            <input type="number" class="form-control" id="start_num" name="start_num" maxlength="3" required value="1">
+        </div>
+        <div class="mb-3">
+            <label for="finish_num" class="form-label">Nomor Akhir</label>
+            <input type="number" class="form-control" id="finish_num" name="finish_num" maxlength="3" required value="50">
         </div>
         <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
     </div>

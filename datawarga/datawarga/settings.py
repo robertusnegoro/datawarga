@@ -191,5 +191,6 @@ RUKUNTANGGA = os.getenv("WG_RT", "006")
 RUKUNWARGA = os.getenv("WG_RW", "012")
 ALAMAT = os.getenv("WG_ALAMAT", "Jalan Nirwana")
 
+GENERATE_KOMPLEKS_LIMIT = 200
 
 TIME_ZONE = "Asia/Jakarta"

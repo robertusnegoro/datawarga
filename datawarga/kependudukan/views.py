@@ -203,7 +203,15 @@ def dashboard_warga(request):
 
 @login_required
 def kompleks_form(request):
-    context = {"rt": settings.RUKUNTANGGA, "rw": settings.RUKUNWARGA}
+    context = {
+        "rt": settings.RUKUNTANGGA,
+        "rw": settings.RUKUNWARGA,
+        "alamat": settings.ALAMAT,
+        "kecamatan": settings.KECAMATAN,
+        "kelurahan": settings.KELURAHAN,
+        "kota": settings.KOTA,
+        "provinsi": settings.PROVINSI,
+    }
     return render(request=request, template_name="form_kompleks.html", context=context)
 
 
@@ -217,24 +225,49 @@ def generate_kompleks(request):
             blok = str(request.POST["blok"])
             rt = str(request.POST["rt"])
             rw = str(request.POST["rw"])
-            total_num = int(request.POST["total_num"])
+            start_num = int(request.POST["start_num"])
+            finish_num = int(request.POST["finish_num"])
+            alamat = str(request.POST["alamat"])
+            kecamatan = str(request.POST["kecamatan"])
+            kelurahan = str(request.POST["kelurahan"])
+            kota = str(request.POST["kota"])
+            provinsi = str(request.POST["provinsi"])
+            kode_pos = str(request.POST["kode_pos"])
 
-            if total_num > 500:
-                logger.error("user is trying to generate more than 500 data kompleks rumah.")
-                return HttpResponse("Error. User seharusnya tidak mengenerate lebih dari 500 nomor rumah. Merasa membutuhkan lebih? Berikan feedback.")
+            total_num = finish_num - start_num
 
-            counter = 0
-            while counter < total_num:
-                counter += 1
-                Kompleks.objects.create(
-                    cluster=cluster, blok=blok, rt=rt, rw=rw, nomor=counter
+            if total_num > settings.GENERATE_KOMPLEKS_LIMIT:
+                logger.error(
+                    "user is trying to generate more than %s data kompleks rumah."
+                    % (settings.GENERATE_KOMPLEKS_LIMIT)
                 )
-                logger.info("%s, %s, %s is saved to db" % (cluster, blok, counter))
+                return HttpResponse(
+                    "Error. User seharusnya tidak mengenerate lebih dari %s nomor rumah."
+                    % (settings.GENERATE_KOMPLEKS_LIMIT)
+                )
+
+            counter = start_num
+            while counter <= finish_num:
+                Kompleks.objects.create(
+                    cluster=cluster,
+                    blok=blok,
+                    rt=rt,
+                    rw=rw,
+                    nomor=counter,
+                    alamat=alamat,
+                    kecamatan=kecamatan,
+                    kelurahan=kelurahan,
+                    kota=kota,
+                    provinsi=provinsi,
+                    kode_pos=kode_pos,
+                )
+                logger.info("%s, %s, %s is saved to db" % (cluster, blok, total_num))
+                counter += 1
             base_url = reverse("kependudukan:listKompleksView")
             payload = urlencode(
                 {
                     "message": "data blok %s sebanyak %s nomor rumah telah disimpan!"
-                    % (blok, counter)
+                    % (blok, total_num)
                 }
             )
             url_redir = "{}?{}".format(base_url, payload)
@@ -303,6 +336,12 @@ def detail_kompleks(request, idkompleks):
         rw = str(request.POST["rw"])
         nomor = str(request.POST["nomor"])
         description = str(request.POST["description"])
+        alamat = str(request.POST["alamat"])
+        kecamatan = str(request.POST["kecamatan"])
+        kelurahan = str(request.POST["kelurahan"])
+        kota = str(request.POST["kota"])
+        provinsi = str(request.POST["provinsi"])
+        kode_pos = str(request.POST["kode_pos"])
 
         data_kompleks.cluster = cluster
         data_kompleks.blok = blok
@@ -310,13 +349,21 @@ def detail_kompleks(request, idkompleks):
         data_kompleks.rw = rw
         data_kompleks.nomor = nomor
         data_kompleks.description = description
+        data_kompleks.alamat = alamat
+        data_kompleks.kecamatan = kecamatan
+        data_kompleks.kelurahan = kelurahan
+        data_kompleks.kota = kota
+        data_kompleks.provinsi = provinsi
+        data_kompleks.kode_pos = kode_pos
         data_kompleks.save()
 
         context["message"] = "Data %s/%s telah disimpan" % (blok, nomor)
         logger.info(context["message"])
 
     context["data"] = data_kompleks
-    context["load_url"] = reverse("kependudukan:wargaRumah", kwargs={'idkompleks':idkompleks})
+    context["load_url"] = reverse(
+        "kependudukan:wargaRumah", kwargs={"idkompleks": idkompleks}
+    )
     return render(
         request=request, template_name="form_kompleks_detail.html", context=context
     )
@@ -326,28 +373,50 @@ def detail_kompleks(request, idkompleks):
 def warga_rumah(request, idkompleks):
     data_warga = Warga.objects.filter(kompleks=idkompleks)
     total_warga = len(data_warga)
-    data = serializers.serialize('json', data_warga)
+    data = serializers.serialize("json", data_warga)
     response = {"data": json.loads(data), "total": total_warga}
     return JsonResponse(response)
+
 
 @login_required
 def form_warga_rumah(request, idkompleks):
     data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
-    context = {'data_kompleks': data_kompleks}
+    context = {"data_kompleks": data_kompleks}
     if request.POST:
         logger.info("insert mode")
         form = WargaForm(request.POST, request.FILES)
         if form.is_valid():
             logger.info("Form warga is valid")
             warga = form.save()
-            base_url = reverse("kependudukan:detailKompleks", kwargs={'idkompleks': idkompleks})
+            base_url = reverse(
+                "kependudukan:detailKompleks", kwargs={"idkompleks": idkompleks}
+            )
             payload = urlencode({"message": "data saved!"})
             url_redir = "{}?{}".format(base_url, payload)
             return redirect(url_redir)
         else:
             logger.info(form.errors)
             return HttpResponse("form is not valid %s" % (form.errors))
-    context['form'] = WargaForm()
-    return render(request=request, template_name="form_warga_rumah.html", context=context)
+    context["form"] = WargaForm()
+    return render(
+        request=request, template_name="form_warga_rumah.html", context=context
+    )
 
-    
+@login_required
+def delete_rumah_form(request, idkompleks):
+    data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
+    context = {"data_kompleks": data_kompleks}
+    if request.POST:
+        logger.info(
+            "Deleting data rumah with id : %s , data : %s"
+            % (idkompleks, data_kompleks)
+        )
+        base_url = reverse("kependudukan:listKompleksView")
+        payload = urlencode(
+            {"message": "data %s was deleted!" % (data_kompleks)}
+        )
+        data_kompleks.delete()
+        url_redir = "{}?{}".format(base_url, payload)
+        return redirect(url_redir)
+    return render(request=request, template_name="delete_form_rumah.html", context=context)
+

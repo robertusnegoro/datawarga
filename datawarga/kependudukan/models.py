@@ -40,23 +40,18 @@ class Warga(models.Model):
     )
     JENIS_KELAMIN = (("Laki-laki", "laki-laki"), ("Perempuan", "perempuan"))
     agama = models.CharField(max_length=50, choices=RELIGIONS, default="")
-    alamat = models.CharField(max_length=255, default=settings.ALAMAT, null=True, blank=True)
+
     email = models.EmailField(max_length=200, null=True, blank=True)
     foto_path = models.ImageField(upload_to="uploads/", blank=True)
-    kecamatan = models.CharField(max_length=150, default=settings.KECAMATAN)
-    kelurahan = models.CharField(max_length=150, default=settings.KELURAHAN)
-    kode_pos = models.CharField(max_length=8, null=True, blank=True)
-    kota = models.CharField(max_length=150, default=settings.KOTA)
+
     nama_lengkap = models.CharField(max_length=254)
     nik = models.CharField(max_length=64, unique=True)
     no_hp = models.CharField(max_length=15)
     no_kk = models.CharField(max_length=64, null=True, blank=True)
-    provinsi = models.CharField(max_length=150, default=settings.PROVINSI)
+
     pekerjaan = models.CharField(
         max_length=128, choices=PEKERJAAN, default="KARYAWAN SWASTA"
     )
-    rt = models.CharField(max_length=4, default=settings.RUKUNTANGGA)
-    rw = models.CharField(max_length=4, default=settings.RUKUNWARGA)
     status = models.CharField(
         max_length=50, choices=STATUS_KAWIN, default="BELUM KAWIN"
     )
@@ -79,6 +74,14 @@ class Warga(models.Model):
 
 
 class Kompleks(models.Model):
+    alamat = models.CharField(
+        max_length=255, default=settings.ALAMAT, null=True, blank=True
+    )
+    kecamatan = models.CharField(max_length=150, default=settings.KECAMATAN)
+    kelurahan = models.CharField(max_length=150, default=settings.KELURAHAN)
+    kode_pos = models.CharField(max_length=8, null=True, blank=True)
+    kota = models.CharField(max_length=150, default=settings.KOTA)
+    provinsi = models.CharField(max_length=150, default=settings.PROVINSI)
     cluster = models.CharField(max_length=50, blank=True, null=True)
     blok = models.CharField(max_length=10, blank=True, null=True)
     nomor = models.CharField(max_length=10, blank=True, null=True)

@@ -8,7 +8,30 @@
         <h5>Edit Data Rumah</h5>
         <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:detailKompleks' data.id %}">
             {% csrf_token %}
-            
+            <div class="mb-3">
+                <label for="alamat" class="form-label">Alamat</label>
+                <input type="text" class="form-control" id="alamat" name="alamat" maxlength="255" value="{{ data.alamat }}">
+            </div>
+            <div class="mb-3">
+                <label for="kelurahan" class="form-label">Kelurahan</label>
+                <input type="text" class="form-control" id="kelurahan" name="kelurahan" maxlength="150" value="{{ data.kelurahan }}">
+            </div>
+            <div class="mb-3">
+                <label for="kecamatan" class="form-label">Kecamatan</label>
+                <input type="text" class="form-control" id="kecamatan" name="kecamatan" maxlength="150" value="{{ data.kecamatan }}">
+            </div>
+            <div class="mb-3">
+                <label for="kota" class="form-label">Kota</label>
+                <input type="text" class="form-control" id="kota" name="kota" maxlength="150" value="{{ data.kota }}">
+            </div>
+            <div class="mb-3">
+                <label for="provinsi" class="form-label">Provinsi</label>
+                <input type="text" class="form-control" id="provinsi" name="provinsi" maxlength="150" value="{{ data.provinsi }}">
+            </div>
+            <div class="mb-3">
+                <label for="kode_pos" class="form-label">Kode Pos</label>
+                <input type="text" class="form-control" id="kode_pos" name="kode_pos" maxlength="150" value="{{ data.kode_pos }}">
+            </div>
             <div class="mb-3">
                 <label for="cluster" class="form-label">Nama Cluster</label>
                 <input type="text" class="form-control" id="cluster" name="cluster" maxlength="150" value="{{ data.cluster }}">
