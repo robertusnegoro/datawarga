@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import views
+from . import views, utility
 from django.conf import settings
 
 app_name = "kependudukan"
@@ -39,7 +39,16 @@ urlpatterns = [
         views.form_warga_rumah,
         name="formWargaRumah",
     ),
-    path("warga/form-delete-rumah/<int:idkompleks>", views.delete_rumah_form, name="deleteRumahForm"),
+    path(
+        "warga/form-delete-rumah/<int:idkompleks>",
+        views.delete_rumah_form,
+        name="deleteRumahForm",
+    ),
+    path(
+        "warga/utility/import-warga",
+        utility.import_data_warga_form,
+        name="utilImportWarga",
+    ),
     re_path(
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
         views.protected_serve,

@@ -175,8 +175,8 @@ def generate_data_warga(request, count=10):
 @login_required
 def dashboard_warga(request):
     total_warga = Warga.objects.all().count()
-    jenkel_laki = Warga.objects.filter(jenis_kelamin="Laki-laki").count()
-    jenkel_perempuan = Warga.objects.filter(jenis_kelamin="Perempuan").count()
+    jenkel_laki = Warga.objects.filter(jenis_kelamin="LAKI-LAKI").count()
+    jenkel_perempuan = Warga.objects.filter(jenis_kelamin="PEREMPUAN").count()
     data_agama = []
     for agama in Warga.RELIGIONS:
         data_agama.append(Warga.objects.filter(agama=agama[0]).count())
@@ -402,21 +402,20 @@ def form_warga_rumah(request, idkompleks):
         request=request, template_name="form_warga_rumah.html", context=context
     )
 
+
 @login_required
 def delete_rumah_form(request, idkompleks):
     data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
     context = {"data_kompleks": data_kompleks}
     if request.POST:
         logger.info(
-            "Deleting data rumah with id : %s , data : %s"
-            % (idkompleks, data_kompleks)
+            "Deleting data rumah with id : %s , data : %s" % (idkompleks, data_kompleks)
         )
         base_url = reverse("kependudukan:listKompleksView")
-        payload = urlencode(
-            {"message": "data %s was deleted!" % (data_kompleks)}
-        )
+        payload = urlencode({"message": "data %s was deleted!" % (data_kompleks)})
         data_kompleks.delete()
         url_redir = "{}?{}".format(base_url, payload)
         return redirect(url_redir)
-    return render(request=request, template_name="delete_form_rumah.html", context=context)
-
+    return render(
+        request=request, template_name="delete_form_rumah.html", context=context
+    )

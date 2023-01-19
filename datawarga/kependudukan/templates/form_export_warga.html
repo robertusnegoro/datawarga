@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Import Data Warga{% endblock %}
+{% block pagetitle %}Import Data Warga{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="col-lg-8 border-bottom">
+    <div class="py-2">
+        <p>Unggah file CSV berisi data warga yang ingin dientry secara bulk. 
+            <br>Unduh confoh format, dan jangan hapus headernya. 
+            <br>Buka file csv di aplikasi spreadsheet dan simpan / export kembali ke format CSV.
+            <br>Pastikan tidak ada NIK yang terduplikasi, bahkan dengan data yang sudah ada di sistem / database.
+            <br><a href='{% static "contoh.csv" %}''>Contoh File CSV</a>
+        </p>
+        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:utilImportWarga' %}">
+            {% csrf_token %}
+
+            
+            {{ form.csv_file | as_crispy_field }}
+            <br>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-cloud-arrow-up"></i> Export</button>
+        </form>
+        <h5>Catatan</h5>
+        <p>
+            Berikut ini adalah petunjuk opsi yang bisa dipilih pada beberapa kolom data warga:
+            <br>
+            Opsi agama :
+            <ul>
+            {% for ag in agama %}
+                <li>{{ ag.0 | title  }}</li>
+            {% endfor %}
+            </ul>
+            <br>
+            Opsi status_kawin:
+            <ul>
+            {% for ag in status_kawin %}
+                <li>{{ ag.0 | title  }}</li>
+            {% endfor %}
+            </ul>
+            <br>
+            Opsi status_tinggal:
+            <ul>
+            {% for ag in status_tinggal %}
+                <li>{{ ag.0 | title  }}</li>
+            {% endfor %}
+            </ul>
+            <br>
+            Opsi pekerjaan:
+            <ul>
+            {% for ag in pekerjaan %}
+                <li>{{ ag.0 | title  }}</li>
+            {% endfor %}
+            </ul>
+            <br>
+            Opsi jenis_kelamin:
+            <ul>
+            {% for ag in jenis_kelamin %}
+                <li>{{ ag.0 | title  }}</li>
+            {% endfor %}
+            </ul>
+        </p>
+    </div>
+</div>
+{% endblock %}

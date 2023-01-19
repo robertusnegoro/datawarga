@@ -4,12 +4,12 @@ from django.conf import settings
 # Create your models here.
 class Warga(models.Model):
     RELIGIONS = (
-        ("islam", "ISLAM"),
-        ("kristen katholik", "KATHOLIK"),
-        ("kristen protestan", "KRISTEN"),
-        ("hindu", "HINDU"),
-        ("buddha", "BUDDHA"),
-        ("konghucu", "KONGHUCU"),
+        ("ISLAM", "ISLAM"),
+        ("KATHOLIK", "KATHOLIK"),
+        ("KRISTEN", "KRISTEN"),
+        ("HINDU", "HINDU"),
+        ("BUDDHA", "BUDDHA"),
+        ("KONGHUCU", "KONGHUCU"),
     )
     STATUS_KAWIN = (
         ("BELUM KAWIN", "BELUM KAWIN"),
@@ -38,7 +38,7 @@ class Warga(models.Model):
         ("OJEK", "OJEK"),
         ("LAINNYA", "LAINNYA"),
     )
-    JENIS_KELAMIN = (("Laki-laki", "laki-laki"), ("Perempuan", "perempuan"))
+    JENIS_KELAMIN = (("LAKI-LAKI", "LAKI-LAKI"), ("PEREMPUAN", "PEREMPUAN"))
     agama = models.CharField(max_length=50, choices=RELIGIONS, default="")
 
     email = models.EmailField(max_length=200, null=True, blank=True)

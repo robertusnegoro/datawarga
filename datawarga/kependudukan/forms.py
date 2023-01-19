@@ -1,6 +1,7 @@
 from .models import Warga, Kompleks
 from django import forms
 from django.conf import settings
+from django.core.validators import FileExtensionValidator
 
 
 class WargaForm(forms.ModelForm):
@@ -36,3 +37,10 @@ class GenerateKompleksForm(forms.Form):
     rw = forms.CharField(label="rw", max_length=4)
     start_num = forms.IntegerField(label="Nomor Awal")
     finish_num = forms.IntegerField(label="Nomor Akhir")
+
+
+class WargaCSVForm(forms.Form):
+    csv_file = forms.FileField(
+        label="CSV File",
+        validators=[FileExtensionValidator(allowed_extensions=["csv"])]
+    )
