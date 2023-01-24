@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Pindahkan Warga{% endblock %}
+{% block pagetitle %}Pindahkan Warga {% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="row">
+    <div class="col-md-12">
+        <h5>Pindahkan Warga ke Rumah Tertentu</h5>
+        <p>Halaman ini digunakan untuk memindahkan warga yang belum dimasukkan ke data kompleks/rumah manapun (None).</p>
+        
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <h6>Warga</h6>
+        <div class="input-group mb-3">
+            {% csrf_token %}
+            <input type="text" class="form-control" placeholder="Cari Nama atau NIK" aria-label="Cari Warga" aria-describedby="btn_search_warga" id="search_box_warga">
+            <button class="btn btn-outline-secondary" type="button" id="btn_search_warga"><i class="bi bi-search"></i></button>
+        </div>
+        <div id="tabel-warga">
+            
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h6>Kompleks</h6>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Cari Cluster atau Nomor" aria-label="Cari Cluster" aria-describedby="btn_search_kompleks" id="search_box_kompleks">
+            <button class="btn btn-outline-secondary" type="button" id="btn_search_kompleks"><i class="bi bi-search"></i></button>
+        </div>
+        <div id="tabel-kompleks">
+            <table class="table">
+                <tr>
+                    <td>Cluster</td>
+                    <td>Blok / No</td>
+                    <td><button type="button" class="btn btn-primary btn-sm"><i class="bi bi-arrow-right-circle-fill"></i> pindah</button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscript %}
+<script>
+    $(document).ready(function(){
+        load_warga_no_kompleks();
+        list_kompleks();
+        $("#btn_search_warga").click(function(){
+            search_warga();
+        });
+        $("#btn_search_kompleks").click(function(){
+            search_kompleks();
+        });
+    });
+
+    function load_table_warga(data){
+        var tabel_warga = "<table class=\"table table-stripped\">";
+        $.each(data, function(key, value){
+            tabel_warga += "<tr><td><input class=\"form-check-input\" name=\"warga_ids\" type=\"checkbox\"></td><td>" + value.fields.nama_lengkap + "</td><td>" + value.fields.nik + "</td></tr>";
+        });
+        return tabel_warga;
+    }
+
+    function load_table_kompleks(data){
+        var tabel_kompleks = "<table class=\"table table-stripped\">";
+        $.each(data, function(key, value){
+            tabel_kompleks += "<tr><td>" + value.fields.cluster + "</td><td>" + value.fields.blok + "/" + value.fields.nomor + "</td><td><button type=\"button\" class=\"btn btn-primary btn-sm\"><i class=\"bi bi-arrow-right-circle-fill\"></i> pindah</button></td></tr>";
+        });
+        return tabel_kompleks;
+    }
+
+    function load_warga_no_kompleks() {
+        $.getJSON("{% url 'kependudukan:listWargaNoKompleksJson' %}", function(response) {
+            var data_table_warga = load_table_warga(response.data);
+            $("#tabel-warga").html(data_table_warga);
+        });
+    }
+
+    function list_kompleks() {
+        $.getJSON("{% url 'kependudukan:listKompleksJson' %}", function(response) {
+            var data_table_kompleks = load_table_kompleks(response.data);
+            $("#tabel-kompleks").html(data_table_kompleks);
+        });
+    }
+
+    function search_warga() {
+        var warga_search_keyword = $("#search_box_warga").val();
+        var csrfmiddlewaretoken = $("input[name=csrfmiddlewaretoken]").val();
+        var data = {'warga_search_keyword': warga_search_keyword, 'csrfmiddlewaretoken': csrfmiddlewaretoken};
+        $.ajax({
+            type: "POST",
+            url: "{% url 'kependudukan:listWargaNoKompleksJson' %}",
+            data: data,
+            success: function(response) {
+                var data_table_warga = load_table_warga(response.data);
+                $("#tabel-warga").html(data_table_warga);
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
+            },
+            dataType: "json"
+        });
+    }
+
+    
+
+    function search_kompleks() {
+        var kompleks_search_keyword = $("#search_box_kompleks").val();
+        var csrfmiddlewaretoken = $("input[name=csrfmiddlewaretoken]").val();
+        var data = {'kompleks_search_keyword': kompleks_search_keyword, 'csrfmiddlewaretoken': csrfmiddlewaretoken};
+        $.ajax({
+            type: "POST",
+            url: "{% url 'kependudukan:listKompleksJson' %}",
+            data: data,
+            success: function(response) {
+                var data_table_kompleks = load_table_kompleks(response.data);
+                $("#tabel-kompleks").html(data_table_kompleks);
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
+            },
+            dataType: "json"
+        });
+    }
+    
+</script>
+
+{% endblock %}

@@ -42,5 +42,5 @@ class GenerateKompleksForm(forms.Form):
 class WargaCSVForm(forms.Form):
     csv_file = forms.FileField(
         label="CSV File",
-        validators=[FileExtensionValidator(allowed_extensions=["csv"])]
+        validators=[FileExtensionValidator(allowed_extensions=["csv"])],
     )

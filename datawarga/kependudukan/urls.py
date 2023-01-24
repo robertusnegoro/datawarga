@@ -1,47 +1,49 @@
 from django.urls import path, re_path
-from . import views, utility
+from . import utility, kompleks, warga
 from django.conf import settings
 
 app_name = "kependudukan"
 
 
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("warga/form-warga/<int:idwarga>", views.formWarga, name="formWarga"),
+    path("", warga.index, name="index"),
+    path("warga/form-warga/<int:idwarga>", warga.formWarga, name="formWarga"),
     path(
         "warga/delete-form-warga/<int:idwarga>",
-        views.deleteFormWarga,
+        warga.deleteFormWarga,
         name="deleteformWarga",
     ),
-    path("warga/form-warga-simpan", views.formWargaSimpan, name="formWargaSimpan"),
-    path("warga/list-warga-view", views.WargaListView.as_view(), name="listWargaView"),
-    path("warga/test-view", views.testView, name="testView"),
-    path("warga/data-warga-pdf", views.listWargaReport, name="dataWargaPDF"),
-    path("warga/dashboard-report", views.dashboard_warga, name="dashboardWarga"),
-    path("warga/form-kompleks", views.kompleks_form, name="kompleksForm"),
+    path("warga/form-warga-simpan", warga.formWargaSimpan, name="formWargaSimpan"),
+    path("warga/list-warga-view", warga.WargaListView.as_view(), name="listWargaView"),
+    path("warga/test-view", warga.testView, name="testView"),
+    path("warga/data-warga-pdf", warga.listWargaReport, name="dataWargaPDF"),
+    path("warga/dashboard-report", utility.dashboard_warga, name="dashboardWarga"),
+    path("warga/form-kompleks", kompleks.kompleks_form, name="kompleksForm"),
     path(
-        "warga/generate-kompleks-exec", views.generate_kompleks, name="generateKompleks"
+        "warga/generate-kompleks-exec",
+        kompleks.generate_kompleks,
+        name="generateKompleks",
     ),
     path(
         "warga/list-kompleks-view",
-        views.KompleksListView.as_view(),
+        kompleks.KompleksListView.as_view(),
         name="listKompleksView",
     ),
-    path("warga/delete-blok-form", views.delete_blok_form, name="deleteBlokForm"),
+    path("warga/delete-blok-form", kompleks.delete_blok_form, name="deleteBlokForm"),
     path(
         "warga/detail-kompleks/<int:idkompleks>",
-        views.detail_kompleks,
+        kompleks.detail_kompleks,
         name="detailKompleks",
     ),
-    path("warga/warga-rumah/<int:idkompleks>", views.warga_rumah, name="wargaRumah"),
+    path("warga/warga-rumah/<int:idkompleks>", kompleks.warga_rumah, name="wargaRumah"),
     path(
         "warga/form-warga-rumah/<int:idkompleks>",
-        views.form_warga_rumah,
+        kompleks.form_warga_rumah,
         name="formWargaRumah",
     ),
     path(
         "warga/form-delete-rumah/<int:idkompleks>",
-        views.delete_rumah_form,
+        kompleks.delete_rumah_form,
         name="deleteRumahForm",
     ),
     path(
@@ -49,12 +51,25 @@ urlpatterns = [
         utility.import_data_warga_form,
         name="utilImportWarga",
     ),
+    path(
+        "warga/utility/assign-warga-rumah",
+        utility.assign_warga_rumah,
+        name="utilAssignWargaRumah",
+    ),
+    path(
+        "warga/list-warga-no-kompleks-json",
+        warga.list_warga_no_kompleks_json,
+        name="listWargaNoKompleksJson",
+    ),
+    path(
+        "warga/list-kompleks-json", kompleks.list_kompleks_json, name="listKompleksJson"
+    ),
     re_path(
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
-        views.protected_serve,
+        warga.protected_serve,
         {"document_root": settings.MEDIA_ROOT},
     ),
 ]
 
 if settings.WG_ENV == "dev":
-    urlpatterns.append(path("generate/<int:count>", views.generate_data_warga))
+    urlpatterns.append(path("generate/<int:count>", utility.generate_data_warga))
