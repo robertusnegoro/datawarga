@@ -25,7 +25,7 @@
     <div class="col-md-6">
         <h6>Kompleks</h6>
         <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Cari Cluster atau Nomor" aria-label="Cari Cluster" aria-describedby="btn_search_kompleks" id="search_box_kompleks">
+            <input type="text" class="form-control" placeholder="Cari Cluster atau Nomor (tanpa blok)" aria-label="Cari Cluster" aria-describedby="btn_search_kompleks" id="search_box_kompleks">
             <button class="btn btn-outline-secondary" type="button" id="btn_search_kompleks"><i class="bi bi-search"></i></button>
         </div>
         <div id="tabel-kompleks">
@@ -39,6 +39,17 @@
         </div>
     </div>
 </div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">Message</strong>
+        <small>moment ago</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toast-body">
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block jscript %}
@@ -57,7 +68,7 @@
     function load_table_warga(data){
         var tabel_warga = "<table class=\"table table-stripped\">";
         $.each(data, function(key, value){
-            tabel_warga += "<tr><td><input class=\"form-check-input\" name=\"warga_ids\" type=\"checkbox\"></td><td>" + value.fields.nama_lengkap + "</td><td>" + value.fields.nik + "</td></tr>";
+            tabel_warga += "<tr><td><input class=\"form-check-input\" name=\"warga_ids[]\" type=\"checkbox\" value=\"" + value.pk + "\"></td><td>" + value.fields.nama_lengkap + "</td><td>" + value.fields.nik + "</td></tr>";
         });
         return tabel_warga;
     }
@@ -65,7 +76,7 @@
     function load_table_kompleks(data){
         var tabel_kompleks = "<table class=\"table table-stripped\">";
         $.each(data, function(key, value){
-            tabel_kompleks += "<tr><td>" + value.fields.cluster + "</td><td>" + value.fields.blok + "/" + value.fields.nomor + "</td><td><button type=\"button\" class=\"btn btn-primary btn-sm\"><i class=\"bi bi-arrow-right-circle-fill\"></i> pindah</button></td></tr>";
+            tabel_kompleks += "<tr><td>" + value.fields.cluster + "</td><td>" + value.fields.blok + "/" + value.fields.nomor + "</td><td><button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"pindah_exec('"+value.pk+"')\"><i class=\"bi bi-arrow-right-circle-fill\"></i> pindah</button></td></tr>";
         });
         return tabel_kompleks;
     }
@@ -103,8 +114,6 @@
         });
     }
 
-    
-
     function search_kompleks() {
         var kompleks_search_keyword = $("#search_box_kompleks").val();
         var csrfmiddlewaretoken = $("input[name=csrfmiddlewaretoken]").val();
@@ -122,6 +131,38 @@
             },
             dataType: "json"
         });
+    }
+
+    function pindah_exec(idkompleks){
+        var warga_ids = $("input[name='warga_ids[]']:checked").map(function(){
+            return $(this).val();
+        }).get();
+        var csrfmiddlewaretoken = $("input[name=csrfmiddlewaretoken]").val();
+       
+        var data = {'warga_ids': warga_ids, 'csrfmiddlewaretoken': csrfmiddlewaretoken, 'idkompleks': idkompleks}
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'kependudukan:utilAssignWargaRumahExec' %}",
+            data: data,
+            success: function(response) {
+                console.log(response);
+                load_warga_no_kompleks();
+                const toastTrigger = document.getElementById('liveToastBtn')
+                const toastLiveExample = document.getElementById('liveToast')
+                
+                
+                const toast = new bootstrap.Toast(toastLiveExample);
+                $("#toast-body").html(response.message);
+                toast.show();
+                
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
+            },
+            dataType: "json"
+        });
+        
     }
     
 </script>

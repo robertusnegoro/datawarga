@@ -239,15 +239,16 @@ def delete_rumah_form(request, idkompleks):
         request=request, template_name="delete_form_rumah.html", context=context
     )
 
+
 @login_required
 def list_kompleks_json(request):
-    data_kompleks = Kompleks.objects.order_by('id')
+    data_kompleks = Kompleks.objects.order_by("id")
     if request.POST:
         search_keyword = str(request.POST["kompleks_search_keyword"])
 
         data_kompleks = data_kompleks.filter(
             Q(cluster__icontains=search_keyword) | Q(nomor=search_keyword)
         )
-    
+
     data = serializers.serialize("json", data_kompleks)
     return JsonResponse({"data": json.loads(data)})

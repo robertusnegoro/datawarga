@@ -64,6 +64,11 @@ urlpatterns = [
     path(
         "warga/list-kompleks-json", kompleks.list_kompleks_json, name="listKompleksJson"
     ),
+    path(
+        "warga/utility/assign-warga-rumah-exec",
+        utility.assign_warga_rumah_exec,
+        name="utilAssignWargaRumahExec",
+    ),
     re_path(
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
         warga.protected_serve,

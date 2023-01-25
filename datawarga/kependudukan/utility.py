@@ -137,3 +137,21 @@ def import_data_warga_form(request):
 @login_required
 def assign_warga_rumah(request):
     return render(request=request, template_name="form_assign_warga_rumah.html")
+
+
+@login_required
+def assign_warga_rumah_exec(request):
+    if request.POST:
+        list_warga_ids = request.POST.getlist("warga_ids[]")
+        idkompleks = request.POST["idkompleks"]
+
+        data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
+
+        for w in list_warga_ids:
+            data_warga = Warga.objects.get(pk=w)
+            data_warga.kompleks = data_kompleks
+            data_warga.save()
+            logger.info("Data warga %s telah diassign ke rumah %s" % (w, idkompleks))
+
+        return JsonResponse({"status": 'ok', 'message': 'data warga berhasil di-assign ke rumah'})
+    return Http404
