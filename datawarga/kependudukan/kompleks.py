@@ -80,7 +80,7 @@ def generate_kompleks(request):
                     provinsi=provinsi,
                     kode_pos=kode_pos,
                 )
-                logger.info("%s, %s, %s is saved to db" % (cluster, blok, total_num))
+                logger.info("%s, %s, %s is saved to db" % (cluster, blok, counter))
                 counter += 1
             base_url = reverse("kependudukan:listKompleksView")
             payload = urlencode(

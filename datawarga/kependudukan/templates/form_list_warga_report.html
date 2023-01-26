@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Generate Laporan Daftar Warga{% endblock %}
+{% block pagetitle %}Generate Laporan Daftar Warga{% endblock %}
+{% block content %}
+<div class="col-lg-8 border-bottom">
+    <div class="py-2">
+        
+        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:utilImportWarga' %}">
+            {% csrf_token %}
+
+            
+            
+            <br>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-right"></i> Generate</button>
+        </form>
+        
+    </div>
+</div>
+{% endblock %}

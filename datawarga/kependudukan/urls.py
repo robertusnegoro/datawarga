@@ -17,6 +17,7 @@ urlpatterns = [
     path("warga/list-warga-view", warga.WargaListView.as_view(), name="listWargaView"),
     path("warga/test-view", warga.testView, name="testView"),
     path("warga/data-warga-pdf", warga.listWargaReport, name="dataWargaPDF"),
+    path("warga/form-warga-report", warga.listWargaReportForm, name="formWargaReport"),
     path("warga/dashboard-report", utility.dashboard_warga, name="dashboardWarga"),
     path("warga/form-kompleks", kompleks.kompleks_form, name="kompleksForm"),
     path(

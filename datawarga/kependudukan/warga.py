@@ -118,6 +118,10 @@ def testView(request):
 
 
 @login_required
+def listWargaReportForm(request):
+    return render(request=request, template_name="form_list_warga_report.html")
+
+@login_required
 def listWargaReport(request):
     dataWarga = Warga.objects.all()
     report_data = {"data": dataWarga}
