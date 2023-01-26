@@ -1,6 +1,6 @@
 from django.test import TestCase
-from .models import Warga
-from .forms import WargaForm
+from ..models import Warga, Kompleks
+from ..forms import WargaForm
 from django.contrib.auth.models import User
 from datetime import datetime
 from django.test import Client
@@ -13,15 +13,26 @@ import string
 
 class WargaTestCase(TestCase):
     def setUp(self):
-        self.test_nama_lengkap = "TestCase1"
-        self.test_nik = "nik_test_case1"
         self.test_user = "testuser"
         self.test_pass = "".join(random.choices(string.ascii_lowercase, k=25))
         self.user = User.objects.create_user(
             username=self.test_user, password=self.test_pass, is_staff=True
         )
-        self.existing_user = Warga.objects.create(
-            nama_lengkap=self.test_nama_lengkap, nik=self.test_nik
+
+        self.existing_kompleks = Kompleks.objects.create(
+            alamat = "fake address",
+            cluster = "fake cluster",
+            blok = "J2",
+            nomor = "5",
+            rt = "001",
+            rw = "002"
+        )
+
+        self.test_nama_lengkap = "TestCase1"
+        self.test_nik = "nik_test_case1"
+        self.existing_warga = Warga.objects.create(
+            nama_lengkap=self.test_nama_lengkap, nik=self.test_nik,
+            kompleks=self.existing_kompleks
         )
 
     def test_select_warga(self):
@@ -32,7 +43,7 @@ class WargaTestCase(TestCase):
         form_data = {
             "nama_lengkap": "test nama",
             "nik": "123123123",
-            "agama": "islam",
+            "agama": "ISLAM",
             "no_hp": "08123456789",
             "alamat": "jalan alamat",
             "kecamatan": "Setu",
@@ -42,8 +53,9 @@ class WargaTestCase(TestCase):
             "pekerjaan": "PNS",
             "tanggal_lahir": "1990-01-01",
             "status": "BELUM KAWIN",
-            "jenis_kelamin": "Perempuan",
+            "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
+            "kompleks": self.existing_kompleks.id
         }
         form = WargaForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -79,7 +91,8 @@ class WargaTestCase(TestCase):
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
         response = client.get(reverse("kependudukan:index"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("kependudukan:dashboardWarga"))
 
     def test_index(self):
         client = Client()
@@ -98,7 +111,7 @@ class WargaTestCase(TestCase):
         form_data = {
             "nama_lengkap": "test case",
             "nik": "000000000",
-            "agama": "buddha",
+            "agama": "BUDDHA",
             "no_hp": "08123456789",
             "alamat": "jalan alamat",
             "kecamatan": "Setu",
@@ -108,8 +121,9 @@ class WargaTestCase(TestCase):
             "pekerjaan": "PNS",
             "tanggal_lahir": "1990-01-01",
             "status": "BELUM KAWIN",
-            "jenis_kelamin": "Perempuan",
+            "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
+            "kompleks": self.existing_kompleks.id
         }
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)
@@ -120,10 +134,10 @@ class WargaTestCase(TestCase):
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
         form_data = {
-            "idwarga": self.existing_user.id,
+            "idwarga": self.existing_warga.id,
             "nama_lengkap": self.test_nama_lengkap,
             "nik": self.test_nik,
-            "agama": "buddha",
+            "agama": "ISLAM",
             "no_hp": "089876543",
             "alamat": "jalan alamat",
             "kecamatan": "Setu",
@@ -133,8 +147,9 @@ class WargaTestCase(TestCase):
             "pekerjaan": "PNS",
             "tanggal_lahir": "1990-01-01",
             "status": "BELUM KAWIN",
-            "jenis_kelamin": "Perempuan",
+            "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
+            "kompleks": self.existing_kompleks.id
         }
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)
