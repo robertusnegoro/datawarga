@@ -8,7 +8,19 @@
         
         <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:utilImportWarga' %}">
             {% csrf_token %}
-
+            <div class="mb-3">
+                <label for="cluster" class="form-label">Cluster</label>
+                <select class="form-select" aria-label="Pilih Cluster" id="cluster" name="cluster">
+                    <option value="all">* semua cluster *</option>
+                    {% for c in list_cluster %}
+                    <option value="{{ c.cluster }}">{{ c.cluster }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="rt" class="form-label">RT</label>
+                <input type="text" class="form-control" id="rt" name="rt" maxlength="150" value="" placeholder="kosongkan untuk semua RT">
+            </div>
             
             
             <br>

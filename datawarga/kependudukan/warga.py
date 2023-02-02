@@ -119,7 +119,9 @@ def testView(request):
 
 @login_required
 def listWargaReportForm(request):
-    return render(request=request, template_name="form_list_warga_report.html")
+    list_cluster = Kompleks.objects.order_by().values('cluster').distinct()
+    context = {'list_cluster': list_cluster}
+    return render(request=request, template_name="form_list_warga_report.html", context=context)
 
 @login_required
 def listWargaReport(request):
