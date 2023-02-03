@@ -6,7 +6,7 @@
 <div class="col-lg-8 border-bottom">
     <div class="py-2">
         
-        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:utilImportWarga' %}">
+        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:pdfWargaReport' %}">
             {% csrf_token %}
             <div class="mb-3">
                 <label for="cluster" class="form-label">Cluster</label>

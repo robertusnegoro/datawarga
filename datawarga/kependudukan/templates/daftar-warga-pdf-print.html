@@ -1,0 +1,93 @@
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Roboto|Playfair+Display:400,400i,700,700i,900" rel="stylesheet" />
+        <style>
+            @page {
+                size: A3 landscape;
+                @bottom-right{
+                    content: "Halaman " counter(page) " dari " counter(pages);
+                }
+            }
+            html {
+                font-family: "Playfair Display";
+                font-size: 10pt;
+            }
+            div.report-title {
+                font-weight: bold;
+                text-align: center;
+                font-size: 16px;
+            }
+            div.report-subtitle {
+                font-weight: bold;
+                text-align: center;
+                font-size: 14px;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            th, td {
+                text-align: left;
+                padding: 8px;
+            }
+
+            tr:nth-child(even){background-color: #f2f2f2}
+
+            th {
+                background-color: #4f504f;
+                color: white;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="report-title">Daftar Warga</div>
+        <div class="report-subtitle">
+            {{ alamat }}. RW {{ rw }}.<br>Kel. {{ kelurahan }}. Kec. {{ kecamatan }}. {{ kota }} - {{ provinsi }}
+        </div>
+        <div class="report-filter">
+            {% if filter.cluster %}Cluster: {{ filter.cluster }} <br>{% endif %} 
+            {% if filter.rt %}RT: {{ filter.rt }} {% endif %}
+        </div>
+        <hr>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Lengkap</th>
+                    <th>NIK</th>
+                    <th>KK</th>
+                    <th>Blok / No. Rumah</th>
+                    <th>RT / RW</th>
+                    <th>TTL</th>
+                    <th>No HP</th>
+                    <th>Jenis Kelamin</th>
+                    <th>Status Tinggal</th>
+                    <th>Status</th>
+                    <th>Agama</th>
+                    <th>Pekerjaan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for warga in data %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ warga.nama_lengkap }}</td>
+                    <td>{{ warga.nik }}</td>
+                    <td>{{ warga.no_kk }}</td>
+                    <td>{{ warga.kompleks }}</td>
+                    <td>{{ warga.kompleks.rt }} / {{ warga.kompleks.rw }}</td>
+                    <td>{{ warga.tempat_lahir }} / {{ warga.tanggal_lahir }}</td>
+                    <td>{{ warga.no_hp }}</td>
+                    <td>{{ warga.jenis_kelamin | upper }}</td>
+                    <td>{{ warga.status_tinggal }}</td>
+                    <td>{{ warga.status }}</td>
+                    <td>{{ warga.agama | upper }}</td>
+                    <td>{{ warga.pekerjaan }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>
