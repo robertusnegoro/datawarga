@@ -118,6 +118,40 @@ def testView(request):
 
 
 @login_required
+def listWargaReportForm(request):
+    list_cluster = Kompleks.objects.order_by().values('cluster').distinct()
+    context = {'list_cluster': list_cluster}
+    return render(request=request, template_name="form_list_warga_report.html", context=context)
+
+@login_required
+def pdfWargaReport(request):
+    dataWarga = Warga.objects.all()
+    report_data = {'filter': {}}
+    if request.POST:
+        cluster = str(request.POST["cluster"])
+        rukuntangga = str(request.POST["rt"])
+        if cluster != "all":
+            dataWarga = dataWarga.filter(kompleks__cluster=cluster)
+            report_data['filter']['cluster'] = cluster
+        if len(rukuntangga) > 0:
+            dataWarga = dataWarga.filter(kompleks__rt=rukuntangga)
+            report_data['filter']['rt'] = rukuntangga
+    report_data['data'] = dataWarga
+    report_data["rw"] = settings.RUKUNWARGA
+    report_data["alamat"] = settings.ALAMAT
+    report_data["kelurahan"] = settings.KELURAHAN
+    report_data["kecamatan"] = settings.KECAMATAN
+    report_data["kota"] = settings.KOTA
+    report_data["provinsi"] = settings.PROVINSI
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "inline; filename=daftar-warga.pdf"
+    html = render_to_string("daftar-warga-pdf-print.html", report_data)
+    font_config = FontConfiguration()
+    HTML(string=html).write_pdf(response, font_config=font_config)
+    return response
+        
+
+@login_required
 def listWargaReport(request):
     dataWarga = Warga.objects.all()
     report_data = {"data": dataWarga}
