@@ -69,7 +69,7 @@ def formWargaSimpan(request):
 class WargaListView(ListView):
     paginate_by = 50
     template_name = "list_warga_view.html"
-    queryset = Warga.objects.order_by("-id")
+    queryset = Warga.objects.order_by('kompleks__blok', 'kompleks__nomor')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -125,7 +125,7 @@ def listWargaReportForm(request):
 
 @login_required
 def pdfWargaReport(request):
-    dataWarga = Warga.objects.all()
+    dataWarga = Warga.objects.all().order_by('kompleks__blok', 'kompleks__nomor')
     report_data = {'filter': {}}
     if request.POST:
         cluster = str(request.POST["cluster"])
@@ -146,25 +146,6 @@ def pdfWargaReport(request):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = "inline; filename=daftar-warga.pdf"
     html = render_to_string("daftar-warga-pdf-print.html", report_data)
-    font_config = FontConfiguration()
-    HTML(string=html).write_pdf(response, font_config=font_config)
-    return response
-        
-
-@login_required
-def listWargaReport(request):
-    dataWarga = Warga.objects.all()
-    report_data = {"data": dataWarga}
-    report_data["alamat"] = settings.ALAMAT
-    report_data["rt"] = settings.RUKUNTANGGA
-    report_data["rw"] = settings.RUKUNWARGA
-    report_data["kelurahan"] = settings.KELURAHAN
-    report_data["kecamatan"] = settings.KECAMATAN
-    report_data["kota"] = settings.KOTA
-    report_data["provinsi"] = settings.PROVINSI
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = "inline; filename=daftar-warga.pdf"
-    html = render_to_string("daftar-warga-pdf.html", report_data)
     font_config = FontConfiguration()
     HTML(string=html).write_pdf(response, font_config=font_config)
     return response

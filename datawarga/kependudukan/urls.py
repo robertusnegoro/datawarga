@@ -16,7 +16,6 @@ urlpatterns = [
     path("warga/form-warga-simpan", warga.formWargaSimpan, name="formWargaSimpan"),
     path("warga/list-warga-view", warga.WargaListView.as_view(), name="listWargaView"),
     path("warga/test-view", warga.testView, name="testView"),
-    path("warga/data-warga-pdf", warga.listWargaReport, name="dataWargaPDF"),
     path("warga/form-warga-report", warga.listWargaReportForm, name="formWargaReport"),
     path("warga/data-warga-pdf-print", warga.pdfWargaReport, name="pdfWargaReport"),
     path("warga/dashboard-report", utility.dashboard_warga, name="dashboardWarga"),
