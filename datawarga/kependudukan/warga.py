@@ -69,7 +69,7 @@ def formWargaSimpan(request):
 class WargaListView(ListView):
     paginate_by = 50
     template_name = "list_warga_view.html"
-    queryset = Warga.objects.order_by('kompleks__blok', 'kompleks__nomor')
+    queryset = Warga.objects.order_by("kompleks__blok", "kompleks__nomor")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -119,24 +119,27 @@ def testView(request):
 
 @login_required
 def listWargaReportForm(request):
-    list_cluster = Kompleks.objects.order_by().values('cluster').distinct()
-    context = {'list_cluster': list_cluster}
-    return render(request=request, template_name="form_list_warga_report.html", context=context)
+    list_cluster = Kompleks.objects.order_by().values("cluster").distinct()
+    context = {"list_cluster": list_cluster}
+    return render(
+        request=request, template_name="form_list_warga_report.html", context=context
+    )
+
 
 @login_required
 def pdfWargaReport(request):
-    dataWarga = Warga.objects.all().order_by('kompleks__blok', 'kompleks__nomor')
-    report_data = {'filter': {}}
+    dataWarga = Warga.objects.all().order_by("kompleks__blok", "kompleks__nomor")
+    report_data = {"filter": {}}
     if request.POST:
         cluster = str(request.POST["cluster"])
         rukuntangga = str(request.POST["rt"])
         if cluster != "all":
             dataWarga = dataWarga.filter(kompleks__cluster=cluster)
-            report_data['filter']['cluster'] = cluster
+            report_data["filter"]["cluster"] = cluster
         if len(rukuntangga) > 0:
             dataWarga = dataWarga.filter(kompleks__rt=rukuntangga)
-            report_data['filter']['rt'] = rukuntangga
-    report_data['data'] = dataWarga
+            report_data["filter"]["rt"] = rukuntangga
+    report_data["data"] = dataWarga
     report_data["rw"] = settings.RUKUNWARGA
     report_data["alamat"] = settings.ALAMAT
     report_data["kelurahan"] = settings.KELURAHAN

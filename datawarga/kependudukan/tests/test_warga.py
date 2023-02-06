@@ -20,19 +20,20 @@ class WargaTestCase(TestCase):
         )
 
         self.existing_kompleks = Kompleks.objects.create(
-            alamat = "fake address",
-            cluster = "fake cluster",
-            blok = "J2",
-            nomor = "5",
-            rt = "001",
-            rw = "002"
+            alamat="fake address",
+            cluster="fake cluster",
+            blok="J2",
+            nomor="5",
+            rt="001",
+            rw="002",
         )
 
         self.test_nama_lengkap = "TestCase1"
         self.test_nik = "nik_test_case1"
         self.existing_warga = Warga.objects.create(
-            nama_lengkap=self.test_nama_lengkap, nik=self.test_nik,
-            kompleks=self.existing_kompleks
+            nama_lengkap=self.test_nama_lengkap,
+            nik=self.test_nik,
+            kompleks=self.existing_kompleks,
         )
 
     def test_select_warga(self):
@@ -55,7 +56,7 @@ class WargaTestCase(TestCase):
             "status": "BELUM KAWIN",
             "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
-            "kompleks": self.existing_kompleks.id
+            "kompleks": self.existing_kompleks.id,
         }
         form = WargaForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -123,7 +124,7 @@ class WargaTestCase(TestCase):
             "status": "BELUM KAWIN",
             "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
-            "kompleks": self.existing_kompleks.id
+            "kompleks": self.existing_kompleks.id,
         }
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)
@@ -149,7 +150,7 @@ class WargaTestCase(TestCase):
             "status": "BELUM KAWIN",
             "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
-            "kompleks": self.existing_kompleks.id
+            "kompleks": self.existing_kompleks.id,
         }
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)

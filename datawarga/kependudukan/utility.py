@@ -3,7 +3,7 @@ from .models import Warga, Kompleks
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse, Http404, JsonResponse, FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -32,12 +32,21 @@ def dashboard_warga(request):
             Warga.objects.filter(status_tinggal=status_tinggal[0]).count()
         )
 
+    warga_per_cluster = (
+        Kompleks.objects.all().values("cluster").annotate(num_warga=Count("warga"))
+    )
+
+    legend_cluster = [x["cluster"] for x in warga_per_cluster]
+    data_cluster = [x["num_warga"] for x in warga_per_cluster]
+
     context = {
         "legend_agama": [agama[0] for agama in Warga.RELIGIONS],
         "legend_jenkel": [jk[0] for jk in Warga.JENIS_KELAMIN],
         "legend_status_tinggal": [
             status_tinggal[0] for status_tinggal in Warga.STATUS_TINGGAL
         ],
+        "legend_cluster": legend_cluster,
+        "data_cluster": data_cluster,
         "data_jenkel": [jenkel_laki, jenkel_perempuan],
         "data_agama": data_agama,
         "data_status_tinggal": data_status_tinggal,
@@ -153,5 +162,7 @@ def assign_warga_rumah_exec(request):
             data_warga.save()
             logger.info("Data warga %s telah diassign ke rumah %s" % (w, idkompleks))
 
-        return JsonResponse({"status": 'ok', 'message': 'data warga berhasil di-assign ke rumah'})
+        return JsonResponse(
+            {"status": "ok", "message": "data warga berhasil di-assign ke rumah"}
+        )
     return Http404

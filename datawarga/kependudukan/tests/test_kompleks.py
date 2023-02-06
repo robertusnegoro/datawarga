@@ -8,6 +8,7 @@ from django.urls import reverse
 import random
 import string
 
+
 class KompleksTestCase(TestCase):
     def setUp(self):
         self.test_user = "testuser"
@@ -17,21 +18,21 @@ class KompleksTestCase(TestCase):
         )
 
         self.existing_kompleks = Kompleks.objects.create(
-            alamat = "fake address",
-            cluster = "fake cluster",
-            blok = "J2",
-            nomor = "5",
-            rt = "001",
-            rw = "002"
+            alamat="fake address",
+            cluster="fake cluster",
+            blok="J2",
+            nomor="5",
+            rt="001",
+            rw="002",
         )
-    
+
     def test_generate_kompleks_form(self):
         form_data = {
             "alamat": "Fake alamat",
             "kecamatan": "test kecamatan",
             "kelurahan": "test kelurahan",
             "kota": "test kota",
-            "provinsi" : "props",
+            "provinsi": "props",
             "kode_pos": "123122",
             "cluster": "test cluster",
             "blok": "A",
@@ -39,7 +40,7 @@ class KompleksTestCase(TestCase):
             "rt": "001",
             "rw": "003",
             "start_num": 5,
-            "finish_num": 10
+            "finish_num": 10,
         }
 
         form = GenerateKompleksForm(data=form_data)
@@ -53,7 +54,7 @@ class KompleksTestCase(TestCase):
             "kecamatan": "test kecamatan",
             "kelurahan": "test kelurahan",
             "kota": "test kota",
-            "provinsi" : "props",
+            "provinsi": "props",
             "kode_pos": "123122",
             "cluster": "test cluster",
             "blok": "A",
@@ -61,7 +62,7 @@ class KompleksTestCase(TestCase):
             "rt": "001",
             "rw": "003",
             "start_num": 5,
-            "finish_num": 10
+            "finish_num": 10,
         }
         response = client.post(reverse("kependudukan:generateKompleks"), data=form_data)
         self.assertEqual(response.status_code, 302)

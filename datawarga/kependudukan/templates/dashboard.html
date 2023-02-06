@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card text-center text-white bg-primary mb-3">
             <div class="card-header">Total Data Warga</div>
             <div class="card-body">
@@ -36,6 +36,17 @@
             <div class="card-header">Status Tinggal</div>
             <div class="card-body">
                 <canvas id="status-tinggal-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center mb-3">
+            <div class="card-header">Warga Per Cluster</div>
+            <div class="card-body">
+                <canvas id="cluster-chart" class="chart-canvas" height="300px"></canvas>
             </div>
         </div>
     </div>
@@ -124,6 +135,33 @@
     
     var ctx = document.getElementById("status-tinggal-chart").getContext('2d');
     new Chart(ctx, config_status_tinggal);
+
+    const data_cluster = {
+        labels: {{ legend_cluster | safe }},
+        datasets: [
+            {
+                data: {{ data_cluster | safe }},
+                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
+            }
+        ]
+    };
+
+    const config_cluster = {
+        type: 'pie',
+        data: data_cluster,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    
+    var ctx = document.getElementById("cluster-chart").getContext('2d');
+    new Chart(ctx, config_cluster);
 
     
 </script>
