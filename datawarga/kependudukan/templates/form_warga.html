@@ -2,57 +2,78 @@
 {% block title %}Data Warga{% endblock %}
 {% block pagetitle %}Data Warga{% endblock %}
 {% block content %}
-{% load crispy_forms_tags %}  
-<div class="col-lg-8 border-bottom">
-    <div class="py-2">
-        {% if idkompleks > 0 %}
-        <div class="alert alert-primary" role="alert">
-            <p>Tambah warga penghuni <b>blok {{ data_kompleks.blok }} / No. {{ data_kompleks.nomor }}</b></p>
-        </div>
-        
-        {% endif %}
-        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:formWargaSimpan' %}">
-            {% csrf_token %}
-
-            
-            {{ form.nik | as_crispy_field }}
-            {{ form.no_kk | as_crispy_field }}
-            {{ form.nama_lengkap | as_crispy_field }}
-
-            {{ form.jenis_kelamin | as_crispy_field }}
-            {{ form.agama | as_crispy_field }}
-
-            {{ form.no_hp | as_crispy_field }}
-            {{ form.tanggal_lahir | as_crispy_field }}
-            {{ form.tempat_lahir | as_crispy_field }}
-
-            {% if idkompleks == 0 %}
-            {{ form.kompleks | as_crispy_field }}
-            {% endif %}
-
-            {{ form.alamat_ktp | as_crispy_field }}
-
-            {{ form.status_tinggal | as_crispy_field }}
-
-            {{ form.pekerjaan | as_crispy_field }}
-            {{ form.status | as_crispy_field }}
-            {{ form.kewarganegaraan | as_crispy_field }}
-
-            {{ form.email | as_crispy_field }}
-            {{ form.foto_path | as_crispy_field }}
-
-            {% if idwarga > 0 %}
-            <input type="hidden" id="idwarga" name="idwarga" value="{{ idwarga }}" >
-            {% endif %}
+{% load crispy_forms_tags %}
+{% load static %}
+<div class="row">
+    <div class="col-lg-8 border-bottom">
+        <div class="py-2">
             {% if idkompleks > 0 %}
-            <input type="hidden" name="kompleks" id="id_kompleks" value="{{ idkompleks }}" >
-            <input type="hidden" name="idkompleks" id="idkompleks" value="{{ idkompleks }}" >
+            <div class="alert alert-primary" role="alert">
+                <p>Tambah warga penghuni <b>blok {{ data_kompleks.blok }} / No. {{ data_kompleks.nomor }}</b></p>
+            </div>
+            
             {% endif %}
-
-            <hr>
-
-            <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
-        </form>
+            <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:formWargaSimpan' %}">
+                {% csrf_token %}
+    
+                
+                {{ form.nik | as_crispy_field }}
+                {{ form.no_kk | as_crispy_field }}
+                {{ form.nama_lengkap | as_crispy_field }}
+    
+                {{ form.jenis_kelamin | as_crispy_field }}
+                {{ form.agama | as_crispy_field }}
+    
+                {{ form.no_hp | as_crispy_field }}
+                {{ form.tanggal_lahir | as_crispy_field }}
+                {{ form.tempat_lahir | as_crispy_field }}
+    
+                {% if idkompleks == 0 %}
+                {{ form.kompleks | as_crispy_field }}
+                {% endif %}
+    
+                {{ form.alamat_ktp | as_crispy_field }}
+    
+                {{ form.status_tinggal | as_crispy_field }}
+    
+                {{ form.pekerjaan | as_crispy_field }}
+                {{ form.status | as_crispy_field }}
+                {{ form.kewarganegaraan | as_crispy_field }}
+    
+                {{ form.email | as_crispy_field }}
+                {{ form.foto_path | as_crispy_field }}
+    
+                {% if idwarga > 0 %}
+                <input type="hidden" id="idwarga" name="idwarga" value="{{ idwarga }}" >
+                {% endif %}
+                {% if idkompleks > 0 %}
+                <input type="hidden" name="kompleks" id="id_kompleks" value="{{ idkompleks }}" >
+                <input type="hidden" name="idkompleks" id="idkompleks" value="{{ idkompleks }}" >
+                {% endif %}
+    
+                <hr>
+    
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h5 class="my-3">Foto</h5>
+                <img src="
+                    {% if datawarga.foto_path %}
+                        /media/{{ datawarga.foto_path }}
+                    
+                    {% else %}
+                    {% static 'no-photo.png' %}
+                {% endif %}" alt="avatar"
+                class="rounded img-fluid" style="width: 150px;">
+                <p class="text-muted mb-1">{{ datawarga.nama_lengkap }}</p>
+                <p class="text-muted mb-4">{{ datawarga.kompleks }}</p>
+            </div>
+        </div>
     </div>
 </div>
+
 {% endblock %}

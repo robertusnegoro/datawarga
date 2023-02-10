@@ -30,7 +30,10 @@ def formWarga(request, idwarga=0, idkompleks=0):
     context = {"idkompleks": int(idkompleks)}
     if idkompleks > 0:
         if idwarga > 0:
-            url_redir = reverse("kependudukan:formWargaRumah", kwargs={"idwarga": 0, "idkompleks": idkompleks})
+            url_redir = reverse(
+                "kependudukan:formWargaRumah",
+                kwargs={"idwarga": 0, "idkompleks": idkompleks},
+            )
             return redirect(url_redir)
         data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
         context["data_kompleks"] = data_kompleks
@@ -39,6 +42,7 @@ def formWarga(request, idwarga=0, idkompleks=0):
         form = WargaForm()
     else:
         warga_record = get_object_or_404(Warga, pk=idwarga)
+        context["datawarga"] = warga_record
         form = WargaForm(instance=warga_record)
 
     context["form"] = form
@@ -72,7 +76,8 @@ def formWargaSimpan(request):
 
             if "idkompleks" in request.POST:
                 base_url = reverse(
-                    "kependudukan:detailKompleks", kwargs={"idkompleks": int(request.POST["idkompleks"])}
+                    "kependudukan:detailKompleks",
+                    kwargs={"idkompleks": int(request.POST["idkompleks"])},
                 )
                 payload = urlencode({"message": "data saved!"})
                 url_redir = "{}?{}".format(base_url, payload)

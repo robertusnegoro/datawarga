@@ -24,3 +24,4 @@ tomli==2.0.1
 weasyprint==57.1
 webencodings==0.5.1
 zopfli==0.2.2
+django-cleanup==6.0.0
