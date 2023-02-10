@@ -67,7 +67,7 @@
             <h5>Data Warga Penghuni</h5>
             <p>Berikut ini adalah daftar warga penghuni blok {{ data.blok }} / No. {{ data.nomor }}</p>
             <p>
-                <a href="{% url 'kependudukan:formWargaRumah' data.id %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Tambah Warga Baru</a> 
+                <a href="{% url 'kependudukan:formWargaRumah' 0 data.id %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Tambah Warga Baru</a> 
             </p>
             <div id="tabelwarga"></div>
         </div>

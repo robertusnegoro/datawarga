@@ -26,17 +26,29 @@ def index(request):
 
 
 @login_required
-def formWarga(request, idwarga=0):
+def formWarga(request, idwarga=0, idkompleks=0):
+    context = {"idkompleks": int(idkompleks)}
+    if idkompleks > 0:
+        if idwarga > 0:
+            url_redir = reverse("kependudukan:formWargaRumah", kwargs={"idwarga": 0, "idkompleks": idkompleks})
+            return redirect(url_redir)
+        data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
+        context["data_kompleks"] = data_kompleks
+
     if idwarga == 0:
         form = WargaForm()
     else:
         warga_record = get_object_or_404(Warga, pk=idwarga)
         form = WargaForm(instance=warga_record)
+
+    context["form"] = form
+    context["idwarga"] = int(idwarga)
+
     logger.info("Form warga empty loaded")
     return render(
         request=request,
         template_name="form_warga.html",
-        context={"form": form, "idwarga": int(idwarga)},
+        context=context,
     )
 
 
@@ -57,6 +69,14 @@ def formWargaSimpan(request):
             base_url = reverse("kependudukan:listWargaView")
             payload = urlencode({"message": "data saved!"})
             url_redir = "{}?{}".format(base_url, payload)
+
+            if "idkompleks" in request.POST:
+                base_url = reverse(
+                    "kependudukan:detailKompleks", kwargs={"idkompleks": int(request.POST["idkompleks"])}
+                )
+                payload = urlencode({"message": "data saved!"})
+                url_redir = "{}?{}".format(base_url, payload)
+
             return redirect(url_redir)
         else:
             logger.info(form.errors)

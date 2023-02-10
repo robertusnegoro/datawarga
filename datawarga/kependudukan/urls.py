@@ -9,6 +9,11 @@ urlpatterns = [
     path("", warga.index, name="index"),
     path("warga/form-warga/<int:idwarga>", warga.formWarga, name="formWarga"),
     path(
+        "warga/form-warga/<int:idwarga>/<int:idkompleks>",
+        warga.formWarga,
+        name="formWargaRumah",
+    ),
+    path(
         "warga/delete-form-warga/<int:idwarga>",
         warga.deleteFormWarga,
         name="deleteformWarga",
@@ -37,11 +42,6 @@ urlpatterns = [
         name="detailKompleks",
     ),
     path("warga/warga-rumah/<int:idkompleks>", kompleks.warga_rumah, name="wargaRumah"),
-    path(
-        "warga/form-warga-rumah/<int:idkompleks>",
-        kompleks.form_warga_rumah,
-        name="formWargaRumah",
-    ),
     path(
         "warga/form-delete-rumah/<int:idkompleks>",
         kompleks.delete_rumah_form,
