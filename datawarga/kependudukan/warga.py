@@ -98,6 +98,8 @@ class WargaListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        list_cluster = Kompleks.objects.order_by().values("cluster").distinct()
+        context['daftar_cluster'] = list_cluster
         if "message" in self.request.GET:
             context["message"] = self.request.GET["message"]
         return context
@@ -111,6 +113,9 @@ class WargaListView(ListView):
                 Q(nama_lengkap__icontains=search_keyword)
                 | Q(nik__icontains=search_keyword)
             )
+        if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
+            cluster = str(self.request.GET["cluster"])
+            queryset = queryset.filter(kompleks__cluster__icontains=cluster)
         return queryset
 
 

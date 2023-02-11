@@ -15,6 +15,14 @@
         <input name="search" type="text" class="form-control" id="search">
     </div> 
     <div class="col-auto">
+        <select class="form-select" aria-label="Pilih Cluster" id="cluster" name="cluster">
+            <option value="all">* semua cluster *</option>
+            {% for c in daftar_cluster %}
+            <option value="{{ c.cluster }}">{{ c.cluster }}</option>
+            {% endfor %}
+        </select>
+    </div> 
+    <div class="col-auto">
         <button type="submit" id="submitBtn" class="btn btn-info">Cari</button>
     </div>
     
@@ -26,6 +34,7 @@
             <th>NIK / KK</th>
             <th>No HP</th>
             <th>Alamat</th>
+            <th>Cluster</th>
             <th>Blok / No</th>
             <th>Opsi</th>
         </tr>
@@ -37,6 +46,7 @@
         <td>{{ w.nik }} / {{ w.no_kk }}</td>
         <td>{{ w.no_hp }}</td>
         <td>{{ w.alamat }}</td>
+        <td>{{ w.kompleks.cluster }}</td>
         <td>{{ w.kompleks }}</td>
         <td><a class="btn btn-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}"> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href="{% url 'kependudukan:deleteformWarga' w.id %}"><i class="bi bi-trash"></i> </a></td>
     </tr>
