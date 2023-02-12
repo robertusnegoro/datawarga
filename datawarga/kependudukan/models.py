@@ -91,3 +91,10 @@ class Kompleks(models.Model):
 
     def __str__(self):
         return "%s / %s" % (self.blok, self.nomor)
+    
+class TransaksiIuranBulanan(models.Model):
+    tanggal_bayar = models.DateField(auto_now_add=True)
+    timestamp_transaksi = models.DateTimeField(auto_now=True)
+    kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
+    keterangan = models.TextField(blank=True, null=True)
+    bukti_bayar = models.FileField(upload_to="bukti_bayar")
