@@ -18,7 +18,7 @@
         <select class="form-select" aria-label="Pilih Cluster" id="cluster" name="cluster">
             <option value="all">* semua cluster *</option>
             {% for c in daftar_cluster %}
-            <option value="{{ c.cluster }}">{{ c.cluster }}</option>
+            <option value="{{ c.cluster }}" {% if cluster == c.cluster %}selected{% endif %}>{{ c.cluster }}</option>
             {% endfor %}
         </select>
     </div> 

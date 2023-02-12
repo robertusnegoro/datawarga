@@ -102,6 +102,8 @@ class WargaListView(ListView):
         context['daftar_cluster'] = list_cluster
         if "message" in self.request.GET:
             context["message"] = self.request.GET["message"]
+        if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
+            context["cluster"] = str(self.request.GET["cluster"])
         return context
 
     def get_queryset(self):
