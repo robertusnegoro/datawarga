@@ -3,7 +3,7 @@ from .models import Warga, Kompleks
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -102,12 +102,14 @@ def generate_kompleks(request):
 class KompleksListView(ListView):
     paginate_by = 50
     template_name = "list_kompleks_view.html"
-    queryset = Kompleks.objects.order_by("-id")
+    queryset = Kompleks.objects.order_by("-id").annotate(num_warga=Count('warga'))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if "message" in self.request.GET:
             context["message"] = self.request.GET["message"]
+        if "search" in self.request.GET:
+            context["search"] = str(self.request.GET["search"])
         return context
 
     def get_queryset(self):
@@ -115,9 +117,15 @@ class KompleksListView(ListView):
         if "search" in self.request.GET:
             search_keyword = str(self.request.GET["search"])
 
-            queryset = queryset.filter(
-                Q(cluster__icontains=search_keyword) | Q(blok__icontains=search_keyword)
-            )
+            if "/" in search_keyword:
+                split_keyword = search_keyword.split("/")
+                queryset = queryset.filter(
+                    blok__icontains=split_keyword[0].strip(), nomor=split_keyword[1].strip()
+                )
+            else:
+                queryset = queryset.filter(
+                    Q(cluster__icontains=search_keyword) | Q(blok__icontains=search_keyword)
+                )
         return queryset
 
 

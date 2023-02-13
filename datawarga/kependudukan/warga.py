@@ -104,6 +104,8 @@ class WargaListView(ListView):
             context["message"] = self.request.GET["message"]
         if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
             context["cluster"] = str(self.request.GET["cluster"])
+        if "search" in self.request.GET:
+            context["search"] = str(self.request.GET["search"])
         return context
 
     def get_queryset(self):
@@ -111,13 +113,21 @@ class WargaListView(ListView):
         if "search" in self.request.GET:
             search_keyword = str(self.request.GET["search"])
 
-            queryset = queryset.filter(
-                Q(nama_lengkap__icontains=search_keyword)
-                | Q(nik__icontains=search_keyword)
-            )
+            if "/" in search_keyword:
+                split_keyword = search_keyword.split("/")
+                queryset = queryset.filter(
+                    kompleks__blok__icontains=split_keyword[0].strip(), kompleks__nomor=split_keyword[1].strip()
+                )
+            else:
+                queryset = queryset.filter(
+                    Q(nama_lengkap__icontains=search_keyword)
+                    | Q(nik__icontains=search_keyword)
+                )
         if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
             cluster = str(self.request.GET["cluster"])
             queryset = queryset.filter(kompleks__cluster__icontains=cluster)
+
+        
         return queryset
 
 
