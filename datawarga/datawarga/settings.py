@@ -191,6 +191,7 @@ PROVINSI = os.getenv("WG_PROVINSI", "BANTEN")
 RUKUNTANGGA = os.getenv("WG_RT", "006")
 RUKUNWARGA = os.getenv("WG_RW", "012")
 ALAMAT = os.getenv("WG_ALAMAT", "Jalan Nirwana")
+IURAN_BULANAN = int(os.getenv("WG_IURAN_BULANAN", 150000))
 
 GENERATE_KOMPLEKS_LIMIT = 200
 
