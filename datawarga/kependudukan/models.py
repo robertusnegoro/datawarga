@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+import calendar
 
 # Create your models here.
 class Warga(models.Model):
@@ -46,7 +47,7 @@ class Warga(models.Model):
 
     nama_lengkap = models.CharField(max_length=254)
     nik = models.CharField(max_length=64, unique=True)
-    no_hp = models.CharField(max_length=15)
+    no_hp = models.CharField(max_length=15, null=True, blank=True)
     no_kk = models.CharField(max_length=64, null=True, blank=True)
 
     pekerjaan = models.CharField(
@@ -91,3 +92,17 @@ class Kompleks(models.Model):
 
     def __str__(self):
         return "%s / %s" % (self.blok, self.nomor)
+    
+class TransaksiIuranBulanan(models.Model):
+    LIST_BULAN = tuple((x, x) for x in list(calendar.month_name))[1:]
+
+    tanggal_bayar = models.DateField(auto_now_add=True)
+    timestamp_transaksi = models.DateTimeField(auto_now=True)
+    kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
+    keterangan = models.TextField(blank=True, null=True)
+    bukti_bayar = models.FileField(upload_to="bukti_bayar")
+    periode_bulan = models.CharField(
+        max_length=30, choices=LIST_BULAN
+    )
+    periode_tahun = models.IntegerField()
+    total_bayar = models.IntegerField(default=settings.IURAN_BULANAN)
