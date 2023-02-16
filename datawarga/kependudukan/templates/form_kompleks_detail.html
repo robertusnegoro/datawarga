@@ -71,6 +71,58 @@
             </p>
             <div id="tabelwarga"></div>
         </div>
+        <div class="py-2">
+            <h5>Data Pembayaran Iuran Bulanan</h5>
+            <p>
+                <a href="{% url 'kependudukan:formWargaRumah' 0 data.id %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Bayar Iuran</a> 
+            </p>
+            <form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-3">
+                <div class="col-auto">
+                    <select class="form-select" aria-label="Pilih Cluster" id="cluster" name="cluster">
+                        <option value="x">2023</option>
+                    </select>
+                </div> 
+                <div class="col-auto">
+                    <button type="submit" id="submitBtn" class="btn btn-info"> <i class="bi bi-search"></i> Cari </button>
+                </div>
+                
+            </form>
+            <div id="tabelIuranBulanan">
+                <table class="table table-hover">
+                    <tr>
+                        <th>Bulan</th>
+                        <th>Pembayaran</th>
+                        <th>Bukti</th>
+                        <th>Keterangan</th>
+                    </tr>
+                    <tr>
+                        <td>January</td>
+                        <td>150000</td>
+                        <td><a href="">Link To File</a></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>February</td>
+                        <td>150000</td>
+                        <td><a href="">Link To File</a></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>March</td>
+                        <td>0</td>
+                        <td><a href="">Link To File</a></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>April</td>
+                        <td>0</td>
+                        <td><a href="">Link To File</a></td>
+                        <td></td>
+                    </tr>
+                </table>
+                
+            </div>
+        </div>
     </div>
 </div>
 

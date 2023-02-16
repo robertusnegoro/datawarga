@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import utility, kompleks, warga
+from . import utility, kompleks, warga, iuran
 from django.conf import settings
 
 app_name = "kependudukan"
@@ -75,6 +75,7 @@ urlpatterns = [
         warga.protected_serve,
         {"document_root": settings.MEDIA_ROOT},
     ),
+    path("warga/form-iuran-bulanan/<int:idkompleks>/<int:year>", iuran.form_iuran_bulanan, name="formIuranBulanan"),
 ]
 
 if settings.WG_ENV == "dev":

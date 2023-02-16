@@ -100,7 +100,7 @@ class TransaksiIuranBulanan(models.Model):
     timestamp_transaksi = models.DateTimeField(auto_now=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
     keterangan = models.TextField(blank=True, null=True)
-    bukti_bayar = models.FileField(upload_to="bukti_bayar")
+    bukti_bayar = models.FileField(upload_to="bukti_bayar", blank=True)
     periode_bulan = models.CharField(
         max_length=30, choices=LIST_BULAN
     )
