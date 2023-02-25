@@ -1,4 +1,4 @@
-from .models import Warga, Kompleks
+from .models import Warga, Kompleks, TransaksiIuranBulanan
 from django import forms
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
@@ -44,3 +44,15 @@ class WargaCSVForm(forms.Form):
         label="CSV File",
         validators=[FileExtensionValidator(allowed_extensions=["csv"])],
     )
+
+
+class IuranBulananForm(forms.ModelForm):
+    class Meta:
+        model = TransaksiIuranBulanan
+        fields = [
+            "keterangan",
+            "bukti_bayar",
+            "periode_bulan",
+            "periode_tahun",
+            "total_bayar",
+        ]

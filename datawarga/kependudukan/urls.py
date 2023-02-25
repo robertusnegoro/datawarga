@@ -75,7 +75,26 @@ urlpatterns = [
         warga.protected_serve,
         {"document_root": settings.MEDIA_ROOT},
     ),
-    path("warga/form-iuran-bulanan/<int:idkompleks>/<int:year>", iuran.form_iuran_bulanan, name="formIuranBulanan"),
+    path(
+        "warga/form-iuran-bulanan/<int:idkompleks>",
+        iuran.form_iuran_bulanan,
+        name="formIuranBulanan",
+    ),
+    path(
+        "warga/form-iuran-bulanan/<int:idkompleks>/<int:year>",
+        iuran.form_iuran_bulanan,
+        name="formIuranBulananYear",
+    ),
+    path(
+        "warga/form-iuran-bulanan/<int:idkompleks>/<int:year>/<int:idtransaksi>",
+        iuran.form_iuran_bulanan,
+        name="formIuranBulananYearTrx",
+    ),
+    path(
+        "warga/form-iuran-bulanan-save",
+        iuran.form_iuran_bulanan_save,
+        name="formIuranBulananSave",
+    ),
 ]
 
 if settings.WG_ENV == "dev":

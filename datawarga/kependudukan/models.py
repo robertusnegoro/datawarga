@@ -92,17 +92,22 @@ class Kompleks(models.Model):
 
     def __str__(self):
         return "%s / %s" % (self.blok, self.nomor)
-    
+
+
 class TransaksiIuranBulanan(models.Model):
     LIST_BULAN = tuple((x, x) for x in list(calendar.month_name))[1:]
 
     tanggal_bayar = models.DateField(auto_now_add=True)
-    timestamp_transaksi = models.DateTimeField(auto_now=True)
+    last_modified = models.DateTimeField(auto_now=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
     keterangan = models.TextField(blank=True, null=True)
     bukti_bayar = models.FileField(upload_to="bukti_bayar", blank=True)
-    periode_bulan = models.CharField(
-        max_length=30, choices=LIST_BULAN
-    )
+    periode_bulan = models.CharField(max_length=30, choices=LIST_BULAN)
     periode_tahun = models.IntegerField()
     total_bayar = models.IntegerField(default=settings.IURAN_BULANAN)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["periode_bulan"]),
+            models.Index(fields=["periode_tahun"]),
+        ]

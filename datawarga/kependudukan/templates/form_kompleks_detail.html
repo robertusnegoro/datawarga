@@ -4,7 +4,7 @@
 {% block content %}
 {% load crispy_forms_tags %}
 <div class="row">
-    <div class="col-lg-4 border-bottom">
+    <div class="col-lg-3 border-bottom">
         <h5>Edit Data Rumah</h5>
         <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:detailKompleks' data.id %}">
             {% csrf_token %}
@@ -62,7 +62,7 @@
 
         </form>
     </div>
-    <div class="col-lg-8 border-bottom">
+    <div class="col-lg-9 border-bottom">
         <div class="py-2">
             <h5>Data Warga Penghuni</h5>
             <p>Berikut ini adalah daftar warga penghuni blok {{ data.blok }} / No. {{ data.nomor }}</p>
@@ -73,17 +73,17 @@
         </div>
         <div class="py-2">
             <h5>Data Pembayaran Iuran Bulanan</h5>
-            <p>
-                <a href="{% url 'kependudukan:formWargaRumah' 0 data.id %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Bayar Iuran</a> 
-            </p>
             <form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-3">
                 <div class="col-auto">
-                    <select class="form-select" aria-label="Pilih Cluster" id="cluster" name="cluster">
-                        <option value="x">2023</option>
+                    <select class="form-select" id="id_periode_tahun" name="periode_tahun">
+                        {% for x in iuran_year_period %}
+                            <option value="{{ x }}">{{ x }}</option>
+                        {% endfor %}
                     </select>
                 </div> 
                 <div class="col-auto">
-                    <button type="submit" id="submitBtn" class="btn btn-info"> <i class="bi bi-search"></i> Cari </button>
+                    <button type="submit" id="searchIuranBtn" class="btn btn-info"> <i class="bi bi-search"></i> Cari </button>
+                    <a href="{% url 'kependudukan:formIuranBulanan' data.id %}" class="btn btn-primary" id="form_iuran_link"><i class="bi bi-plus"></i> Bayar Iuran</a>
                 </div>
                 
             </form>
@@ -94,30 +94,43 @@
                         <th>Pembayaran</th>
                         <th>Bukti</th>
                         <th>Keterangan</th>
+                        <th>Opsi</th>
                     </tr>
                     <tr>
                         <td>January</td>
                         <td>150000</td>
                         <td><a href="">Link To File</a></td>
                         <td></td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
+                        </td>
                     </tr>
                     <tr>
                         <td>February</td>
                         <td>150000</td>
                         <td><a href="">Link To File</a></td>
                         <td></td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
+                        </td>
                     </tr>
                     <tr>
                         <td>March</td>
                         <td>0</td>
                         <td><a href="">Link To File</a></td>
-                        <td></td>
+                        <td>Bukti pembayaran ada di bulan sebelumnya</td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
+                        </td>
                     </tr>
                     <tr>
                         <td>April</td>
                         <td>0</td>
                         <td><a href="">Link To File</a></td>
                         <td></td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
+                        </td>
                     </tr>
                 </table>
                 
@@ -153,6 +166,10 @@
             table += "</table>";
             $("#tabelwarga").append(table);
         }
+    });
+
+    $('#id_periode_tahun').on('change', function() {
+        $("#form_iuran_link").attr("href", "{% url 'kependudukan:formIuranBulanan' data.id %}/" + this.value);
     });
 </script>
 {% endblock %}
