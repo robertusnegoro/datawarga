@@ -7,8 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.core import serializers
 from urllib.parse import urlencode
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +65,11 @@ def form_iuran_bulanan_save(request):
             iuran = form.save()
 
             base_url = reverse(
-                "kependudukan:formIuranBulananYear",
+                "kependudukan:formIuranBulananYearTrx",
                 kwargs={
                     "idkompleks": int(request.POST["kompleks"]),
                     "year": int(request.POST["periode_tahun"]),
+                    "idtransaksi": iuran.id,
                 },
             )
             payload = urlencode({"message": "data saved!"})
@@ -77,3 +80,16 @@ def form_iuran_bulanan_save(request):
             return HttpResponse("form is not valid %s" % (form.errors))
     else:
         return Http404()
+    
+@login_required
+def list_iuran_kompleks_tahun_json(request, idkompleks, year=datetime.now().strftime("%Y")):
+    list_trx = TransaksiIuranBulanan.objects.order_by(
+        "periode_bulan"
+    ).filter(periode_tahun=year)
+    data = serializers.serialize("json", list_trx)
+
+    total_trx = len(list_trx)
+    data = serializers.serialize("json", list_trx)
+    response = {"data": json.loads(data), "total": total_trx}
+    return JsonResponse(response)
+

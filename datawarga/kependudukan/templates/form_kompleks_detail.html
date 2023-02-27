@@ -82,59 +82,12 @@
                     </select>
                 </div> 
                 <div class="col-auto">
-                    <button type="submit" id="searchIuranBtn" class="btn btn-info"> <i class="bi bi-search"></i> Cari </button>
+                    <button type="button" id="searchIuranBtn" class="btn btn-info"> <i class="bi bi-search"></i> Cari </button>
                     <a href="{% url 'kependudukan:formIuranBulanan' data.id %}" class="btn btn-primary" id="form_iuran_link"><i class="bi bi-plus"></i> Bayar Iuran</a>
                 </div>
                 
             </form>
-            <div id="tabelIuranBulanan">
-                <table class="table table-hover">
-                    <tr>
-                        <th>Bulan</th>
-                        <th>Pembayaran</th>
-                        <th>Bukti</th>
-                        <th>Keterangan</th>
-                        <th>Opsi</th>
-                    </tr>
-                    <tr>
-                        <td>January</td>
-                        <td>150000</td>
-                        <td><a href="">Link To File</a></td>
-                        <td></td>
-                        <td>
-                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>February</td>
-                        <td>150000</td>
-                        <td><a href="">Link To File</a></td>
-                        <td></td>
-                        <td>
-                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>March</td>
-                        <td>0</td>
-                        <td><a href="">Link To File</a></td>
-                        <td>Bukti pembayaran ada di bulan sebelumnya</td>
-                        <td>
-                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>April</td>
-                        <td>0</td>
-                        <td><a href="">Link To File</a></td>
-                        <td></td>
-                        <td>
-                            <a class="btn btn-primary btn-sm" href=""> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href=""><i class="bi bi-trash"></i> </a>
-                        </td>
-                    </tr>
-                </table>
-                
-            </div>
+            <div id="tabelIuranBulanan"></div>
         </div>
     </div>
 </div>
@@ -149,6 +102,9 @@
 
 {% block jscript %}
 <script>
+    var current_year = new Date().getFullYear();
+    load_iuran_bulanan(current_year);
+
     $.getJSON("{{ load_url }}", function(response) {
         console.log(response);
         var data = response.data;
@@ -161,12 +117,36 @@
             var table = "<table class=\"table table-striped\">";
             table += "<tr><th>NIK</th><th>Nama Lengkap</th><th>HP</th></tr>";
             $.each(data, function(key, value) {
-                table += "<tr><td>" + value.fields.nik + "</td><td><a href=\"/warga/form-warga/" + value.pk + "\">" + value.fields.nama_lengkap + "</td><td>" + value.fields.no_hp + "</td></tr></a>";
+                table += "<tr><td>" + value.fields.nik + "</td><td><a href=\"/warga/form-warga/" + value.pk + "\">" + value.fields.nama_lengkap + "</a></td><td>" + value.fields.no_hp + "</td></tr>";
             });
             table += "</table>";
             $("#tabelwarga").append(table);
         }
     });
+
+    $("#searchIuranBtn").click(function(){
+        load_iuran_bulanan( $('#id_periode_tahun').find(":selected").val() );
+    });
+
+    function load_iuran_bulanan(year) {
+        $.getJSON("{{ iuran_bulanan_url }}/" + year, function(response){
+            console.log(response);
+            var data = response.data;
+            var count = response.total;
+
+            if (count === 0) {
+                $("#tabelIuranBulanan").html("No Data");
+            }else{
+                var table = "<table class=\"table table-striped\">";
+                table += "<tr><th>Bulan</th><th>Bukti</th><th>Keterangan</th></tr>";
+                $.each(data, function(key, value) {
+                    table += "<tr><td><a href=\"/warga/form-iuran-bulanan/{{ data.id }}/"+value.fields.periode_tahun+"/"+value.pk+"\">" + value.fields.periode_bulan + "</td><td><a href=\"/media/"+ value.fields.bukti_bayar +"\">" + value.fields.bukti_bayar + "</a></td><td>" + value.fields.keterangan + "</td></tr>";
+                });
+                table += "</table>";
+                $("#tabelIuranBulanan").html(table);
+            }
+        });
+    }
 
     $('#id_periode_tahun').on('change', function() {
         $("#form_iuran_link").attr("href", "{% url 'kependudukan:formIuranBulanan' data.id %}/" + this.value);
