@@ -72,6 +72,16 @@ class Warga(models.Model):
     alamat_ktp = models.CharField(max_length=255, null=True, blank=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["nama_lengkap"]),
+            models.Index(fields=["nik"]),
+            models.Index(fields=["no_kk"]),
+            models.Index(fields=["agama"]),
+            models.Index(fields=["jenis_kelamin"]),
+            models.Index(fields=["status_tinggal"]),
+        ]
+
     def __str__(self):
         return self.nama_lengkap
 
@@ -91,6 +101,13 @@ class Kompleks(models.Model):
     description = models.TextField(blank=True, null=True)
     rt = models.CharField(max_length=4, default=settings.RUKUNTANGGA)
     rw = models.CharField(max_length=4, default=settings.RUKUNWARGA)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["blok"]),
+            models.Index(fields=["nomor"]),
+            models.Index(fields=["cluster"]),
+        ]
 
     def __str__(self):
         return "%s / %s" % (self.blok, self.nomor)
