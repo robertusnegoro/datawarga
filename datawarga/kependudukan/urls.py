@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import utility, kompleks, warga
+from . import utility, kompleks, warga, iuran
 from django.conf import settings
 
 app_name = "kependudukan"
@@ -74,6 +74,41 @@ urlpatterns = [
         r"^%s(?P<path>.*)$" % settings.MEDIA_URL[1:],
         warga.protected_serve,
         {"document_root": settings.MEDIA_ROOT},
+    ),
+    path(
+        "warga/form-iuran-bulanan/<int:idkompleks>",
+        iuran.form_iuran_bulanan,
+        name="formIuranBulanan",
+    ),
+    path(
+        "warga/form-iuran-bulanan/<int:idkompleks>/<int:year>",
+        iuran.form_iuran_bulanan,
+        name="formIuranBulananYear",
+    ),
+    path(
+        "warga/form-iuran-bulanan/<int:idkompleks>/<int:year>/<int:idtransaksi>",
+        iuran.form_iuran_bulanan,
+        name="formIuranBulananYearTrx",
+    ),
+    path(
+        "warga/form-iuran-bulanan-save",
+        iuran.form_iuran_bulanan_save,
+        name="formIuranBulananSave",
+    ),
+    path(
+        "warga/list-iuran-bulanan-json/<int:idkompleks>",
+        iuran.list_iuran_kompleks_tahun_json,
+        name="listIuranBulananJson",
+    ),
+    path(
+        "warga/list-iuran-bulanan-json/<int:idkompleks>/<int:year>",
+        iuran.list_iuran_kompleks_tahun_json,
+        name="listIuranBulananJsonYear",
+    ),
+    path(
+        "warga/delete-iuran-bulanan/<int:idtransaksi>",
+        iuran.delete_iuran_bulanan,
+        name="deleteIuranBulanan",
     ),
 ]
 

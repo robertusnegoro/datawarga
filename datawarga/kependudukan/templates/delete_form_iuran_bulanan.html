@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %} Hapus Iuran Bulanan {% endblock %}
+{% block pagetitle %}  <i class="bi bi-geo"></i> </i> Hapus Iuran Bulanan {% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}  
+<form method="post" enctype="multipart/form-data" id="iuranbulanan-form" action="{% url 'kependudukan:deleteIuranBulanan' data.id %}">
+    {% csrf_token %}
+    <div class="col-md-4">
+        <div class="mb-3">
+            <p>Hapus data transaksi untuk {{ data.kompleks }}. Bulan {{ data.periode_bulan }} / Tahun {{ data.periode_tahun }}</p>
+        </div>
+        <button type="submit" class="btn btn-danger">Submit</button>
+    </div>
+    
+</form>
+
+
+{% endblock %}

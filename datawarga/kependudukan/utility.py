@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from urllib.parse import urlencode
 from django.core.exceptions import *
+from datetime import datetime
 import logging
 import csv
 import random
@@ -166,3 +167,10 @@ def assign_warga_rumah_exec(request):
             {"status": "ok", "message": "data warga berhasil di-assign ke rumah"}
         )
     return Http404
+
+
+def helper_finance_year_list():
+    iuran_start_period = settings.FINANCE_PERIOD_START
+    iuran_current_period = int(datetime.now().strftime("%Y"))
+
+    return [x for x in reversed(range(iuran_start_period, (iuran_current_period + 1)))]

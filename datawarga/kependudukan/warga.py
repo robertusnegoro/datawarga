@@ -99,7 +99,7 @@ class WargaListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         list_cluster = Kompleks.objects.order_by().values("cluster").distinct()
-        context['daftar_cluster'] = list_cluster
+        context["daftar_cluster"] = list_cluster
         if "message" in self.request.GET:
             context["message"] = self.request.GET["message"]
         if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
@@ -116,7 +116,8 @@ class WargaListView(ListView):
             if "/" in search_keyword:
                 split_keyword = search_keyword.split("/")
                 queryset = queryset.filter(
-                    kompleks__blok__icontains=split_keyword[0].strip(), kompleks__nomor=split_keyword[1].strip()
+                    kompleks__blok__icontains=split_keyword[0].strip(),
+                    kompleks__nomor=split_keyword[1].strip(),
                 )
             else:
                 queryset = queryset.filter(
@@ -127,7 +128,6 @@ class WargaListView(ListView):
             cluster = str(self.request.GET["cluster"])
             queryset = queryset.filter(kompleks__cluster__icontains=cluster)
 
-        
         return queryset
 
 

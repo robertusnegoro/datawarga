@@ -191,6 +191,7 @@ PROVINSI = os.getenv("WG_PROVINSI", "BANTEN")
 RUKUNTANGGA = os.getenv("WG_RT", "006")
 RUKUNWARGA = os.getenv("WG_RW", "012")
 ALAMAT = os.getenv("WG_ALAMAT", "Jalan Nirwana")
+FINANCE_PERIOD_START = int(os.getenv("WG_FINANCE_PERIOD_START", 2018))
 IURAN_BULANAN = int(os.getenv("WG_IURAN_BULANAN", 150000))
 
 GENERATE_KOMPLEKS_LIMIT = 200

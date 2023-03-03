@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Iuran Bulanan Rumah{% endblock %}
+{% block pagetitle %}Iuran Bulanan Rumah Blok {{ data_kompleks.blok }} / Nomor {{ data_kompleks.nomor }} {% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="row">
+    <div class="col-lg-6">
+        <h5>Form Iuran Bulanan</h5>
+        <form method="post" enctype="multipart/form-data" id="iuranbulanan-form" action="{% url 'kependudukan:formIuranBulananSave' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="periode_tahun" class="form-label">Tahun</label>
+                <input class="form-control" id="id_periode_tahun" name="periode_tahun" value="{{ year }}" readonly>
+            </div>
+            <div class="mb-3">
+                {{ form.periode_bulan | as_crispy_field}}
+            </div>
+            <div class="mb-3">
+                <label for="id_total_bayar" class="form-label">Total Bayar</label>
+                <input type="text" class="form-control" id="id_total_bayar" name="total_bayar" maxlength="10" value="{% if iuran_record %}{{ iuran_record.total_bayar}}{% else %}{{ default_iuran_amount }}{% endif %}">
+            </div>
+            <div class="mb-3">
+                {{ form.bukti_bayar | as_crispy_field}}
+            </div>
+            <div class="mb-3">
+                {{ form.keterangan | as_crispy_field}}
+            </div>
+            <input type="hidden" id="id_kompleks" name="kompleks" value="{{ data_kompleks.id }}" >
+            {% if iuran_record %}
+                <input type="hidden" id="idtransaksi" name="idtransaksi" value="{{ iuran_record.id }}" >
+            {% endif %}
+            <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
+        </form>
+    </div>
+    <div class="col-lg-6">
+        <h5>Iuran Bulanan</h5>
+        <p>Data Pembayaran Iuran Bulanan untuk rumah {{ data_kompleks }}</p>
+        <div class="col-auto">
+            
+        </div> 
+        <div class="py-2">
+            <table class="table table-hover">
+                <tr>
+                    <th width="10px">#</th>
+                    <th>Bulan</th>
+                    <th>Bukti Bayar</th>
+                    <th>Tanggal Entry</th>
+                    <th>Keterangan</th>
+                    <th>Opsi</th>
+                </tr>
+                {% for y in data_iuran %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ y.get_periode_bulan_display }}</td>
+                    <td>{{ y.bukti_bayar }}</td>
+                    <td>{{ y.tanggal_bayar }}</td>
+                    <td>{{ y.keterangan }}</td>
+                    <td>{{ y.total_bayar }}</td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if message %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+    {{ message | safe}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block jscript %}
+<script>
+    
+</script>
+{% endblock %}

@@ -1,5 +1,7 @@
 from .forms import WargaForm, GenerateKompleksForm
 from .models import Warga, Kompleks
+from .utility import helper_finance_year_list
+from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -102,7 +104,7 @@ def generate_kompleks(request):
 class KompleksListView(ListView):
     paginate_by = 50
     template_name = "list_kompleks_view.html"
-    queryset = Kompleks.objects.order_by("-id").annotate(num_warga=Count('warga'))
+    queryset = Kompleks.objects.order_by("-id").annotate(num_warga=Count("warga"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -120,11 +122,13 @@ class KompleksListView(ListView):
             if "/" in search_keyword:
                 split_keyword = search_keyword.split("/")
                 queryset = queryset.filter(
-                    blok__icontains=split_keyword[0].strip(), nomor=split_keyword[1].strip()
+                    blok__icontains=split_keyword[0].strip(),
+                    nomor=split_keyword[1].strip(),
                 )
             else:
                 queryset = queryset.filter(
-                    Q(cluster__icontains=search_keyword) | Q(blok__icontains=search_keyword)
+                    Q(cluster__icontains=search_keyword)
+                    | Q(blok__icontains=search_keyword)
                 )
         return queryset
 
@@ -191,6 +195,11 @@ def detail_kompleks(request, idkompleks):
     context["load_url"] = reverse(
         "kependudukan:wargaRumah", kwargs={"idkompleks": idkompleks}
     )
+    context["iuran_bulanan_url"] = reverse(
+        "kependudukan:listIuranBulananJson", kwargs={"idkompleks": idkompleks}
+    )
+
+    context["iuran_year_period"] = helper_finance_year_list()
     return render(
         request=request, template_name="form_kompleks_detail.html", context=context
     )
