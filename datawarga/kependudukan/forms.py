@@ -55,4 +55,5 @@ class IuranBulananForm(forms.ModelForm):
             "periode_bulan",
             "periode_tahun",
             "total_bayar",
+            "kompleks",
         ]

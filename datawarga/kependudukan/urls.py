@@ -95,8 +95,21 @@ urlpatterns = [
         iuran.form_iuran_bulanan_save,
         name="formIuranBulananSave",
     ),
-    path("warga/list-iuran-bulanan-json/<int:idkompleks>", iuran.list_iuran_kompleks_tahun_json, name="listIuranBulananJson"),
-    path("warga/list-iuran-bulanan-json/<int:idkompleks>/<int:year>", iuran.list_iuran_kompleks_tahun_json, name="listIuranBulananJsonYear"),
+    path(
+        "warga/list-iuran-bulanan-json/<int:idkompleks>",
+        iuran.list_iuran_kompleks_tahun_json,
+        name="listIuranBulananJson",
+    ),
+    path(
+        "warga/list-iuran-bulanan-json/<int:idkompleks>/<int:year>",
+        iuran.list_iuran_kompleks_tahun_json,
+        name="listIuranBulananJsonYear",
+    ),
+    path(
+        "warga/delete-iuran-bulanan/<int:idtransaksi>",
+        iuran.delete_iuran_bulanan,
+        name="deleteIuranBulanan",
+    ),
 ]
 
 if settings.WG_ENV == "dev":

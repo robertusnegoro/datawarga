@@ -30,7 +30,6 @@
                 <input type="hidden" id="idtransaksi" name="idtransaksi" value="{{ iuran_record.id }}" >
             {% endif %}
             <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
-            <button type="button" class="btn btn-danger"><i class="bi bi-trash"></i> Hapus</button>
         </form>
     </div>
     <div class="col-lg-6">
@@ -52,7 +51,7 @@
                 {% for y in data_iuran %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td>{{ y.periode_bulan }}</td>
+                    <td>{{ y.get_periode_bulan_display }}</td>
                     <td>{{ y.bukti_bayar }}</td>
                     <td>{{ y.tanggal_bayar }}</td>
                     <td>{{ y.keterangan }}</td>

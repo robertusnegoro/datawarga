@@ -36,7 +36,10 @@ def form_iuran_bulanan(
 
     context["data_iuran"] = TransaksiIuranBulanan.objects.order_by(
         "periode_bulan"
-    ).filter(periode_tahun=year)
+    ).filter(periode_tahun=year, kompleks__id=idkompleks)
+
+    if "message" in request.GET:
+        context["message"] = str(request.GET["message"])
 
     return render(
         request=request, template_name="form_iuran_bulanan.html", context=context
@@ -48,31 +51,38 @@ def form_iuran_bulanan_save(request):
     if request.POST:
         form = IuranBulananForm(request.POST, request.FILES)
 
-        
-
         if form.is_valid():
             if "idtransaksi" in request.POST:
                 idtransaksi = int(request.POST["idtransaksi"])
-                data_transaksi = get_object_or_404(TransaksiIuranBulanan, pk=idtransaksi)
-                form = IuranBulananForm(request.POST, request.FILES, instance=data_transaksi)
+                data_transaksi = get_object_or_404(
+                    TransaksiIuranBulanan, pk=idtransaksi
+                )
+                form = IuranBulananForm(
+                    request.POST, request.FILES, instance=data_transaksi
+                )
             else:
-                check_existing_trx = TransaksiIuranBulanan.objects.filter(periode_bulan=str(request.POST["periode_bulan"]), periode_tahun=str(request.POST["periode_tahun"]))
+                check_existing_trx = TransaksiIuranBulanan.objects.filter(
+                    periode_bulan=str(request.POST["periode_bulan"]),
+                    periode_tahun=str(request.POST["periode_tahun"]),
+                    kompleks__id=int(request.POST["kompleks"]),
+                )
                 if len(check_existing_trx) > 0:
-                    error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (str(request.POST["periode_bulan"]), str(request.POST["periode_tahun"]))
+                    error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
+                        str(request.POST["periode_bulan"]),
+                        str(request.POST["periode_tahun"]),
+                    )
                     logger.error(error_message)
                     return HttpResponse(error_message)
 
             iuran = form.save()
 
             base_url = reverse(
-                "kependudukan:formIuranBulananYearTrx",
+                "kependudukan:detailKompleks",
                 kwargs={
-                    "idkompleks": int(request.POST["kompleks"]),
-                    "year": int(request.POST["periode_tahun"]),
-                    "idtransaksi": iuran.id,
+                    "idkompleks": int(request.POST["kompleks"])
                 },
             )
-            payload = urlencode({"message": "data saved!"})
+            payload = urlencode({"message": "iuran bulanan is saved!"})
             url_redir = "{}?{}".format(base_url, payload)
             return redirect(url_redir)
         else:
@@ -80,16 +90,38 @@ def form_iuran_bulanan_save(request):
             return HttpResponse("form is not valid %s" % (form.errors))
     else:
         return Http404()
-    
-@login_required
-def list_iuran_kompleks_tahun_json(request, idkompleks, year=datetime.now().strftime("%Y")):
-    list_trx = TransaksiIuranBulanan.objects.order_by(
-        "periode_bulan"
-    ).filter(periode_tahun=year)
-    data = serializers.serialize("json", list_trx)
 
+
+@login_required
+def list_iuran_kompleks_tahun_json(
+    request, idkompleks, year=datetime.now().strftime("%Y")
+):
+    list_trx = TransaksiIuranBulanan.objects.order_by("periode_bulan").filter(
+        periode_tahun=year, kompleks__id=idkompleks
+    )
     total_trx = len(list_trx)
     data = serializers.serialize("json", list_trx)
     response = {"data": json.loads(data), "total": total_trx}
     return JsonResponse(response)
 
+
+@login_required
+def delete_iuran_bulanan(request, idtransaksi):
+    data_transaksi = get_object_or_404(TransaksiIuranBulanan, pk=idtransaksi)
+    kompleks_id = data_transaksi.kompleks.id
+    if request.POST:
+        data_transaksi.delete()
+        logger.info("Deleting data transaksi with id : %s" % (idtransaksi))
+        base_url = reverse(
+            "kependudukan:detailKompleks",
+            kwargs={"idkompleks": kompleks_id},
+        )
+        payload = urlencode({"message": "data %s was deleted!" % (idtransaksi)})
+        url_redir = "{}?{}".format(base_url, payload)
+        return redirect(url_redir)
+
+    context = {"data": data_transaksi}
+
+    return render(
+        request, template_name="delete_form_iuran_bulanan.html", context=context
+    )

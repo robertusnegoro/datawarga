@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+import os
+from datetime import date
 import calendar
 
 # Create your models here.
@@ -94,14 +96,44 @@ class Kompleks(models.Model):
         return "%s / %s" % (self.blok, self.nomor)
 
 
+def upload_to(instance, filename):
+    """
+    Renames the uploaded file to year-month-date.ext
+    """
+    ext = os.path.splitext(filename)[1]
+    today = date.today()
+    return 'bukti_bayar/{}/{}{}'.format(today.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d'), ext)
+
+
 class TransaksiIuranBulanan(models.Model):
-    LIST_BULAN = tuple((x, x) for x in list(calendar.month_name))[1:]
+    indonesian_months = (
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember",
+    )
+    
+    list_bulan_ori = []
+    counter = 1
+    for a in indonesian_months:
+        list_bulan_ori.append((str(counter), a))
+        counter += 1
+
+    LIST_BULAN = tuple(list_bulan_ori)
 
     tanggal_bayar = models.DateField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
     keterangan = models.TextField(blank=True, null=True)
-    bukti_bayar = models.FileField(upload_to="bukti_bayar", blank=True)
+    bukti_bayar = models.FileField(upload_to=upload_to, blank=True)
     periode_bulan = models.CharField(max_length=30, choices=LIST_BULAN)
     periode_tahun = models.IntegerField()
     total_bayar = models.IntegerField(default=settings.IURAN_BULANAN)

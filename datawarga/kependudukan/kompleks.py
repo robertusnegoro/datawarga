@@ -195,7 +195,9 @@ def detail_kompleks(request, idkompleks):
     context["load_url"] = reverse(
         "kependudukan:wargaRumah", kwargs={"idkompleks": idkompleks}
     )
-    context["iuran_bulanan_url"] = reverse("kependudukan:listIuranBulananJson", kwargs={"idkompleks": idkompleks})
+    context["iuran_bulanan_url"] = reverse(
+        "kependudukan:listIuranBulananJson", kwargs={"idkompleks": idkompleks}
+    )
 
     context["iuran_year_period"] = helper_finance_year_list()
     return render(

@@ -138,9 +138,9 @@
                 $("#tabelIuranBulanan").html("No Data");
             }else{
                 var table = "<table class=\"table table-striped\">";
-                table += "<tr><th>Bulan</th><th>Bukti</th><th>Keterangan</th></tr>";
+                table += "<tr><th>Bulan</th><th>Bukti</th><th>Keterangan</th><th></th></tr>";
                 $.each(data, function(key, value) {
-                    table += "<tr><td><a href=\"/warga/form-iuran-bulanan/{{ data.id }}/"+value.fields.periode_tahun+"/"+value.pk+"\">" + value.fields.periode_bulan + "</td><td><a href=\"/media/"+ value.fields.bukti_bayar +"\">" + value.fields.bukti_bayar + "</a></td><td>" + value.fields.keterangan + "</td></tr>";
+                    table += "<tr><td><a href=\"/warga/form-iuran-bulanan/{{ data.id }}/"+value.fields.periode_tahun+"/"+value.pk+"\">" + indonesian_months[value.fields.periode_bulan] + "</td><td><a href=\"/media/"+ value.fields.bukti_bayar +"\" target=\"_blank\">" + value.fields.bukti_bayar + "</a></td><td>" + value.fields.keterangan + "</td><td><a class=\"btn btn-danger btn-sm\" href=\"/warga/delete-iuran-bulanan/"+value.pk+"\"><i class=\"bi bi-trash\"></i> </a></td></tr>";
                 });
                 table += "</table>";
                 $("#tabelIuranBulanan").html(table);
