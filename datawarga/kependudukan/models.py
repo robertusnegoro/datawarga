@@ -41,6 +41,17 @@ class Warga(models.Model):
         ("OJEK", "OJEK"),
         ("LAINNYA", "LAINNYA"),
     )
+
+    STATUS_KELUARGA = (
+        ("SUAMI", "SUAMI"),
+        ("ISTRI", "ISTRI"),
+        ("ANAK", "ANAK"),
+        ("ORANG TUA", "ORANG TUA"),
+        ("SAUDARA", "SAUDARA"),
+        ("LAINNYA", "LAINNYA"),
+        ("N/A", "N/A"),
+    )
+
     JENIS_KELAMIN = (("LAKI-LAKI", "LAKI-LAKI"), ("PEREMPUAN", "PEREMPUAN"))
     agama = models.CharField(max_length=50, choices=RELIGIONS, default="")
 
@@ -68,6 +79,9 @@ class Warga(models.Model):
     )
     status_tinggal = models.CharField(
         max_length=30, choices=STATUS_TINGGAL, default="TETAP"
+    )
+    status_keluarga = models.CharField(
+        max_length=30, choices=STATUS_KELUARGA, default="N/A"
     )
     alamat_ktp = models.CharField(max_length=255, null=True, blank=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
