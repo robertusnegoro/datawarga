@@ -174,3 +174,41 @@ def helper_finance_year_list():
     iuran_current_period = int(datetime.now().strftime("%Y"))
 
     return [x for x in reversed(range(iuran_start_period, (iuran_current_period + 1)))]
+
+def dashboard_public(request, page="warga"):
+    context = {}
+    if page == "warga":
+        context["total_warga"] = Warga.objects.all().count()
+    elif page == "jenis_kelamin":
+        jenkel_laki = Warga.objects.filter(jenis_kelamin="LAKI-LAKI").count()
+        jenkel_perempuan = Warga.objects.filter(jenis_kelamin="PEREMPUAN").count()
+        context["legend_jenkel"] = [jk[0] for jk in Warga.JENIS_KELAMIN]
+        context["data_jenkel"] = [jenkel_laki, jenkel_perempuan]
+    elif page == "agama":
+        data_agama = []
+        for agama in Warga.RELIGIONS:
+            data_agama.append(Warga.objects.filter(agama=agama[0]).count())
+        context["legend_agama"] = [agama[0] for agama in Warga.RELIGIONS]
+        context["data_agama"] = data_agama
+    elif page == "status_tinggal":
+        data_status_tinggal = []
+        for status_tinggal in Warga.STATUS_TINGGAL:
+            data_status_tinggal.append(
+                Warga.objects.filter(status_tinggal=status_tinggal[0]).count()
+            )
+        context["legend_status_tinggal"] = [
+            status_tinggal[0] for status_tinggal in Warga.STATUS_TINGGAL
+        ]
+        context["data_status_tinggal"] = data_status_tinggal
+    elif page == "cluster":
+        warga_per_cluster = (
+            Kompleks.objects.all().values("cluster").annotate(num_warga=Count("warga"))
+        )
+
+        context["legend_cluster"] = [x["cluster"] for x in warga_per_cluster]
+        context["data_cluster"] = [x["num_warga"] for x in warga_per_cluster]
+    else:
+        return Http404
+
+    template_path = "public/dashboard_%s.html" % (page)
+    return render(request=request, template_name=template_path, context=context)

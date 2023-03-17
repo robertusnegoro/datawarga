@@ -1,0 +1,20 @@
+{% extends "base_plain.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center text-white bg-primary mb-3">
+            <div class="card-header">Total Data Warga</div>
+            <div class="card-body">
+                <h1 class="card-title">{{ total_warga }}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block jscript %}
+
+{% endblock %}

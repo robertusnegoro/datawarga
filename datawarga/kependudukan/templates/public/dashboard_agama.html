@@ -1,0 +1,48 @@
+{% extends "base_plain.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-center mb-3">
+            <div class="card-header">Agama</div>
+            <div class="card-body">
+                <canvas id="agama-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+{% block jscript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
+<script>
+    const data_agama = {
+        labels: {{ legend_agama | safe }},
+        datasets: [
+            {
+                data: {{ data_agama | safe }},
+                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
+            }
+        ]
+    };
+    const config_agama = {
+        type: 'pie',
+        data: data_agama,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    var chart_agama = document.getElementById('agama-chart').getContext('2d');
+    new Chart(chart_agama, config_agama);
+</script>
+
+{% endblock %}

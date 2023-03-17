@@ -1,0 +1,49 @@
+{% extends "base_plain.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-center mb-3">
+            <div class="card-header">Jenis Kelamin</div>
+            <div class="card-body">
+                <canvas id="jenkel-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+{% block jscript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
+<script>
+    const data = {
+        labels: {{ legend_jenkel | safe }},
+        datasets: [
+            {
+                data: {{ data_jenkel | safe }},
+                backgroundColor: ['#264653', '#e76f51'],
+            }
+        ]
+    };
+    const config = {
+        type: 'pie',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    var chart_jenis_kelamin = document.getElementById('jenkel-chart').getContext('2d');
+    new Chart(chart_jenis_kelamin, config);
+
+</script>
+
+{% endblock %}

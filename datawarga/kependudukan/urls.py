@@ -110,6 +110,7 @@ urlpatterns = [
         iuran.delete_iuran_bulanan,
         name="deleteIuranBulanan",
     ),
+    path("public/dashboard/<str:page>", utility.dashboard_public, name="publicDasboard"),
 ]
 
 if settings.WG_ENV == "dev":

@@ -1,0 +1,53 @@
+{% extends "base_plain.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-3 col-sm-12">
+        <div class="card text-center mb-3">
+            <div class="card-header">Warga Per Cluster</div>
+            <div class="card-body">
+                <canvas id="cluster-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+{% block jscript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
+<script>
+    const data_cluster = {
+        labels: {{ legend_cluster | safe }},
+        datasets: [
+            {
+                data: {{ data_cluster | safe }},
+                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
+            }
+        ]
+    };
+
+    const config_cluster = {
+        type: 'pie',
+        data: data_cluster,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    
+    var ctx = document.getElementById("cluster-chart").getContext('2d');
+    new Chart(ctx, config_cluster);
+
+    
+</script>
+
+{% endblock %}

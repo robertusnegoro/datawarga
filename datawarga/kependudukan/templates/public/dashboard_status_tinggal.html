@@ -1,0 +1,50 @@
+{% extends "base_plain.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-center mb-3">
+            <div class="card-header">Status Tinggal</div>
+            <div class="card-body">
+                <canvas id="status-tinggal-chart" class="chart-canvas" height="300px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+{% block jscript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
+<script>
+    const data_status_tinggal = {
+        labels: {{ legend_status_tinggal | safe }},
+        datasets: [
+            {
+                data: {{ data_status_tinggal | safe }},
+                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
+            }
+        ]
+    };
+
+    const config_status_tinggal = {
+        type: 'pie',
+        data: data_status_tinggal,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        },
+    };
+
+    
+    var ctx = document.getElementById("status-tinggal-chart").getContext('2d');
+    new Chart(ctx, config_status_tinggal);
+</script>
+
+{% endblock %}
