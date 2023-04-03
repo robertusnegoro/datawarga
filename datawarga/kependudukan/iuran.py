@@ -51,6 +51,20 @@ def form_iuran_bulanan_save(request):
     if request.POST:
         form = IuranBulananForm(request.POST, request.FILES)
 
+        check_existing_trx = TransaksiIuranBulanan.objects.filter(
+            periode_bulan=str(request.POST["periode_bulan"]),
+            periode_tahun=str(request.POST["periode_tahun"]),
+            kompleks__id=int(request.POST["kompleks"]),
+        )
+
+        if len(check_existing_trx) > 0:
+            error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
+                str(request.POST["periode_bulan"]),
+                str(request.POST["periode_tahun"]),
+            )
+            logger.error(error_message)
+            return HttpResponse(error_message)
+
         if form.is_valid():
             if "idtransaksi" in request.POST:
                 idtransaksi = int(request.POST["idtransaksi"])
@@ -60,27 +74,12 @@ def form_iuran_bulanan_save(request):
                 form = IuranBulananForm(
                     request.POST, request.FILES, instance=data_transaksi
                 )
-            else:
-                check_existing_trx = TransaksiIuranBulanan.objects.filter(
-                    periode_bulan=str(request.POST["periode_bulan"]),
-                    periode_tahun=str(request.POST["periode_tahun"]),
-                    kompleks__id=int(request.POST["kompleks"]),
-                )
-                if len(check_existing_trx) > 0:
-                    error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
-                        str(request.POST["periode_bulan"]),
-                        str(request.POST["periode_tahun"]),
-                    )
-                    logger.error(error_message)
-                    return HttpResponse(error_message)
 
             iuran = form.save()
 
             base_url = reverse(
                 "kependudukan:detailKompleks",
-                kwargs={
-                    "idkompleks": int(request.POST["kompleks"])
-                },
+                kwargs={"idkompleks": int(request.POST["kompleks"])},
             )
             payload = urlencode({"message": "iuran bulanan is saved!"})
             url_redir = "{}?{}".format(base_url, payload)

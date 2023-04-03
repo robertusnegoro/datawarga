@@ -133,7 +133,9 @@ def upload_to(instance, filename):
     """
     ext = os.path.splitext(filename)[1]
     today = date.today()
-    return 'bukti_bayar/{}/{}{}'.format(today.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d'), ext)
+    return "bukti_bayar/{}/{}{}".format(
+        today.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d"), ext
+    )
 
 
 class TransaksiIuranBulanan(models.Model):
@@ -151,7 +153,7 @@ class TransaksiIuranBulanan(models.Model):
         "November",
         "Desember",
     )
-    
+
     list_bulan_ori = []
     counter = 1
     for a in indonesian_months:

@@ -175,6 +175,7 @@ def helper_finance_year_list():
 
     return [x for x in reversed(range(iuran_start_period, (iuran_current_period + 1)))]
 
+
 def dashboard_public(request, page="warga"):
     context = {}
     if page == "warga":

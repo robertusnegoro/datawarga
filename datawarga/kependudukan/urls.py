@@ -110,7 +110,9 @@ urlpatterns = [
         iuran.delete_iuran_bulanan,
         name="deleteIuranBulanan",
     ),
-    path("public/dashboard/<str:page>", utility.dashboard_public, name="publicDasboard"),
+    path(
+        "public/dashboard/<str:page>", utility.dashboard_public, name="publicDasboard"
+    ),
     path("public/iuran", iuran_public.form_iuran_bulanan_display, name="publicIuran"),
 ]
 
