@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import utility, kompleks, warga, iuran
+from . import utility, kompleks, warga, iuran, iuran_public
 from django.conf import settings
 
 app_name = "kependudukan"
@@ -111,6 +111,7 @@ urlpatterns = [
         name="deleteIuranBulanan",
     ),
     path("public/dashboard/<str:page>", utility.dashboard_public, name="publicDasboard"),
+    path("public/iuran", iuran_public.form_iuran_bulanan_display, name="publicIuran"),
 ]
 
 if settings.WG_ENV == "dev":

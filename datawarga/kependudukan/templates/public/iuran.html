@@ -1,0 +1,69 @@
+{% extends "base_plain.html" %}
+{% load humanize %}
+{% block title %}Cek Iuran{% endblock %}
+{% block customstyle %}
+.container {
+    max-width: 960px;
+  }
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <main>
+        <div class="py-5 text-center">
+            <h2>Cek Histori Pembayaran Iuran Bulanan</h2>
+            <p class="lead">Pilih nomor rumah dan tahun periode</p>
+        </div>
+        <div class="row g-5">
+            <div class="col-md-6 col-lg-4">
+                <form id="iuran" action="{% url 'kependudukan:publicIuran' %}" method="post" >
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="kompleks" class="form-label">Nomor Rumah</label>
+                        <select class="form-select" aria-label="Pilih Nomor Rumah" id="kompleks" name="kompleks">
+                            {% for rumah in list_kompleks %} <option value="{{ rumah.id }}">{{ rumah }}</option> {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periode_tahun" class="form-label">Periode</label>
+                        <select class="form-select" id="periode_tahun" name="periode_tahun">
+                            {% for x in iuran_year_period %}
+                                <option value="{{ x }}">{{ x }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="w-100 btn btn-primary" type="submit">Submit</button>
+                </form>
+            </div>
+            <div class="col-md-6 col-lg-8">
+                {% if data_pembayaran %}
+                <h4 class="d-flex justify-content-between align-items-center mb-3">
+                  <span class="text-primary">Pembayaran Anda</span>
+                  <span class="badge bg-primary rounded-pill">{{ periode_tahun }}</span>
+                </h4>
+                <ul class="list-group mb-3">
+                  {% for data in data_pembayaran %}
+                  <li class="list-group-item d-flex justify-content-between lh-sm">
+                    <div>
+                      <h6 class="my-0">{{ data.periode_bulan }}</h6>
+                      <small class="text-body-secondary">{{ data.tanggal_bayar }}</small>
+                      {% if data.keterangan %}
+                      <br><small class="text-body-secondary">Keterangan : {{ data.keterangan }}</small>
+                      {% endif %}
+                      
+                    </div>
+                    <span class="text-body-secondary">Rp. {{ data.total_bayar|intcomma }}</span>
+                  </li>
+                  {% endfor %}          
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+{% endblock %}
+{% block jscript %}
+
+{% endblock %}
