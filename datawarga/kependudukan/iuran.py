@@ -46,24 +46,21 @@ def form_iuran_bulanan(
     )
 
 
+def check_existing_trx_bulan(bulan, tahun, kompleks):
+    check_existing_trx = TransaksiIuranBulanan.objects.filter(
+        periode_bulan=str(bulan),
+        periode_tahun=str(tahun),
+        kompleks__id=int(kompleks),
+    )
+    if len(check_existing_trx) > 0:
+        return False
+    else:
+        return True
+
 @login_required
 def form_iuran_bulanan_save(request):
     if request.POST:
         form = IuranBulananForm(request.POST, request.FILES)
-
-        check_existing_trx = TransaksiIuranBulanan.objects.filter(
-            periode_bulan=str(request.POST["periode_bulan"]),
-            periode_tahun=str(request.POST["periode_tahun"]),
-            kompleks__id=int(request.POST["kompleks"]),
-        )
-
-        if len(check_existing_trx) > 0:
-            error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
-                str(request.POST["periode_bulan"]),
-                str(request.POST["periode_tahun"]),
-            )
-            logger.error(error_message)
-            return HttpResponse(error_message)
 
         if form.is_valid():
             if "idtransaksi" in request.POST:
@@ -71,9 +68,29 @@ def form_iuran_bulanan_save(request):
                 data_transaksi = get_object_or_404(
                     TransaksiIuranBulanan, pk=idtransaksi
                 )
+
+                if int(data_transaksi.periode_bulan) != int(request.POST["periode_bulan"]):
+                    test_check = check_existing_trx_bulan(request.POST['periode_bulan'], request.POST['periode_tahun'], request.POST['kompleks'])
+                    if not test_check:
+                        error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
+                            int(request.POST["periode_bulan"]),
+                            str(request.POST["periode_tahun"]),
+                        )
+                        logger.error(error_message)
+                        return HttpResponse(error_message)
+
                 form = IuranBulananForm(
                     request.POST, request.FILES, instance=data_transaksi
                 )
+            else:
+                test_check = check_existing_trx_bulan(request.POST['periode_bulan'], request.POST['periode_tahun'], request.POST['kompleks'])
+                if not test_check:
+                    error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
+                        int(request.POST["periode_bulan"]),
+                        str(request.POST["periode_tahun"]),
+                    )
+                    logger.error(error_message)
+                    return HttpResponse(error_message)
 
             iuran = form.save()
 

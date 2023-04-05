@@ -46,7 +46,7 @@
                   {% for data in data_pembayaran %}
                   <li class="list-group-item d-flex justify-content-between lh-sm">
                     <div>
-                      <h6 class="my-0">{{ data.periode_bulan }}</h6>
+                      <h6 class="my-0">{{ data.get_periode_bulan_display }}</h6>
                       <small class="text-body-secondary">{{ data.tanggal_bayar }}</small>
                       {% if data.keterangan %}
                       <br><small class="text-body-secondary">Keterangan : {{ data.keterangan }}</small>

@@ -157,7 +157,7 @@ class TransaksiIuranBulanan(models.Model):
     list_bulan_ori = []
     counter = 1
     for a in indonesian_months:
-        list_bulan_ori.append((str(counter), a))
+        list_bulan_ori.append((int(counter), a))
         counter += 1
 
     LIST_BULAN = tuple(list_bulan_ori)
@@ -167,7 +167,7 @@ class TransaksiIuranBulanan(models.Model):
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
     keterangan = models.TextField(blank=True, null=True)
     bukti_bayar = models.FileField(upload_to=upload_to, blank=True)
-    periode_bulan = models.CharField(max_length=30, choices=LIST_BULAN)
+    periode_bulan = models.IntegerField(choices=LIST_BULAN)
     periode_tahun = models.IntegerField()
     total_bayar = models.IntegerField(default=settings.IURAN_BULANAN)
 
