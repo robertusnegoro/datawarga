@@ -26,7 +26,9 @@ def form_iuran_bulanan_display(request):
         list_trx = TransaksiIuranBulanan.objects.order_by("periode_bulan").filter(
             periode_tahun=periode_tahun, kompleks__id=id_komplek
         )
+        data_kompleks = Kompleks.objects.get(pk=id_komplek)
         context["data_pembayaran"] = list_trx
         context["periode_tahun"] = periode_tahun
+        context["data_kompleks"] = data_kompleks
 
     return render(request=request, template_name="public/iuran.html", context=context)

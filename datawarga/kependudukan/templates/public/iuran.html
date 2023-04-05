@@ -39,7 +39,7 @@
             <div class="col-md-6 col-lg-8">
                 {% if data_pembayaran %}
                 <h4 class="d-flex justify-content-between align-items-center mb-3">
-                  <span class="text-primary">Pembayaran Anda</span>
+                  <span class="text-primary">Pembayaran {{ data_kompleks }}</span>
                   <span class="badge bg-primary rounded-pill">{{ periode_tahun }}</span>
                 </h4>
                 <ul class="list-group mb-3">
@@ -57,6 +57,10 @@
                   </li>
                   {% endfor %}          
                 </ul>
+                {% else %}
+                <h4 class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-primary">Pembayaran {{ data_kompleks }} belum ditemukan</span>
+                  </h4>
                 {% endif %}
             </div>
         </div>
