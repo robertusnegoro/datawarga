@@ -1,0 +1,99 @@
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Roboto|Playfair+Display:400,400i,700,700i,900" rel="stylesheet" />
+        <style>
+            @page {
+                size: A3 landscape;
+                @bottom-right{
+                    content: "Halaman " counter(page) " dari " counter(pages);
+                }
+            }
+            html {
+                font-family: "Playfair Display";
+                font-size: 10pt;
+            }
+            div.report-title {
+                font-weight: bold;
+                text-align: center;
+                font-size: 16px;
+            }
+            div.report-subtitle {
+                font-weight: bold;
+                text-align: center;
+                font-size: 14px;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            th, td {
+                text-align: left;
+                padding: 8px;
+            }
+
+            tr:nth-child(even){background-color: #f2f2f2}
+
+            th {
+                background-color: #4f504f;
+                color: white;
+            }
+
+            td.paid {
+                background-color: aqua;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="report-title">Iuran Bulanan Warga</div>
+        <div class="report-subtitle">
+            {{ alamat }}. RW {{ rw }}.<br>Kel. {{ kelurahan }}. Kec. {{ kecamatan }}. {{ kota }} - {{ provinsi }}
+        </div>
+        <div class="report-filter">
+            Tahun : {{ year }}<br/>
+            Digenerate oleh sistem pada : {% now "SHORT_DATETIME_FORMAT" %}
+        </div>
+        <hr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nomor Rumah</th>
+                    <th>Januari</th>
+                    <th>Februari</th>
+                    <th>Maret</th>
+                    <th>April</th>
+                    <th>Mei</th>
+                    <th>Juni</th>
+                    <th>Juli</th>
+                    <th>Agustus</th>
+                    <th>September</th>
+                    <th>Oktober</th>
+                    <th>November</th>
+                    <th>Desember</th>
+                    <th>Last Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for iuran in data %}
+                <tr>
+                    <td>{{ iuran.kompleks }}</td>
+                    {% if iuran.january %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.february %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.march %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.april %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.may %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.june %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.july %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.august %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.september %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.october %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.november %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    {% if iuran.december %}<td class="paid">Lunas</td>{% else %}<td></td>{% endif %}
+                    <td>{{ iuran.last_modified }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>

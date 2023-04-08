@@ -3,6 +3,7 @@ from django.conf import settings
 import os
 from datetime import date
 import calendar
+from datetime import datetime
 
 # Create your models here.
 class Warga(models.Model):
@@ -176,3 +177,40 @@ class TransaksiIuranBulanan(models.Model):
             models.Index(fields=["periode_bulan"]),
             models.Index(fields=["periode_tahun"]),
         ]
+
+
+class SummaryTransaksiBulanan(models.Model):
+    kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
+    periode_tahun = models.IntegerField()
+    january = models.BooleanField(null=True, default=False)
+    february = models.BooleanField(null=True, default=False)
+    march = models.BooleanField(null=True, default=False)
+    april = models.BooleanField(null=True, default=False)
+    may = models.BooleanField(null=True, default=False)
+    june = models.BooleanField(null=True, default=False)
+    july = models.BooleanField(null=True, default=False)
+    august = models.BooleanField(null=True, default=False)
+    september = models.BooleanField(null=True, default=False)
+    october = models.BooleanField(null=True, default=False)
+    november = models.BooleanField(null=True, default=False)
+    december = models.BooleanField(null=True, default=False)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    def update_month_field(self, month_num, value):
+        month_name = datetime.strptime(str(month_num), "%m").strftime("%B").lower()
+        field_name = {
+            'january': 'january',
+            'february': 'february',
+            'march': 'march',
+            'april': 'april',
+            'may': 'may',
+            'june': 'june',
+            'july': 'july',
+            'august': 'august',
+            'september': 'september',
+            'october': 'october',
+            'november': 'november',
+            'december': 'december'
+        }[month_name]
+        setattr(self, field_name, value)
+        self.save()

@@ -1,5 +1,5 @@
 from .forms import IuranBulananForm
-from .models import Warga, Kompleks, TransaksiIuranBulanan
+from .models import Warga, Kompleks, TransaksiIuranBulanan, SummaryTransaksiBulanan
 from .utility import helper_finance_year_list
 from datetime import datetime
 from django.conf import settings
@@ -7,7 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.template.loader import render_to_string
 from django.core import serializers
+from weasyprint.text.fonts import FontConfiguration
+from weasyprint import HTML
 from urllib.parse import urlencode
 import logging
 import json
@@ -57,6 +60,7 @@ def check_existing_trx_bulan(bulan, tahun, kompleks):
     else:
         return True
 
+
 @login_required
 def form_iuran_bulanan_save(request):
     if request.POST:
@@ -69,8 +73,14 @@ def form_iuran_bulanan_save(request):
                     TransaksiIuranBulanan, pk=idtransaksi
                 )
 
-                if int(data_transaksi.periode_bulan) != int(request.POST["periode_bulan"]):
-                    test_check = check_existing_trx_bulan(request.POST['periode_bulan'], request.POST['periode_tahun'], request.POST['kompleks'])
+                if int(data_transaksi.periode_bulan) != int(
+                    request.POST["periode_bulan"]
+                ):
+                    test_check = check_existing_trx_bulan(
+                        request.POST["periode_bulan"],
+                        request.POST["periode_tahun"],
+                        request.POST["kompleks"],
+                    )
                     if not test_check:
                         error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
                             int(request.POST["periode_bulan"]),
@@ -83,7 +93,11 @@ def form_iuran_bulanan_save(request):
                     request.POST, request.FILES, instance=data_transaksi
                 )
             else:
-                test_check = check_existing_trx_bulan(request.POST['periode_bulan'], request.POST['periode_tahun'], request.POST['kompleks'])
+                test_check = check_existing_trx_bulan(
+                    request.POST["periode_bulan"],
+                    request.POST["periode_tahun"],
+                    request.POST["kompleks"],
+                )
                 if not test_check:
                     error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
                         int(request.POST["periode_bulan"]),
@@ -141,3 +155,20 @@ def delete_iuran_bulanan(request, idtransaksi):
     return render(
         request, template_name="delete_form_iuran_bulanan.html", context=context
     )
+
+@login_required
+def pdf_report_iuranbulanan(request, year):
+    data_iuran_summary = SummaryTransaksiBulanan.objects.filter(periode_tahun=year).order_by("kompleks")
+    report_data = {'data': data_iuran_summary, 'year': year}
+    report_data["rw"] = settings.RUKUNWARGA
+    report_data["alamat"] = settings.ALAMAT
+    report_data["kelurahan"] = settings.KELURAHAN
+    report_data["kecamatan"] = settings.KECAMATAN
+    report_data["kota"] = settings.KOTA
+    report_data["provinsi"] = settings.PROVINSI
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "inline; filename=summary-iuranbulanan.pdf"
+    html = render_to_string("summary-iuranbulanan-pdf.html", report_data)
+    font_config = FontConfiguration()
+    HTML(string=html).write_pdf(response, font_config=font_config)
+    return response

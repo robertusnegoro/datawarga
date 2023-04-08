@@ -114,6 +114,7 @@ urlpatterns = [
         "public/dashboard/<str:page>", utility.dashboard_public, name="publicDasboard"
     ),
     path("public/iuran", iuran_public.form_iuran_bulanan_display, name="publicIuran"),
+    path("warga/summary-iuranbulanan-pdf/<int:year>", iuran.pdf_report_iuranbulanan, name="pdfReportIuranBulanan"),
 ]
 
 if settings.WG_ENV == "dev":
