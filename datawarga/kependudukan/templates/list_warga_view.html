@@ -36,6 +36,8 @@
             <th>Alamat</th>
             <th>Cluster</th>
             <th>Blok / No</th>
+            <th>Status Tinggal</th>
+            <th>Kepala Keluarga</th>
             <th>Opsi</th>
         </tr>
     </thead>
@@ -48,6 +50,8 @@
         <td>{{ w.alamat }}</td>
         <td>{{ w.kompleks.cluster }}</td>
         <td>{{ w.kompleks }}</td>
+        <td>{{ w.status_tinggal }}</td>
+        <td>{% if w.kepala_keluarga %}<i class="bi bi-check-square-fill"></i>{% endif %}</td>
         <td><a class="btn btn-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}"> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href="{% url 'kependudukan:deleteformWarga' w.id %}"><i class="bi bi-trash"></i> </a></td>
     </tr>
     {% empty %}

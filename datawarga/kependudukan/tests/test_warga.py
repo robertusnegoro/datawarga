@@ -57,6 +57,7 @@ class WargaTestCase(TestCase):
             "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
             "kompleks": self.existing_kompleks.id,
+            "status_keluarga": "SAUDARA",
         }
         form = WargaForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -84,6 +85,7 @@ class WargaTestCase(TestCase):
             "status": "BELUM KAWIN",
             "jenis_kelamin": "Perempuan",
             "status_tinggal": "KONTRAK",
+            "status_keluarga": "SAUDARA",
         }
         form = WargaForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -125,6 +127,7 @@ class WargaTestCase(TestCase):
             "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
             "kompleks": self.existing_kompleks.id,
+            "status_keluarga": "SAUDARA",
         }
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)
@@ -151,6 +154,7 @@ class WargaTestCase(TestCase):
             "jenis_kelamin": "PEREMPUAN",
             "status_tinggal": "KONTRAK",
             "kompleks": self.existing_kompleks.id,
+            "status_keluarga": "SAUDARA",
         }
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)

@@ -181,6 +181,9 @@ def pdfWargaReport(request):
         if len(rukuntangga) > 0:
             dataWarga = dataWarga.filter(kompleks__rt=rukuntangga)
             report_data["filter"]["rt"] = rukuntangga
+        if request.POST["kepala_keluarga"]:
+            dataWarga = dataWarga.filter(kepala_keluarga=True)
+
     report_data["data"] = dataWarga
     report_data["rw"] = settings.RUKUNWARGA
     report_data["alamat"] = settings.ALAMAT
@@ -211,3 +214,22 @@ def list_warga_no_kompleks_json(request):
         )
     data = serializers.serialize("json", data_warga)
     return JsonResponse({"data": json.loads(data)})
+
+
+@login_required
+def set_kepala_keluarga(request, idwarga):
+    warga_record = get_object_or_404(Warga, pk=idwarga)
+    warga_serumah = Warga.objects.filter(kompleks=warga_record.kompleks)
+    for warga in warga_serumah:
+        warga.kepala_keluarga = False
+        warga.save()
+
+    warga_record.kepala_keluarga = True
+    warga_record.save()
+
+    base_url = reverse(
+        "kependudukan:detailKompleks", kwargs={"idkompleks": warga_record.kompleks.id}
+    )
+    payload = urlencode({"message": "data saved!"})
+    url_redir = "{}?{}".format(base_url, payload)
+    return redirect(url_redir)

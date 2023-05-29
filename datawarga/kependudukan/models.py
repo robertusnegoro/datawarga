@@ -86,6 +86,7 @@ class Warga(models.Model):
     )
     alamat_ktp = models.CharField(max_length=255, null=True, blank=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
+    kepala_keluarga = models.BooleanField(default=False)
 
     class Meta:
         indexes = [
@@ -199,18 +200,18 @@ class SummaryTransaksiBulanan(models.Model):
     def update_month_field(self, month_num, value):
         month_name = datetime.strptime(str(month_num), "%m").strftime("%B").lower()
         field_name = {
-            'january': 'january',
-            'february': 'february',
-            'march': 'march',
-            'april': 'april',
-            'may': 'may',
-            'june': 'june',
-            'july': 'july',
-            'august': 'august',
-            'september': 'september',
-            'october': 'october',
-            'november': 'november',
-            'december': 'december'
+            "january": "january",
+            "february": "february",
+            "march": "march",
+            "april": "april",
+            "may": "may",
+            "june": "june",
+            "july": "july",
+            "august": "august",
+            "september": "september",
+            "october": "october",
+            "november": "november",
+            "december": "december",
         }[month_name]
         setattr(self, field_name, value)
         self.save()

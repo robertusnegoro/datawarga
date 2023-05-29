@@ -9,6 +9,11 @@ urlpatterns = [
     path("", warga.index, name="index"),
     path("warga/form-warga/<int:idwarga>", warga.formWarga, name="formWarga"),
     path(
+        "warga/set-kk/<int:idwarga>",
+        warga.set_kepala_keluarga,
+        name="set_kepala_keluarga",
+    ),
+    path(
         "warga/form-warga/<int:idwarga>/<int:idkompleks>",
         warga.formWarga,
         name="formWargaRumah",
@@ -114,7 +119,11 @@ urlpatterns = [
         "public/dashboard/<str:page>", utility.dashboard_public, name="publicDasboard"
     ),
     path("public/iuran", iuran_public.form_iuran_bulanan_display, name="publicIuran"),
-    path("warga/summary-iuranbulanan-pdf/<int:year>", iuran.pdf_report_iuranbulanan, name="pdfReportIuranBulanan"),
+    path(
+        "warga/summary-iuranbulanan-pdf/<int:year>",
+        iuran.pdf_report_iuranbulanan,
+        name="pdfReportIuranBulanan",
+    ),
 ]
 
 if settings.WG_ENV == "dev":

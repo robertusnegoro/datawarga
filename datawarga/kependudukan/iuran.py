@@ -156,10 +156,13 @@ def delete_iuran_bulanan(request, idtransaksi):
         request, template_name="delete_form_iuran_bulanan.html", context=context
     )
 
+
 @login_required
 def pdf_report_iuranbulanan(request, year):
-    data_iuran_summary = SummaryTransaksiBulanan.objects.filter(periode_tahun=year).order_by("kompleks")
-    report_data = {'data': data_iuran_summary, 'year': year}
+    data_iuran_summary = SummaryTransaksiBulanan.objects.filter(
+        periode_tahun=year
+    ).order_by("kompleks")
+    report_data = {"data": data_iuran_summary, "year": year}
     report_data["rw"] = settings.RUKUNWARGA
     report_data["alamat"] = settings.ALAMAT
     report_data["kelurahan"] = settings.KELURAHAN
