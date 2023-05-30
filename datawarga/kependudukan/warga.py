@@ -1,5 +1,6 @@
 from .forms import WargaForm, GenerateKompleksForm
 from .models import Warga, Kompleks
+from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -14,10 +15,13 @@ from django.views.static import serve
 from urllib.parse import urlencode
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 import logging
 import json
 
 logger = logging.getLogger(__name__)
+
 
 # Create your views here.
 @login_required
@@ -170,9 +174,11 @@ def listWargaReportForm(request):
 
 @login_required
 def pdfWargaReport(request):
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     dataWarga = Warga.objects.all().order_by("kompleks__blok", "kompleks__nomor")
     report_data = {"filter": {}}
     if request.POST:
+        file_type = str(request.POST["file_type"])
         cluster = str(request.POST["cluster"])
         rukuntangga = str(request.POST["rt"])
         if cluster != "all":
@@ -181,7 +187,7 @@ def pdfWargaReport(request):
         if len(rukuntangga) > 0:
             dataWarga = dataWarga.filter(kompleks__rt=rukuntangga)
             report_data["filter"]["rt"] = rukuntangga
-        if request.POST["kepala_keluarga"]:
+        if "kepala_keluarga" in request.POST:
             dataWarga = dataWarga.filter(kepala_keluarga=True)
 
     report_data["data"] = dataWarga
@@ -191,12 +197,97 @@ def pdfWargaReport(request):
     report_data["kecamatan"] = settings.KECAMATAN
     report_data["kota"] = settings.KOTA
     report_data["provinsi"] = settings.PROVINSI
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = "inline; filename=daftar-warga.pdf"
-    html = render_to_string("daftar-warga-pdf-print.html", report_data)
-    font_config = FontConfiguration()
-    HTML(string=html).write_pdf(response, font_config=font_config)
-    return response
+    if file_type == "pdf":
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = "inline; filename=daftar-warga.pdf"
+        html = render_to_string("daftar-warga-pdf-print.html", report_data)
+        font_config = FontConfiguration()
+        HTML(string=html).write_pdf(response, font_config=font_config)
+        return response
+    else:
+        service = build(
+            "sheets", "v4", credentials=settings.GOOGLE_SHEETS_SERVICE_ACCOUNT
+        )
+
+        spreadsheet = (
+            service.spreadsheets()
+            .create(body={"properties": {"title": f"Data Warga - {timestamp}" }})
+            .execute()
+        )
+
+        # Retrieve the ID of the newly created spreadsheet
+        spreadsheet_id = spreadsheet["spreadsheetId"]
+
+        # Prepare the data to be written to the spreadsheet
+        data = [
+            [
+                "Nama",
+                "NIK",
+                "KK",
+                "Blok",
+                "No Rumah",
+                "RT",
+                "RW",
+                "Tempat Lahir",
+                "Tanggal Lahir",
+                "HP",
+                "Jenis Kelamin",
+                "Status Tinggal",
+                "Status",
+                "Agama",
+                "Pekerjaan",
+            ]
+        ]
+
+        for record in dataWarga:
+            data.append(
+                [
+                    record.nama_lengkap,
+                    record.nik,
+                    record.no_kk,
+                    record.kompleks.blok,
+                    record.kompleks.nomor,
+                    record.kompleks.rt,
+                    record.kompleks.rw,
+                    record.tempat_lahir,
+                    str(record.tanggal_lahir),
+                    record.no_hp,
+                    record.jenis_kelamin,
+                    record.status_tinggal,
+                    record.status,
+                    record.agama,
+                    record.pekerjaan,
+                ]
+            )
+
+        # Write the data to the spreadsheet
+        service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id,
+            range="Sheet1!A1",
+            valueInputOption="RAW",
+            body={"values": data},
+        ).execute()
+
+        if settings.GOOGLE_DRIVE_USER is not None:
+            try:
+                drive_service = build(
+                    "drive", "v3", credentials=settings.GOOGLE_SHEETS_SERVICE_ACCOUNT
+                )
+                user_permission = {
+                    "type": "user",
+                    "role": "writer",
+                    "emailAddress": settings.GOOGLE_DRIVE_USER,
+                }
+                drive_service.permissions().create(
+                    fileId=spreadsheet_id, body=user_permission, fields="id"
+                ).execute()
+            except HttpError as e:
+                logger.error(e)
+
+        # Construct the URL to the generated Google Sheets document
+        spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
+
+        return render(request, "sheet-link.html", {"spreadsheet_url": spreadsheet_url})
 
 
 @login_required

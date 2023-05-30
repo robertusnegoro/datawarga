@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+from google.oauth2 import service_account
 from distutils.util import strtobool
 import sys
 import os
@@ -198,3 +199,17 @@ IURAN_BULANAN = int(os.getenv("WG_IURAN_BULANAN", 150000))
 GENERATE_KOMPLEKS_LIMIT = 200
 
 TIME_ZONE = "Asia/Jakarta"
+
+GOOGLE_SHEETS_CREDS = os.getenv("GOOGLE_CRED_PATH", None)
+GOOGLE_SHEETS_SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
+]
+GOOGLE_SHEETS_SERVICE_ACCOUNT = None
+if os.path.isfile(GOOGLE_SHEETS_CREDS):
+    GOOGLE_SHEETS_SERVICE_ACCOUNT = (
+        service_account.Credentials.from_service_account_file(
+            GOOGLE_SHEETS_CREDS, scopes=GOOGLE_SHEETS_SCOPES
+        )
+    )
+GOOGLE_DRIVE_USER = os.getenv("GOOGLE_DRIVE_USER", None)

@@ -5,7 +5,6 @@ import kependudukan.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kependudukan", "0016_transaksiiuranbulanan_and_more"),
     ]

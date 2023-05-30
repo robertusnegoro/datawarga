@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kependudukan", "0021_alter_transaksiiuranbulanan_periode_bulan_and_more"),
     ]

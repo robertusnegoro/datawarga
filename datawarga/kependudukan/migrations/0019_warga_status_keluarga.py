@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kependudukan", "0018_kompleks_kependuduka_blok_2c7004_idx_and_more"),
     ]

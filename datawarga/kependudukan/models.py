@@ -5,6 +5,7 @@ from datetime import date
 import calendar
 from datetime import datetime
 
+
 # Create your models here.
 class Warga(models.Model):
     RELIGIONS = (

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kependudukan", "0013_remove_warga_alamat_remove_warga_kecamatan_and_more"),
     ]
