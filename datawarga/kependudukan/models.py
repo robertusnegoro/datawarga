@@ -1,9 +1,10 @@
-from django.db import models
-from django.conf import settings
-import os
 from datetime import date
-import calendar
 from datetime import datetime
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db import models
+import calendar
+import os
 
 
 # Create your models here.
@@ -118,6 +119,7 @@ class Kompleks(models.Model):
     description = models.TextField(blank=True, null=True)
     rt = models.CharField(max_length=4, default=settings.RUKUNTANGGA)
     rw = models.CharField(max_length=4, default=settings.RUKUNWARGA)
+    permission_group = models.ForeignKey("WargaPermissionGroup", on_delete=models.SET_NULL, null=True)
 
     class Meta:
         indexes = [
@@ -216,3 +218,13 @@ class SummaryTransaksiBulanan(models.Model):
         }[month_name]
         setattr(self, field_name, value)
         self.save()
+
+class WargaPermissionGroup(models.Model):
+    group_name = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return self.group_name
+
+class UserPermission(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    permission_group = models.ForeignKey("WargaPermissionGroup", on_delete=models.SET_NULL, null=True)

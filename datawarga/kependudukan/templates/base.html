@@ -42,16 +42,25 @@
                             </a>
                         </h6>
                         <ul class="nav flex-column">
+                            {% if request.user.is_superuser %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'kependudukan:kompleksForm' %}">
                                     <span class="align-text-bottom"></span>
                                     <i class="bi bi-geo"></i> </i> Form Kompleks Rumah
                                 </a>
                             </li>
+                            {% endif %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'kependudukan:listKompleksView' %}">
                                     <span class="align-text-bottom"></span>
                                     <i class="bi bi-map"></i> </i> Data Kompleks Rumah
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                {% now "Y" as current_year %}
+                                <a class="nav-link" href="{% url 'kependudukan:pdfReportIuranBulanan' year=current_year %}">
+                                    <span class="align-text-bottom"></span>
+                                    <i class="bi bi-file-earmark-pdf"></i> Summary Iuran Bulanan Per Tahun
                                 </a>
                             </li>
                         </ul>

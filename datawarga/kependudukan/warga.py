@@ -1,6 +1,6 @@
 from .forms import WargaForm, GenerateKompleksForm
-from .models import Warga, Kompleks
-from datetime import datetime
+from .models import Warga, Kompleks, WargaPermissionGroup, UserPermission
+from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -10,13 +10,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.timezone import now
 from django.views.generic import ListView
 from django.views.static import serve
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from urllib.parse import urlencode
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 import logging
 import json
 
@@ -114,6 +115,12 @@ class WargaListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        current_permission_group = UserPermission.objects.get(user=self.request.user)
+        logger.info(current_permission_group.permission_group)
+
+        if str(current_permission_group.permission_group).lower() != 'all':
+            queryset = queryset.filter(kompleks__permission_group=current_permission_group.permission_group.id)
+
         if "search" in self.request.GET:
             search_keyword = str(self.request.GET["search"])
 
@@ -181,6 +188,7 @@ def pdfWargaReport(request):
         file_type = str(request.POST["file_type"])
         cluster = str(request.POST["cluster"])
         rukuntangga = str(request.POST["rt"])
+        usia = str(request.POST["usia"])
         if cluster != "all":
             dataWarga = dataWarga.filter(kompleks__cluster=cluster)
             report_data["filter"]["cluster"] = cluster
@@ -189,7 +197,16 @@ def pdfWargaReport(request):
             report_data["filter"]["rt"] = rukuntangga
         if "kepala_keluarga" in request.POST:
             dataWarga = dataWarga.filter(kepala_keluarga=True)
-
+        today = now().date()
+        if usia == "lansia":
+            age_delta = 55 * 365
+            age_date = today - timedelta(days=age_delta)
+            dataWarga = dataWarga.filter(tanggal_lahir__lte=age_date)
+        elif usia == "balita":
+            age_delta = 5 * 365
+            age_date = today - timedelta(days=age_delta)
+            dataWarga = dataWarga.filter(tanggal_lahir__gte=age_date)
+            
     report_data["data"] = dataWarga
     report_data["rw"] = settings.RUKUNWARGA
     report_data["alamat"] = settings.ALAMAT

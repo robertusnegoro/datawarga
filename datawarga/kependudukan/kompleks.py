@@ -1,9 +1,9 @@
 from .forms import WargaForm, GenerateKompleksForm
-from .models import Warga, Kompleks
+from .models import Warga, Kompleks, WargaPermissionGroup, UserPermission
 from .utility import helper_finance_year_list
 from datetime import datetime
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core import serializers
 from django.db.models import Q, Count
 from django.http import HttpResponse, Http404, JsonResponse
@@ -21,9 +21,9 @@ import json
 
 logger = logging.getLogger(__name__)
 
-
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def kompleks_form(request):
+    permission_group_data = WargaPermissionGroup.objects.all()
     context = {
         "rt": settings.RUKUNTANGGA,
         "rw": settings.RUKUNWARGA,
@@ -32,7 +32,9 @@ def kompleks_form(request):
         "kelurahan": settings.KELURAHAN,
         "kota": settings.KOTA,
         "provinsi": settings.PROVINSI,
+        "permission_group": permission_group_data
     }
+    
     return render(request=request, template_name="form_kompleks.html", context=context)
 
 
@@ -54,6 +56,7 @@ def generate_kompleks(request):
             kota = str(request.POST["kota"])
             provinsi = str(request.POST["provinsi"])
             kode_pos = str(request.POST["kode_pos"])
+            permission_group = int(request.POST["permission_group"])
 
             total_num = finish_num - start_num
 
@@ -81,6 +84,7 @@ def generate_kompleks(request):
                     kota=kota,
                     provinsi=provinsi,
                     kode_pos=kode_pos,
+                    permission_group=WargaPermissionGroup.objects.get(pk=permission_group),
                 )
                 logger.info("%s, %s, %s is saved to db" % (cluster, blok, counter))
                 counter += 1
@@ -116,6 +120,13 @@ class KompleksListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        current_permission_group = UserPermission.objects.get(user=self.request.user)
+        logger.info(current_permission_group.permission_group)
+
+        if str(current_permission_group.permission_group).lower() != 'all':
+            queryset = queryset.filter(permission_group=current_permission_group.permission_group.id)
+
         if "search" in self.request.GET:
             search_keyword = str(self.request.GET["search"])
 
@@ -207,7 +218,7 @@ def detail_kompleks(request, idkompleks):
 
 @login_required
 def warga_rumah(request, idkompleks):
-    data_warga = Warga.objects.filter(kompleks=idkompleks)
+    data_warga = Warga.objects.filter(kompleks=idkompleks).filter(~Q(status_tinggal="PINDAH"))
     total_warga = len(data_warga)
     data = serializers.serialize("json", data_warga)
     response = {"data": json.loads(data), "total": total_warga}

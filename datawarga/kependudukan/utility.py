@@ -1,7 +1,7 @@
 from .forms import WargaForm, GenerateKompleksForm, WargaCSVForm
 from .models import Warga, Kompleks
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core import serializers
 from django.db.models import Q, Count
 from django.http import HttpResponse, Http404, JsonResponse, FileResponse
@@ -56,7 +56,7 @@ def dashboard_warga(request):
     return render(request=request, template_name="dashboard.html", context=context)
 
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def generate_data_warga(request, count=10):
     counter = 0
 
@@ -65,12 +65,13 @@ def generate_data_warga(request, count=10):
     tempat_lahir = ("Malang", "Payakumbuh", "Medan", "Magelang")
 
     while counter < count:
+        random_records = list(Kompleks.objects.all())
+        random_komplek = random.sample(random_records, 1)[0]
         nama_lengkap = "%s %s" % (random.choice(first_name), random.choice(last_name))
         data_warga = Warga.objects.create(
             nama_lengkap=nama_lengkap,
             nik=random.randint(100000000, 200000000),
             agama=random.choice(Warga.RELIGIONS)[0],
-            kode_pos=15315,
             no_hp=random.randint(1000000, 2000000),
             no_kk=random.randint(100000000, 200000000),
             pekerjaan=random.choice(Warga.PEKERJAAN)[0],
@@ -78,9 +79,8 @@ def generate_data_warga(request, count=10):
             tanggal_lahir="%s-08-10" % (random.randint(1960, 1990)),
             tempat_lahir=random.choice(tempat_lahir),
             jenis_kelamin=random.choice(Warga.JENIS_KELAMIN)[0],
-            alamat_blok="A-%s" % (random.randint(1, 5)),
-            alamat_nomor=random.randint(1, 100),
             status_tinggal=random.choice(Warga.STATUS_TINGGAL)[0],
+            kompleks=random_komplek,
         )
         counter += 1
     return HttpResponse("generated %s data" % (counter))
