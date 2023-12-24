@@ -17,7 +17,10 @@
             </button>
         <div class="navbar-nav">
             <div class="nav-item text-nowrap">
-                <a class="nav-link px-3 d-sm-none d-md-block d-none d-sm-block" href="{% url 'logout' %}">Log out</a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button class="nav-link px-3 d-sm-none d-md-block d-none d-sm-block btn btn-link">Log out</button>
+                </form>
             </div>
         </div>
         </header>
