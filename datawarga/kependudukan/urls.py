@@ -121,9 +121,19 @@ urlpatterns = [
     ),
     path("public/iuran", iuran_public.form_iuran_bulanan_display, name="publicIuran"),
     path(
+        "warga/summary-iuranbulanan-form",
+        iuran.pdfReportIuranBulananForm,
+        name="pdfReportIuranBulananForm",
+    ),
+    path(
         "warga/summary-iuranbulanan-pdf/<int:year>",
         iuran.pdf_report_iuranbulanan,
         name="pdfReportIuranBulanan",
+    ),
+    path(
+        "warga/iuran-income-statement",
+        iuran.iuranIncomeStatementReportForm,
+        name="iuranIncomeStatementReportForm",
     ),
 ]
 
