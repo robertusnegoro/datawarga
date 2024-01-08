@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Generate Iuran Income Statement{% endblock %}
+{% block pagetitle %}Income Statement dari IPL{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="row">
+    <div class="col-lg-6">
+        <h5>Form Iuran Bulanan</h5>
+        <form method="post" enctype="multipart/form-data" id="incomestatement-form" action="{% url 'kependudukan:iuranIncomeStatementReportFormExec' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="periode_tahun" class="form-label">Tahun</label>
+                <select class="form-select" aria-label="Pilih Tahun" id="periode_tahun" name="periode_tahun">
+                    {% for y in range_tahun %}
+                    <option value="{{ y }}">{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="periode_bulan" class="form-label">Bulan</label>
+                <select class="form-select" aria-label="Pilih Bulan" id="periode_bulan" name="periode_bulan">
+                    {% for m in range_bulan %}
+                    <option value="{{ m }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-right"></i> Generate</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscript %}
+<script>
+    
+</script>
+{% endblock %}

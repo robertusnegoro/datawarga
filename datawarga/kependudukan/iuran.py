@@ -197,4 +197,15 @@ def pdf_report_iuranbulanan(request, year):
 
 @login_required
 def iuranIncomeStatementReportForm(request):
-    return HttpResponse("OK")
+    context = {}
+    current_year = int(datetime.now().strftime("%Y"))
+    context['range_tahun'] = [ year for  year in range(current_year, current_year - 6, -1) ]
+    context['range_bulan'] = TransaksiIuranBulanan.indonesian_months
+    return render(request, template_name="form_iuran_income_statement.html", context=context)
+
+@login_required
+def iuranIncomeStatementReportFormExec(request):
+    if request.POST:
+        year = int(request.POST["periode_tahun"])
+        month = str(request.POST["periode_bulan"])
+        return HttpResponse(f"{month} {year}")

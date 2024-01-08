@@ -135,6 +135,11 @@ urlpatterns = [
         iuran.iuranIncomeStatementReportForm,
         name="iuranIncomeStatementReportForm",
     ),
+    path(
+        "warga/iuran-income-statement-pdf",
+        iuran.iuranIncomeStatementReportFormExec,
+        name="iuranIncomeStatementReportFormExec",
+    ),
 ]
 
 if settings.WG_ENV == "dev":
