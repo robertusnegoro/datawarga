@@ -5,7 +5,7 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -205,7 +205,12 @@ def iuranIncomeStatementReportForm(request):
 
 @login_required
 def iuranIncomeStatementReportFormExec(request):
+    context = {}
     if request.POST:
         year = int(request.POST["periode_tahun"])
         month = str(request.POST["periode_bulan"])
-        return HttpResponse(f"{month} {year}")
+        month_number = TransaksiIuranBulanan.indonesian_months.index(month) + 1
+        transaction = TransaksiIuranBulanan.objects.filter(tanggal_bayar__month=month_number, tanggal_bayar__year=year)
+        context["transaction"] = transaction
+        context["total_sum"] = transaction.aggregate(Sum("total_bayar"))
+        return render(request, template_name="form_iuran_income_statement_exec.html", context=context)
