@@ -199,9 +199,14 @@ def pdf_report_iuranbulanan(request, year):
 def iuranIncomeStatementReportForm(request):
     context = {}
     current_year = int(datetime.now().strftime("%Y"))
-    context['range_tahun'] = [ year for  year in range(current_year, current_year - 6, -1) ]
-    context['range_bulan'] = TransaksiIuranBulanan.indonesian_months
-    return render(request, template_name="form_iuran_income_statement.html", context=context)
+    context["range_tahun"] = [
+        year for year in range(current_year, current_year - 6, -1)
+    ]
+    context["range_bulan"] = TransaksiIuranBulanan.indonesian_months
+    return render(
+        request, template_name="form_iuran_income_statement.html", context=context
+    )
+
 
 @login_required
 def iuranIncomeStatementReportFormExec(request):
@@ -210,7 +215,15 @@ def iuranIncomeStatementReportFormExec(request):
         year = int(request.POST["periode_tahun"])
         month = str(request.POST["periode_bulan"])
         month_number = TransaksiIuranBulanan.indonesian_months.index(month) + 1
-        transaction = TransaksiIuranBulanan.objects.filter(tanggal_bayar__month=month_number, tanggal_bayar__year=year)
+        transaction = TransaksiIuranBulanan.objects.filter(
+            tanggal_bayar__month=month_number, tanggal_bayar__year=year
+        )
         context["transaction"] = transaction
         context["total_sum"] = transaction.aggregate(Sum("total_bayar"))
-        return render(request, template_name="form_iuran_income_statement_exec.html", context=context)
+        context["year"] = year
+        context["month"] = month
+        return render(
+            request,
+            template_name="form_iuran_income_statement_exec.html",
+            context=context,
+        )

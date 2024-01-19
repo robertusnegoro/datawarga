@@ -49,6 +49,20 @@
     </div>
     
 </div>
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-header">Cie Ulang Tahun</div>
+            <div class="card-body">
+                <ul>
+                    {% for warga in ultah %}
+                        <li>{{ warga.nama_lengkap}} [{{ warga.kompleks}}]</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 

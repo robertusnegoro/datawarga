@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Income Statement : {% endblock %}
+{% block title %}Income Statement : Periode {{ month }} {{ year }}{% endblock %}
 {% block pagetitle %}Income Statement dari IPL{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
 {% load humanize %}
 <div class="row">
     <div class="col-lg-12">
-        <h5>Title Here</h5>
+        <h5>Laporan Transaksi IPL Periode {{ month }} {{ year }}</h5>
         <table class="table table-striped">
             <thead>
                 <tr>
