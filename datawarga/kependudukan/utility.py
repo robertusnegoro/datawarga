@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @login_required
 def dashboard_warga(request):
     total_warga = Warga.objects.all().count()
+    ultah = Warga.objects.filter(tanggal_lahir__month=datetime.now().month)
     jenkel_laki = Warga.objects.filter(jenis_kelamin="LAKI-LAKI").count()
     jenkel_perempuan = Warga.objects.filter(jenis_kelamin="PEREMPUAN").count()
     data_agama = []
@@ -52,6 +53,7 @@ def dashboard_warga(request):
         "data_agama": data_agama,
         "data_status_tinggal": data_status_tinggal,
         "total_warga": total_warga,
+        "ultah": ultah,
     }
     return render(request=request, template_name="dashboard.html", context=context)
 

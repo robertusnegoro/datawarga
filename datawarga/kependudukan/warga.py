@@ -118,8 +118,10 @@ class WargaListView(ListView):
         current_permission_group = UserPermission.objects.get(user=self.request.user)
         logger.info(current_permission_group.permission_group)
 
-        if str(current_permission_group.permission_group).lower() != 'all':
-            queryset = queryset.filter(kompleks__permission_group=current_permission_group.permission_group.id)
+        if str(current_permission_group.permission_group).lower() != "all":
+            queryset = queryset.filter(
+                kompleks__permission_group=current_permission_group.permission_group.id
+            )
 
         if "search" in self.request.GET:
             search_keyword = str(self.request.GET["search"])
@@ -206,7 +208,7 @@ def pdfWargaReport(request):
             age_delta = 5 * 365
             age_date = today - timedelta(days=age_delta)
             dataWarga = dataWarga.filter(tanggal_lahir__gte=age_date)
-            
+
     report_data["data"] = dataWarga
     report_data["rw"] = settings.RUKUNWARGA
     report_data["alamat"] = settings.ALAMAT
@@ -228,7 +230,7 @@ def pdfWargaReport(request):
 
         spreadsheet = (
             service.spreadsheets()
-            .create(body={"properties": {"title": f"Data Warga - {timestamp}" }})
+            .create(body={"properties": {"title": f"Data Warga - {timestamp}"}})
             .execute()
         )
 

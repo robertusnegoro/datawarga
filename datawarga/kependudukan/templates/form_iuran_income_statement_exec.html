@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Income Statement : Periode {{ month }} {{ year }}{% endblock %}
+{% block pagetitle %}Income Statement dari IPL{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load humanize %}
+<div class="row">
+    <div class="col-lg-12">
+        <h5>Laporan Transaksi IPL Periode {{ month }} {{ year }}</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Tanggal Bayar</th>
+                    <th>Nomor Rumah</th>
+                    <th>Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transact in transaction %}
+                <tr>
+                    <td>{{ transact.tanggal_bayar }}</td>
+                    <td>{{ transact.kompleks }}</td>
+                    <td>{{ transact.total_bayar|intcomma }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td colspan="2">Total</td>
+                    <td>{{ total_sum.total_bayar__sum|intcomma }}</td>
+                </tr>
+            </tbody>
+            
+
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscript %}
+<script>
+    
+</script>
+{% endblock %}

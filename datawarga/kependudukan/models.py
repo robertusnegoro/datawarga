@@ -119,7 +119,9 @@ class Kompleks(models.Model):
     description = models.TextField(blank=True, null=True)
     rt = models.CharField(max_length=4, default=settings.RUKUNTANGGA)
     rw = models.CharField(max_length=4, default=settings.RUKUNWARGA)
-    permission_group = models.ForeignKey("WargaPermissionGroup", on_delete=models.SET_NULL, null=True)
+    permission_group = models.ForeignKey(
+        "WargaPermissionGroup", on_delete=models.SET_NULL, null=True
+    )
 
     class Meta:
         indexes = [
@@ -219,12 +221,16 @@ class SummaryTransaksiBulanan(models.Model):
         setattr(self, field_name, value)
         self.save()
 
+
 class WargaPermissionGroup(models.Model):
     group_name = models.CharField(max_length=64, unique=True)
 
     def __str__(self):
         return self.group_name
 
+
 class UserPermission(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    permission_group = models.ForeignKey("WargaPermissionGroup", on_delete=models.SET_NULL, null=True)
+    permission_group = models.ForeignKey(
+        "WargaPermissionGroup", on_delete=models.SET_NULL, null=True
+    )

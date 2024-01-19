@@ -4,16 +4,17 @@ from .utility import helper_finance_year_list
 from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core import serializers
+from django.db.models import Count, Sum
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
 from django.template.loader import render_to_string
-from django.core import serializers
-from weasyprint.text.fonts import FontConfiguration
-from weasyprint import HTML
+from django.urls import reverse
 from urllib.parse import urlencode
-import logging
+from weasyprint import HTML
+from weasyprint.text.fonts import FontConfiguration
 import json
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -158,6 +159,23 @@ def delete_iuran_bulanan(request, idtransaksi):
 
 
 @login_required
+def pdfReportIuranBulananForm(request):
+    get_year = (
+        (
+            SummaryTransaksiBulanan.objects.all()
+            .values("periode_tahun")
+            .annotate(count=Count("periode_tahun"))
+        )
+        .order_by("-year")[:10]
+        .values_list("year", flat=True)
+    )
+    context = {"years": get_year}
+    return render(
+        request, template_name="form_summary_iuran_bulanan.html", context=context
+    )
+
+
+@login_required
 def pdf_report_iuranbulanan(request, year):
     data_iuran_summary = SummaryTransaksiBulanan.objects.filter(
         periode_tahun=year
@@ -175,3 +193,37 @@ def pdf_report_iuranbulanan(request, year):
     font_config = FontConfiguration()
     HTML(string=html).write_pdf(response, font_config=font_config)
     return response
+
+
+@login_required
+def iuranIncomeStatementReportForm(request):
+    context = {}
+    current_year = int(datetime.now().strftime("%Y"))
+    context["range_tahun"] = [
+        year for year in range(current_year, current_year - 6, -1)
+    ]
+    context["range_bulan"] = TransaksiIuranBulanan.indonesian_months
+    return render(
+        request, template_name="form_iuran_income_statement.html", context=context
+    )
+
+
+@login_required
+def iuranIncomeStatementReportFormExec(request):
+    context = {}
+    if request.POST:
+        year = int(request.POST["periode_tahun"])
+        month = str(request.POST["periode_bulan"])
+        month_number = TransaksiIuranBulanan.indonesian_months.index(month) + 1
+        transaction = TransaksiIuranBulanan.objects.filter(
+            tanggal_bayar__month=month_number, tanggal_bayar__year=year
+        )
+        context["transaction"] = transaction
+        context["total_sum"] = transaction.aggregate(Sum("total_bayar"))
+        context["year"] = year
+        context["month"] = month
+        return render(
+            request,
+            template_name="form_iuran_income_statement_exec.html",
+            context=context,
+        )
