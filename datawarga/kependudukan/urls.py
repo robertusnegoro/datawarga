@@ -140,6 +140,7 @@ urlpatterns = [
         iuran.iuranIncomeStatementReportFormExec,
         name="iuranIncomeStatementReportFormExec",
     ),
+    path("warga/iuran-yearly", iuran.iuranYearly, name="iuranYearly"),
 ]
 
 if settings.WG_ENV == "dev":

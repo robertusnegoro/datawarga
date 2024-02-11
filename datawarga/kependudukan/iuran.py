@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.db.models import Count, Sum
+from django.db.models.functions import TruncMonth
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -227,3 +228,33 @@ def iuranIncomeStatementReportFormExec(request):
             template_name="form_iuran_income_statement_exec.html",
             context=context,
         )
+
+
+@login_required
+def iuranYearly(request):
+    context = {}
+    current_year = int(datetime.now().strftime("%Y"))
+    context["range_tahun"] = [
+        year for year in range(current_year, current_year - 6, -1)
+    ]
+    if request.POST:
+        year = int(request.POST["periode_tahun"])
+    else:
+        year = current_year
+
+    sum_transaksi = (
+        TransaksiIuranBulanan.objects.filter(tanggal_bayar__year=year)
+        .annotate(month=TruncMonth("tanggal_bayar"))
+        .values("month")
+        .annotate(total_amount=Sum("total_bayar"))
+        .order_by("month")
+    )
+    grand_total = TransaksiIuranBulanan.objects.filter(
+        tanggal_bayar__year=year
+    ).aggregate(total_amount=Sum("total_bayar"))["total_amount"]
+
+    context["year"] = year
+    context["sum_transaksi"] = sum_transaksi
+    context["grand_total"] = grand_total
+
+    return render(request, template_name="iuran_yearly.html", context=context)

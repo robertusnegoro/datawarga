@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Rekap Iuran Per Tahun : {{ year }}{% endblock %}
+{% block pagetitle %}Rekap Iuran Per Tahun {{ year }}{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load humanize %}
+<div class="row">
+    <div class="col-md-4">
+        <h5>Form Iuran Bulanan</h5>
+        <form method="post" enctype="multipart/form-data" id="incomestatement-form" action="{% url 'kependudukan:iuranYearly' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="periode_tahun" class="form-label">Tahun</label>
+                <select class="form-select" aria-label="Pilih Tahun" id="periode_tahun" name="periode_tahun">
+                    {% for y in range_tahun %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-right"></i> Submit</button>
+        </form>
+    </div>
+    <div class="col-md-4">
+        <h5>Rekapan Tahunan : {{ year }}</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Bulan</th>
+                    <th>Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaksi in sum_transaksi %}
+                <tr>
+                    <td>{{ transaksi.month|date:"F" }}</td>
+                    <td class="text-end">{{ transaksi.total_amount|intcomma }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td>Total</td>
+                    <td class="text-end">{{ grand_total|intcomma }}</td>
+                </tr>
+            </tbody>
+            
+
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscript %}
+<script>
+    
+</script>
+{% endblock %}
