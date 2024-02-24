@@ -20,13 +20,27 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def dashboard_warga(request):
-    total_warga = Warga.objects.all().count()
-    ultah = Warga.objects.filter(tanggal_lahir__month=datetime.now().month)
-    jenkel_laki = Warga.objects.filter(jenis_kelamin="LAKI-LAKI").count()
-    jenkel_perempuan = Warga.objects.filter(jenis_kelamin="PEREMPUAN").count()
+    total_warga = Warga.objects.exclude(status_tinggal="PINDAH").count()
+    ultah = Warga.objects.filter(tanggal_lahir__month=datetime.now().month).exclude(
+        status_tinggal="PINDAH"
+    )
+    jenkel_laki = (
+        Warga.objects.filter(jenis_kelamin="LAKI-LAKI")
+        .exclude(status_tinggal="PINDAH")
+        .count()
+    )
+    jenkel_perempuan = (
+        Warga.objects.filter(jenis_kelamin="PEREMPUAN")
+        .exclude(status_tinggal="PINDAH")
+        .count()
+    )
     data_agama = []
     for agama in Warga.RELIGIONS:
-        data_agama.append(Warga.objects.filter(agama=agama[0]).count())
+        data_agama.append(
+            Warga.objects.filter(agama=agama[0])
+            .exclude(status_tinggal="PINDAH")
+            .count()
+        )
 
     data_status_tinggal = []
     for status_tinggal in Warga.STATUS_TINGGAL:
@@ -56,6 +70,42 @@ def dashboard_warga(request):
         "ultah": ultah,
     }
     return render(request=request, template_name="dashboard.html", context=context)
+
+
+@login_required
+def statistic_warga(request):
+    jenis_kelamin = (
+        Kompleks.objects.values("rt", "rw", "warga__jenis_kelamin")
+        .annotate(num_warga=Count("warga"))
+        .exclude(warga__status_tinggal="PINDAH")
+        .exclude(warga__jenis_kelamin=None)
+    )
+
+    agama = (
+        Kompleks.objects.values("rt", "rw", "warga__agama")
+        .annotate(num_warga=Count("warga"))
+        .exclude(warga__status_tinggal="PINDAH")
+        .exclude(warga__agama=None)
+    )
+
+    status_tinggal = (
+        Kompleks.objects.values("rt", "rw", "warga__status_tinggal")
+        .annotate(num_warga=Count("warga"))
+        .exclude(warga__status_tinggal=None)
+    )
+
+    print(jenis_kelamin)
+    print(agama)
+    print(status_tinggal)
+    context = {
+        "jenis_kelamin": jenis_kelamin,
+        "agama": agama,
+        "status_tinggal": status_tinggal,
+    }
+
+    return render(
+        request=request, template_name="statistic_warga.html", context=context
+    )
 
 
 @user_passes_test(lambda u: u.is_superuser)

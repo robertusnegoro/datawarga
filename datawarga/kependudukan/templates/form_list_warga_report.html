@@ -42,6 +42,16 @@
             </div>
 
             <div class="mb-3">
+                <label for="status_tinggal" class="form-label">Status Tinggal</label>
+                <select class="form-select" aria-label="Pilih Status" id="status_tinggal" name="status_tinggal">
+                    <option value="all">* semua *</option>
+                    {% for s in status_tinggal %}
+                    <option value="{{ s.0 }}">{{ s.0 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
                 <label for="file_type" class="form-label">Tipe File</label>
                 <select class="form-select" aria-label="Pilih Tipe File" id="file_type" name="file_type">
                     <option value="pdf">PDF</option>

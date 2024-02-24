@@ -30,6 +30,7 @@ urlpatterns = [
     path("warga/form-warga-report", warga.listWargaReportForm, name="formWargaReport"),
     path("warga/data-warga-pdf-print", warga.pdfWargaReport, name="pdfWargaReport"),
     path("warga/dashboard-report", utility.dashboard_warga, name="dashboardWarga"),
+    path("warga/statistic", utility.statistic_warga, name="statisticWarga"),
     path("warga/form-kompleks", kompleks.kompleks_form, name="kompleksForm"),
     path(
         "warga/generate-kompleks-exec",

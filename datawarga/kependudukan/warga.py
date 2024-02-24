@@ -175,7 +175,7 @@ def testView(request):
 @login_required
 def listWargaReportForm(request):
     list_cluster = Kompleks.objects.order_by().values("cluster").distinct()
-    context = {"list_cluster": list_cluster}
+    context = {"list_cluster": list_cluster, "status_tinggal": Warga.STATUS_TINGGAL}
     return render(
         request=request, template_name="form_list_warga_report.html", context=context
     )
@@ -189,6 +189,7 @@ def pdfWargaReport(request):
     if request.POST:
         file_type = str(request.POST["file_type"])
         cluster = str(request.POST["cluster"])
+        status_tinggal = str(request.POST["status_tinggal"]).upper()
         rukuntangga = str(request.POST["rt"])
         usia = str(request.POST["usia"])
         if cluster != "all":
@@ -208,6 +209,9 @@ def pdfWargaReport(request):
             age_delta = 5 * 365
             age_date = today - timedelta(days=age_delta)
             dataWarga = dataWarga.filter(tanggal_lahir__gte=age_date)
+        if status_tinggal != "ALL":
+            dataWarga = dataWarga.filter(status_tinggal=status_tinggal)
+            report_data["filter"]["status_tinggal"] = status_tinggal
 
     report_data["data"] = dataWarga
     report_data["rw"] = settings.RUKUNWARGA
