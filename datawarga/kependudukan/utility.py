@@ -79,6 +79,7 @@ def statistic_warga(request):
         .annotate(num_warga=Count("warga"))
         .exclude(warga__status_tinggal="PINDAH")
         .exclude(warga__jenis_kelamin=None)
+        .order_by("rt", "rw", "warga__jenis_kelamin")
     )
 
     agama = (
@@ -86,17 +87,16 @@ def statistic_warga(request):
         .annotate(num_warga=Count("warga"))
         .exclude(warga__status_tinggal="PINDAH")
         .exclude(warga__agama=None)
+        .order_by("rt", "rw", "warga__agama")
     )
 
     status_tinggal = (
         Kompleks.objects.values("rt", "rw", "warga__status_tinggal")
         .annotate(num_warga=Count("warga"))
         .exclude(warga__status_tinggal=None)
+        .order_by("rt", "rw", "warga__status_tinggal")
     )
 
-    print(jenis_kelamin)
-    print(agama)
-    print(status_tinggal)
     context = {
         "jenis_kelamin": jenis_kelamin,
         "agama": agama,
