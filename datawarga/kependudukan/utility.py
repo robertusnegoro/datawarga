@@ -75,54 +75,58 @@ def dashboard_warga(request):
 @login_required
 def statistic_warga(request):
     all_data = (
-        Kompleks.objects.values("rt", "rw")
-        .annotate(num_warga=Count("warga"))
-        .exclude(warga__status_tinggal="PINDAH")
-        .exclude(warga__agama=None)
-        .exclude(warga__jenis_kelamin=None)
-        .exclude(warga__status_tinggal=None)
-        .order_by("rt", "rw")
+        Warga.objects
+        .values("kompleks__rt", "kompleks__rw")
+        .annotate(num_warga=Count("id"))
+        .exclude(status_tinggal="PINDAH")
+        .exclude(agama=None)
+        .exclude(jenis_kelamin=None)
+        .exclude(status_tinggal=None)
+        .order_by("kompleks__rt", "kompleks__rw")
     )
 
 
     jenis_kelamin = (
-        Kompleks.objects.values("rt", "rw", "warga__jenis_kelamin")
-        .annotate(num_warga=Count("warga"))
-        .exclude(warga__status_tinggal="PINDAH")
-        .exclude(warga__agama=None)
-        .exclude(warga__jenis_kelamin=None)
-        .exclude(warga__status_tinggal=None)
-        .order_by("rt", "rw", "warga__jenis_kelamin")
+        Warga.objects
+        .values("kompleks__rt", "kompleks__rw", "jenis_kelamin")
+        .annotate(num_warga=Count("id"))
+        .exclude(status_tinggal="PINDAH")
+        .exclude(agama=None)
+        .exclude(jenis_kelamin=None)
+        .exclude(status_tinggal=None)
+        .order_by("kompleks__rt", "kompleks__rw", "jenis_kelamin")
     )
 
     agama = (
-        Kompleks.objects.values("rt", "rw", "warga__agama")
-        .annotate(num_warga=Count("warga"))
-        .exclude(warga__status_tinggal="PINDAH")
-        .exclude(warga__agama=None)
-        .exclude(warga__jenis_kelamin=None)
-        .exclude(warga__status_tinggal=None)
-        .order_by("rt", "rw", "warga__agama")
+        Warga.objects
+        .values("kompleks__rt", "kompleks__rw", "agama")
+        .annotate(num_warga=Count("id"))
+        .exclude(status_tinggal="PINDAH")
+        .exclude(agama=None)
+        .exclude(jenis_kelamin=None)
+        .exclude(status_tinggal=None)
+        .order_by("kompleks__rt", "kompleks__rw", "agama")
     )
 
     status_tinggal = (
-        Kompleks.objects.values("rt", "rw", "warga__status_tinggal")
-        .annotate(num_warga=Count("warga"))
-        .exclude(warga__status_tinggal="PINDAH")
-        .exclude(warga__agama=None)
-        .exclude(warga__jenis_kelamin=None)
-        .exclude(warga__status_tinggal=None)
-        .order_by("rt", "rw", "warga__status_tinggal")
+        Warga.objects
+        .values("kompleks__rt", "kompleks__rw", "status_tinggal")
+        .annotate(num_warga=Count("id"))
+        .exclude(status_tinggal="PINDAH")
+        .exclude(agama=None)
+        .exclude(jenis_kelamin=None)
+        .exclude(status_tinggal=None)
+        .order_by("kompleks__rt", "kompleks__rw", "status_tinggal")
     )
 
     warga_pindah = (
-        Kompleks.objects.values("rt", "rw")
-        .annotate(num_warga=Count("warga"))
-        .filter(warga__status_tinggal="PINDAH")
-        .exclude(warga__agama=None)
-        .exclude(warga__jenis_kelamin=None)
-        .exclude(warga__status_tinggal=None)
-        .order_by("rt", "rw")
+        Warga.objects.filter(status_tinggal="PINDAH")
+        .values("kompleks__rt", "kompleks__rw")
+        .annotate(num_warga=Count("id"))
+        .exclude(agama=None)
+        .exclude(jenis_kelamin=None)
+        .exclude(status_tinggal=None)
+        .order_by("kompleks__rt", "kompleks__rw")
     )
 
     context = {
