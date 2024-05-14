@@ -115,11 +115,22 @@ def statistic_warga(request):
         .order_by("rt", "rw", "warga__status_tinggal")
     )
 
+    warga_pindah = (
+        Kompleks.objects.values("rt", "rw")
+        .annotate(num_warga=Count("warga"))
+        .filter(warga__status_tinggal="PINDAH")
+        .exclude(warga__agama=None)
+        .exclude(warga__jenis_kelamin=None)
+        .exclude(warga__status_tinggal=None)
+        .order_by("rt", "rw")
+    )
+
     context = {
         "jenis_kelamin": jenis_kelamin,
         "agama": agama,
         "status_tinggal": status_tinggal,
         "all_data": all_data,
+        "warga_pindah": warga_pindah,
     }
 
     return render(
