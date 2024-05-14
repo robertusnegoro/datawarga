@@ -74,11 +74,24 @@ def dashboard_warga(request):
 
 @login_required
 def statistic_warga(request):
+    all_data = (
+        Kompleks.objects.values("rt", "rw")
+        .annotate(num_warga=Count("warga"))
+        .exclude(warga__status_tinggal="PINDAH")
+        .exclude(warga__agama=None)
+        .exclude(warga__jenis_kelamin=None)
+        .exclude(warga__status_tinggal=None)
+        .order_by("rt", "rw")
+    )
+
+
     jenis_kelamin = (
         Kompleks.objects.values("rt", "rw", "warga__jenis_kelamin")
         .annotate(num_warga=Count("warga"))
         .exclude(warga__status_tinggal="PINDAH")
+        .exclude(warga__agama=None)
         .exclude(warga__jenis_kelamin=None)
+        .exclude(warga__status_tinggal=None)
         .order_by("rt", "rw", "warga__jenis_kelamin")
     )
 
@@ -87,12 +100,17 @@ def statistic_warga(request):
         .annotate(num_warga=Count("warga"))
         .exclude(warga__status_tinggal="PINDAH")
         .exclude(warga__agama=None)
+        .exclude(warga__jenis_kelamin=None)
+        .exclude(warga__status_tinggal=None)
         .order_by("rt", "rw", "warga__agama")
     )
 
     status_tinggal = (
         Kompleks.objects.values("rt", "rw", "warga__status_tinggal")
         .annotate(num_warga=Count("warga"))
+        .exclude(warga__status_tinggal="PINDAH")
+        .exclude(warga__agama=None)
+        .exclude(warga__jenis_kelamin=None)
         .exclude(warga__status_tinggal=None)
         .order_by("rt", "rw", "warga__status_tinggal")
     )
@@ -101,6 +119,7 @@ def statistic_warga(request):
         "jenis_kelamin": jenis_kelamin,
         "agama": agama,
         "status_tinggal": status_tinggal,
+        "all_data": all_data,
     }
 
     return render(
