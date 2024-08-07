@@ -129,12 +129,23 @@ def statistic_warga(request):
         .order_by("kompleks__rt", "kompleks__rw")
     )
 
+    kepala_keluarga = (
+        Warga.objects.filter(kepala_keluarga=True)
+        .values("kompleks__rt", "kompleks__rw")
+        .annotate(num_warga=Count("id"))
+        .exclude(agama=None)
+        .exclude(jenis_kelamin=None)
+        .exclude(status_tinggal=None)
+        .order_by("kompleks__rt", "kompleks__rw")
+    )
+
     context = {
         "jenis_kelamin": jenis_kelamin,
         "agama": agama,
         "status_tinggal": status_tinggal,
         "all_data": all_data,
         "warga_pindah": warga_pindah,
+        "kepala_keluarga": kepala_keluarga
     }
 
     return render(
