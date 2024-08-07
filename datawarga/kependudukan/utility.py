@@ -75,8 +75,7 @@ def dashboard_warga(request):
 @login_required
 def statistic_warga(request):
     all_data = (
-        Warga.objects
-        .values("kompleks__rt", "kompleks__rw")
+        Warga.objects.values("kompleks__rt", "kompleks__rw")
         .annotate(num_warga=Count("id"))
         .exclude(status_tinggal="PINDAH")
         .exclude(agama=None)
@@ -85,10 +84,8 @@ def statistic_warga(request):
         .order_by("kompleks__rt", "kompleks__rw")
     )
 
-
     jenis_kelamin = (
-        Warga.objects
-        .values("kompleks__rt", "kompleks__rw", "jenis_kelamin")
+        Warga.objects.values("kompleks__rt", "kompleks__rw", "jenis_kelamin")
         .annotate(num_warga=Count("id"))
         .exclude(status_tinggal="PINDAH")
         .exclude(agama=None)
@@ -98,8 +95,7 @@ def statistic_warga(request):
     )
 
     agama = (
-        Warga.objects
-        .values("kompleks__rt", "kompleks__rw", "agama")
+        Warga.objects.values("kompleks__rt", "kompleks__rw", "agama")
         .annotate(num_warga=Count("id"))
         .exclude(status_tinggal="PINDAH")
         .exclude(agama=None)
@@ -109,8 +105,7 @@ def statistic_warga(request):
     )
 
     status_tinggal = (
-        Warga.objects
-        .values("kompleks__rt", "kompleks__rw", "status_tinggal")
+        Warga.objects.values("kompleks__rt", "kompleks__rw", "status_tinggal")
         .annotate(num_warga=Count("id"))
         .exclude(status_tinggal="PINDAH")
         .exclude(agama=None)
@@ -145,7 +140,7 @@ def statistic_warga(request):
         "status_tinggal": status_tinggal,
         "all_data": all_data,
         "warga_pindah": warga_pindah,
-        "kepala_keluarga": kepala_keluarga
+        "kepala_keluarga": kepala_keluarga,
     }
 
     return render(
