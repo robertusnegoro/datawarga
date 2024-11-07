@@ -57,11 +57,16 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "crispy_forms",
+    "crispy_bootstrap4",
     "django_cleanup.apps.CleanupConfig",
     "django.contrib.humanize",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "drf_yasg",
 ]
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -214,3 +219,14 @@ if os.path.isfile(GOOGLE_SHEETS_CREDS):
         )
     )
 GOOGLE_DRIVE_USER = os.getenv("GOOGLE_DRIVE_USER", None)
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
+APPEND_SLASH = False

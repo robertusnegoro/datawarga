@@ -1,10 +1,34 @@
-from django.urls import path, re_path
-from . import utility, kompleks, warga, iuran, iuran_public
+from django.urls import path, re_path, include
+from . import utility, kompleks, warga, iuran, iuran_public, api_view
 from django.conf import settings
 from datetime import datetime
+from rest_framework.routers import DefaultRouter
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
 app_name = "kependudukan"
 
+router = DefaultRouter()
+router.register(r"warga", api_view.wargaViewSet)
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Datawarga API",
+        default_version="v1",
+        description="Datawarga API Documentation",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="dopydino@protonmail.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=[AllowAny],
+)
 
 urlpatterns = [
     path("", warga.index, name="index"),
@@ -142,6 +166,15 @@ urlpatterns = [
         name="iuranIncomeStatementReportFormExec",
     ),
     path("warga/iuran-yearly", iuran.iuranYearly, name="iuranYearly"),
+    path("api/", include(router.urls)),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path(
+        "swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
 
 if settings.WG_ENV == "dev":
