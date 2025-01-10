@@ -16,6 +16,8 @@ app_name = "kependudukan"
 
 router = DefaultRouter()
 router.register(r"warga", api_view.wargaViewSet)
+router.register(r"kompleks", api_view.kompleksViewSet)
+router.register(r"iuran", api_view.iuranViewSet)
 
 schema_view = get_schema_view(
     openapi.Info(
