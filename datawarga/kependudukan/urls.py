@@ -119,6 +119,11 @@ urlpatterns = [
         name="formIuranBulananYear",
     ),
     path(
+        'warga/kompleks/<int:idkompleks>/iuran/batch/<str:year>',
+        iuran.form_batch_iuran_bulanan,
+        name='batchIuranBulanan'
+    ),
+    path(
         "warga/form-iuran-bulanan/<int:idkompleks>/<int:year>/<int:idtransaksi>",
         iuran.form_iuran_bulanan,
         name="formIuranBulananYearTrx",

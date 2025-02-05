@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Batch Iuran Bulanan{% endblock %}
+{% block pagetitle %}Iuran Bulanan Batch - Blok {{ data_kompleks.blok }} / Nomor {{ data_kompleks.nomor }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Periode Tahun</label>
+                            <select name="periode_tahun" class="form-select">
+                                {% for tahun in iuran_year_period %}
+                                    <option value="{{ tahun }}" {% if tahun|stringformat:"s" == year %}selected{% endif %}>{{ tahun }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Bulan</label>
+                            <div class="row row-cols-2 row-cols-md-4 g-3">
+                                {% for value, label in form.bulan.field.choices %}
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="bulan" value="{{ value }}" class="form-check-input" id="bulan_{{ value }}">
+                                        <label class="form-check-label" for="bulan_{{ value }}">{{ label }}</label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah</label>
+                            <input type="number" name="total_bayar" value="{{ default_iuran_amount }}" class="form-control">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Keterangan</label>
+                            <textarea name="keterangan" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Bukti Pembayaran</label>
+                            <input type="file" name="bukti_bayar" class="form-control">
+                        </div>
+
+                        <div class="d-flex flex-column flex-md-row gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Simpan
+                            </button>
+                            <a href="{% url 'kependudukan:detailKompleks' data_kompleks.id %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Kembali
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if data_iuran %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Riwayat Pembayaran Tahun {{ year }}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="px-3" style="min-width: 100px;">Bulan</th>
+                                    <th class="px-3" style="min-width: 100px;">Jumlah</th>
+                                    <th class="px-3" style="min-width: 80px;">Bukti</th>
+                                    <th class="px-3" style="min-width: 150px;">Keterangan</th>
+                                    <th class="px-3" style="min-width: 100px;">Tanggal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for iuran in data_iuran %}
+                                <tr>
+                                    <td class="px-3">{{ iuran.get_periode_bulan_display }}</td>
+                                    <td class="px-3">{{ iuran.total_bayar|floatformat:0 }}</td>
+                                    <td class="px-3">
+                                        {% if iuran.bukti_bayar %}
+                                            <a href="{{ iuran.bukti_bayar.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-3">{{ iuran.keterangan }}</td>
+                                    <td class="px-3">{{ iuran.tanggal_bayar|date:"d M Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block customstyle %}
+<style>
+    @media (max-width: 768px) {
+        .form-check-label {
+            font-size: 0.9rem;
+        }
+        .table {
+            font-size: 0.875rem;
+        }
+        .table td, .table th {
+            padding: 0.5rem 0.25rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %} 

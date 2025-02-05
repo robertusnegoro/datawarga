@@ -1,4 +1,4 @@
-from .forms import IuranBulananForm
+from .forms import IuranBulananForm, BatchIuranBulananForm
 from .models import Warga, Kompleks, TransaksiIuranBulanan, SummaryTransaksiBulanan
 from .utility import helper_finance_year_list
 from datetime import datetime
@@ -258,3 +258,58 @@ def iuranYearly(request):
     context["grand_total"] = grand_total
 
     return render(request, template_name="iuran_yearly.html", context=context)
+
+
+@login_required
+def form_batch_iuran_bulanan(request, idkompleks, year=datetime.now().strftime("%Y")):
+    data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
+    
+    if request.method == "POST":
+        form = BatchIuranBulananForm(request.POST, request.FILES)
+        if form.is_valid():
+            selected_months = form.cleaned_data['bulan']
+            tahun = form.cleaned_data['periode_tahun']
+            total_bayar = form.cleaned_data['total_bayar']
+            keterangan = form.cleaned_data['keterangan']
+            bukti_bayar = form.cleaned_data.get('bukti_bayar')
+            
+            # Check for existing payments
+            existing_months = []
+            for bulan in selected_months:
+                if not check_existing_trx_bulan(bulan, tahun, idkompleks):
+                    existing_months.append(dict(TransaksiIuranBulanan.LIST_BULAN)[bulan])
+            
+            if existing_months:
+                error_message = f"Iuran untuk bulan {', '.join(existing_months)} tahun {tahun} sudah dibayar"
+                return HttpResponse(error_message)
+            
+            # Save transactions for each selected month
+            for bulan in selected_months:
+                TransaksiIuranBulanan.objects.create(
+                    kompleks=data_kompleks,
+                    periode_bulan=bulan,
+                    periode_tahun=tahun,
+                    total_bayar=total_bayar,
+                    keterangan=keterangan,
+                    bukti_bayar=bukti_bayar
+                )
+            
+            base_url = reverse("kependudukan:detailKompleks", kwargs={"idkompleks": idkompleks})
+            payload = urlencode({"message": f"Iuran bulanan untuk {len(selected_months)} bulan berhasil disimpan!"})
+            return redirect(f"{base_url}?{payload}")
+    else:
+        form = BatchIuranBulananForm(initial={'periode_tahun': year})
+    
+    context = {
+        "data_kompleks": data_kompleks,
+        "year": year,
+        "form": form,
+        "iuran_year_period": helper_finance_year_list(),
+        "default_iuran_amount": settings.IURAN_BULANAN,
+        "data_iuran": TransaksiIuranBulanan.objects.filter(
+            periode_tahun=year, 
+            kompleks__id=idkompleks
+        ).order_by("periode_bulan")
+    }
+    
+    return render(request, "form_batch_iuran_bulanan.html", context)
