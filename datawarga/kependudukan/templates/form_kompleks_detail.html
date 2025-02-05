@@ -58,7 +58,9 @@
                 <input type="description" class="form-control" id="description" name="description" maxlength="200" value="{% if data.description == None %}{% else %}{{ data.description }}{% endif %}">
             </div>
             
-            <button type="submit" class="btn btn-primary"><i class="bi bi-database-check"></i> Simpan Data Rumah</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Simpan Data Rumah
+            </button>
 
         </form>
     </div>
@@ -72,7 +74,19 @@
             <div id="tabelwarga"></div>
         </div>
         <div class="py-2">
-            <h5>Data Pembayaran Iuran Bulanan</h5>
+            <div class="card-header">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                    <h5 class="mb-0">Data Pembayaran Iuran Bulanan</h5>
+                    <div class="d-flex flex-column flex-md-row gap-2">
+                        <a href="{% url 'kependudukan:formIuranBulanan' data.id %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle"></i> Entry Iuran
+                        </a>
+                        <a href="{% url 'kependudukan:batchIuranBulanan' data.id current_year %}" class="btn btn-success btn-sm">
+                            <i class="bi bi-list-check"></i> Entry Batch
+                        </a>
+                    </div>
+                </div>
+            </div>
             <form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-3">
                 <div class="col-auto">
                     <select class="form-select" id="id_periode_tahun" name="periode_tahun">
@@ -83,7 +97,6 @@
                 </div> 
                 <div class="col-auto">
                     <button type="button" id="searchIuranBtn" class="btn btn-info"> <i class="bi bi-search"></i> Cari </button>
-                    <a href="{% url 'kependudukan:formIuranBulanan' data.id %}" class="btn btn-primary" id="form_iuran_link"><i class="bi bi-plus"></i> Bayar Iuran</a>
                 </div>
                 
             </form>
