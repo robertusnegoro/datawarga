@@ -20,9 +20,22 @@ class wargaViewSet(viewsets.ModelViewSet):
     def search(self, request, *args, **kwargs):
         if request.method == "POST":
             search_term = request.data.get("search", "")
-            queryset = self.queryset.filter(
-                Q(nama_lengkap__icontains=search_term) | Q(nik__icontains=search_term)
-            )
+            
+            # Check if search term contains blok/nomor format
+            if "/" in search_term:
+                split_keyword = search_term.split("/")
+                queryset = self.queryset.filter(
+                    kompleks__blok__icontains=split_keyword[0].strip(),
+                    kompleks__nomor=split_keyword[1].strip(),
+                )
+            else:
+                # Original search plus kompleks search
+                queryset = self.queryset.filter(
+                    Q(nama_lengkap__icontains=search_term) | 
+                    Q(nik__icontains=search_term) |
+                    Q(kompleks__blok__icontains=search_term) |
+                    Q(kompleks__nomor__icontains=search_term)
+                )
             logger.info(f"search to warga models with keyword {search_term}")
         else:
             queryset = self.queryset
