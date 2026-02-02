@@ -263,15 +263,16 @@ def pdfWargaReport(request):
         ]
 
         for record in dataWarga:
+            kompleks = record.kompleks
             data.append(
                 [
                     record.nama_lengkap,
                     record.nik,
                     record.no_kk,
-                    record.kompleks.blok,
-                    record.kompleks.nomor,
-                    record.kompleks.rt,
-                    record.kompleks.rw,
+                    kompleks.blok if kompleks else "",
+                    kompleks.nomor if kompleks else "",
+                    kompleks.rt if kompleks else "",
+                    kompleks.rw if kompleks else "",
                     record.tempat_lahir,
                     str(record.tanggal_lahir),
                     record.no_hp,

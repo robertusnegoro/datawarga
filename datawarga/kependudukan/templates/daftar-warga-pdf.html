@@ -71,7 +71,7 @@
                     <td>{{ warga.nik }}</td>
                     <td>{{ warga.no_kk }}</td>
                     <td>{{ warga.kompleks }}</td>
-                    <td>{{ warga.kompleks.rt }} / {{ warga.kompleks.rw }}</td>
+                    <td>{% if warga.kompleks %}{{ warga.kompleks.rt }} / {{ warga.kompleks.rw }}{% else %}— / —{% endif %}</td>
                     <td>{{ warga.tempat_lahir }} / {{ warga.tanggal_lahir }}</td>
                     <td>{{ warga.no_hp }}</td>
                     <td>{{ warga.jenis_kelamin | upper }}</td>
