@@ -228,6 +228,12 @@ def pdfWargaReport(request):
         HTML(string=html).write_pdf(response, font_config=font_config)
         return response
     else:
+        if settings.GOOGLE_SHEETS_SERVICE_ACCOUNT is None:
+            return HttpResponse(
+                "Google Sheets export is not configured. Set GOOGLE_CRED_PATH to the path of the service account JSON file inside the container (and mount that file when running Docker).",
+                status=503,
+                content_type="text/plain",
+            )
         service = build(
             "sheets", "v4", credentials=settings.GOOGLE_SHEETS_SERVICE_ACCOUNT
         )

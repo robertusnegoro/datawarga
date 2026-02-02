@@ -37,6 +37,28 @@ python manage.py runserver 18000
 
 Buka browser dan akses http://localhost:18000
 
+## Docker
+
+Untuk menjalankan dengan Docker, **Google Sheets export** membutuhkan file JSON service account yang di-**mount** ke dalam container. `GOOGLE_CRED_PATH` harus mengacu ke **path di dalam container**, bukan path di host.
+
+Contoh:
+
+```bash
+docker run -d \
+  --link postgres-15-db:pgdb \
+  -p 8000:8000 \
+  --env-file /path/to/your/.env \
+  --name datawarga \
+  -v /path/to/your/service-account.json:/app/datawarga/google-creds.json \
+  -e GOOGLE_CRED_PATH=/app/datawarga/google-creds.json \
+  robeevanjava/datawarga:2.1.1
+```
+
+- `-v /path/to/your/service-account.json:/app/datawarga/google-creds.json` — mount file kredensial ke path di dalam container.
+- `-e GOOGLE_CRED_PATH=/app/datawarga/google-creds.json` — path ini harus path **di dalam container** tempat file JSON ter-mount.
+
+Tanpa mount, file kredensial tidak ada di dalam container dan export ke Google Sheets akan gagal.
+
 ## Production Deployment
 
 Untuk melakukan deployment production, mohon ikuti best practice dari Django sendiri. Referesi : 
