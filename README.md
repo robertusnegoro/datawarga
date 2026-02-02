@@ -45,7 +45,7 @@ Contoh:
 
 ```bash
 docker run -d \
-  --link postgres-15-db:pgdb \
+  --link <dbcontainer>:pgdb \
   -p 8000:8000 \
   --env-file /path/to/your/.env \
   --name datawarga \
