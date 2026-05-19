@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from google.oauth2 import service_account
-from distutils.util import strtobool
 import sys
 import os
 
@@ -25,7 +24,7 @@ LOGIN_REDIRECT_URL = "/"
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DATA_WARGA_SECRET", "")
+SECRET_KEY = os.getenv("DATA_WARGA_SECRET", "django-insecure-fallback-secret-key-for-local-dev-only-12345")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 WG_ENV = os.getenv("WG_ENV", "dev")
@@ -108,21 +107,28 @@ DB_NAME = os.getenv("DB_NAME", "ngantridb")
 DB_PASS = os.getenv("DB_PASS", "")
 DB_PORT = int(os.getenv("DB_PORT", 5432))
 DB_USER = os.getenv("DB_USER", "robi")
-DB_SSL = strtobool(os.getenv("DB_SSL", "False"))
+DB_SSL = os.getenv("DB_SSL", "False").lower() in ("true", "1", "t", "y", "yes")
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": DB_NAME,
-        "HOST": DB_HOST,
-        "PORT": DB_PORT,
-        "USER": DB_USER,
-        "PASSWORD": DB_PASS,
+if "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
-
-if DB_SSL:
-    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB_NAME,
+            "HOST": DB_HOST,
+            "PORT": DB_PORT,
+            "USER": DB_USER,
+            "PASSWORD": DB_PASS,
+        }
+    }
+    if DB_SSL:
+        DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -212,7 +218,7 @@ GOOGLE_SHEETS_SCOPES = [
     "https://www.googleapis.com/auth/drive",
 ]
 GOOGLE_SHEETS_SERVICE_ACCOUNT = None
-if os.path.isfile(GOOGLE_SHEETS_CREDS):
+if GOOGLE_SHEETS_CREDS and os.path.isfile(GOOGLE_SHEETS_CREDS):
     GOOGLE_SHEETS_SERVICE_ACCOUNT = (
         service_account.Credentials.from_service_account_file(
             GOOGLE_SHEETS_CREDS, scopes=GOOGLE_SHEETS_SCOPES

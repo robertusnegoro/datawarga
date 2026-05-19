@@ -1,0 +1,7 @@
+-c requirements.txt
+
+# Formatting and Linting
+black
+
+# Dependency Management
+pip-tools

@@ -7,16 +7,45 @@ Data warga adalah aplikasi sumber terbuka (_open source_) web berbasis python Dj
 Persiapan : 
 - postgresql versi >= 14 ;  buat database e.g `datawarga`
 
-```
+### 1. Inisialisasi Environment & Dependensi
+
+Proyek ini menggunakan `pip-tools` untuk manajemen dependensi yang lebih aman dan terstruktur (memisahkan *direct* dan *transitive* dependencies).
+
+```bash
 cd /path/to/source/datawarga
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -Ur requirements.txt
+
+# Upgrade pip & install pip-tools
+pip install --upgrade pip pip-tools
+
+# Sinkronisasi seluruh dependensi (production & development)
+pip-sync requirements.txt dev-requirements.txt
 ```
+
+> **Tips Manajemen Dependensi:**
+> - Dependensi utama (*direct dependencies*) didefinisikan di `requirements.in` dan `dev-requirements.in`.
+> - Untuk melakukan pembaruan/kompilasi ulang berkas lock (`requirements.txt` / `dev-requirements.txt`):
+>   ```bash
+>   pip-compile --upgrade requirements.in --output-file requirements.txt
+>   pip-compile --upgrade dev-requirements.in --output-file dev-requirements.txt
+>   ```
+
+### 2. Menjalankan Unit Tests (Bebas PostgreSQL)
+
+Konfigurasi pengujian telah ditingkatkan secara otomatis menggunakan database **SQLite3** apabila perintah test dipanggil. Sehingga, Anda **tidak memerlukan database Postgres yang aktif** untuk menjalankan rangkaian pengujian (unit tests) lokal.
+
+Untuk menjalankan seluruh test suite:
+```bash
+cd datawarga
+python manage.py test
+```
+
+### 3. Menjalankan Server Lokal (Development)
 
 Buat file `.env-dev.sh` yang isinya e.g :
 
-```
+```bash
 export DATA_WARGA_SECRET="<isi dengan generated secret>"
 export DB_HOST="localhost"
 export DB_NAME="datawarga"
@@ -28,7 +57,7 @@ export DB_USER="database-user-postgres-anda"
 untuk DATA_WARGA_SECRET, dapat mengikuti [tutorial ini](https://www.educative.io/answers/how-to-generate-a-django-secretkey).
 
 kemudian :
-```
+```bash
 source .env.sh
 cd datawarga
 python manage.py migrate

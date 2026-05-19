@@ -1,0 +1,34 @@
+# Core Web Framework
+Django>=5.1
+
+# Database
+psycopg2-binary
+
+# API and Authentication
+djangorestframework
+djangorestframework-simplejwt
+drf-yasg
+
+# Forms and Cleanup
+django-crispy-forms
+crispy-bootstrap4
+django-cleanup
+
+# PDF Generation
+weasyprint
+Pillow
+
+# Google APIs
+google-api-python-client
+google-auth
+google-auth-httplib2
+google-auth-oauthlib
+
+# Telegram Bot Integration
+python-telegram-bot
+
+# WSGI HTTP Server
+gunicorn
+
+# Utility / Compatibility
+setuptools
