@@ -1,9 +1,9 @@
 from .forms import WargaForm, GenerateKompleksForm, WargaCSVForm
-from .models import Warga, Kompleks
+from .models import Warga, Kompleks, TransaksiIuranBulanan
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core import serializers
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 from django.http import HttpResponse, Http404, JsonResponse, FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -52,8 +52,101 @@ def dashboard_warga(request):
         Kompleks.objects.all().values("cluster").annotate(num_warga=Count("warga"))
     )
 
-    legend_cluster = [x["cluster"] for x in warga_per_cluster]
+    legend_cluster = [
+        x["cluster"] if x["cluster"] is not None else "Tanpa Cluster"
+        for x in warga_per_cluster
+    ]
     data_cluster = [x["num_warga"] for x in warga_per_cluster]
+
+    # Additional metrics and statistics:
+    total_kk = (
+        Warga.objects.filter(kepala_keluarga=True)
+        .exclude(status_tinggal="PINDAH")
+        .count()
+    )
+    total_kompleks = Kompleks.objects.count()
+    occupied_kompleks = (
+        Kompleks.objects.annotate(num_warga=Count("warga"))
+        .filter(num_warga__gt=0)
+        .count()
+    )
+    vacant_kompleks = total_kompleks - occupied_kompleks
+
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    current_month_name = TransaksiIuranBulanan.indonesian_months[current_month - 1]
+
+    # Calculate financial performance for current year
+    total_iuran_year = (
+        TransaksiIuranBulanan.objects.filter(periode_tahun=current_year).aggregate(
+            total=Sum("total_bayar")
+        )["total"]
+        or 0
+    )
+    total_iuran_year_formatted = f"Rp {int(total_iuran_year):,}".replace(",", ".")
+
+    monthly_income = [0] * 12
+    monthly_income_qs = (
+        TransaksiIuranBulanan.objects.filter(periode_tahun=current_year)
+        .values("periode_bulan")
+        .annotate(total=Sum("total_bayar"))
+    )
+    for m in monthly_income_qs:
+        monthly_income[m["periode_bulan"] - 1] = m["total"]
+
+    # Current month's collection status for occupied complexes
+    occupied_kompleks_ids = list(
+        Warga.objects.exclude(status_tinggal="PINDAH")
+        .values_list("kompleks_id", flat=True)
+        .distinct()
+    )
+    paid_houses_count = (
+        TransaksiIuranBulanan.objects.filter(
+            periode_tahun=current_year,
+            periode_bulan=current_month,
+            kompleks_id__in=occupied_kompleks_ids,
+        )
+        .values("kompleks_id")
+        .distinct()
+        .count()
+    )
+
+    total_occupied_houses = len(occupied_kompleks_ids)
+    unpaid_houses_count = total_occupied_houses - paid_houses_count
+    payment_rate_pct = (
+        int((paid_houses_count / total_occupied_houses) * 100)
+        if total_occupied_houses > 0
+        else 0
+    )
+
+    # Age distribution
+    today = datetime.now().date()
+    wargas_age = Warga.objects.exclude(status_tinggal="PINDAH").exclude(
+        tanggal_lahir=None
+    )
+    age_groups = {
+        "Balita (0-5)": 0,
+        "Anak-anak (6-12)": 0,
+        "Remaja (13-17)": 0,
+        "Dewasa (18-55)": 0,
+        "Lansia (56+)": 0,
+    }
+    for w in wargas_age:
+        dob = w.tanggal_lahir
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age <= 5:
+            age_groups["Balita (0-5)"] += 1
+        elif age <= 12:
+            age_groups["Anak-anak (6-12)"] += 1
+        elif age <= 17:
+            age_groups["Remaja (13-17)"] += 1
+        elif age <= 55:
+            age_groups["Dewasa (18-55)"] += 1
+        else:
+            age_groups["Lansia (56+)"] += 1
+
+    legend_umur = list(age_groups.keys())
+    data_umur = list(age_groups.values())
 
     context = {
         "legend_agama": [agama[0] for agama in Warga.RELIGIONS],
@@ -68,6 +161,21 @@ def dashboard_warga(request):
         "data_status_tinggal": data_status_tinggal,
         "total_warga": total_warga,
         "ultah": ultah,
+        # New enriched context variables:
+        "total_kk": total_kk,
+        "total_kompleks": total_kompleks,
+        "occupied_kompleks": occupied_kompleks,
+        "vacant_kompleks": vacant_kompleks,
+        "total_iuran_year": total_iuran_year,
+        "total_iuran_year_formatted": total_iuran_year_formatted,
+        "paid_houses_count": paid_houses_count,
+        "unpaid_houses_count": unpaid_houses_count,
+        "payment_rate_pct": payment_rate_pct,
+        "monthly_income": monthly_income,
+        "legend_umur": legend_umur,
+        "data_umur": data_umur,
+        "current_year": current_year,
+        "current_month_name": current_month_name,
     }
     return render(request=request, template_name="dashboard.html", context=context)
 
@@ -298,7 +406,10 @@ def dashboard_public(request, page="warga"):
             Kompleks.objects.all().values("cluster").annotate(num_warga=Count("warga"))
         )
 
-        context["legend_cluster"] = [x["cluster"] for x in warga_per_cluster]
+        context["legend_cluster"] = [
+            x["cluster"] if x["cluster"] is not None else "Tanpa Cluster"
+            for x in warga_per_cluster
+        ]
         context["data_cluster"] = [x["num_warga"] for x in warga_per_cluster]
     else:
         return Http404

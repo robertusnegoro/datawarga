@@ -1,181 +1,427 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
-{% block pagetitle %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard Kependudukan & Iuran{% endblock %}
 {% block content %}
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card text-center text-white bg-primary mb-3">
-            <div class="card-header">Total Data Warga</div>
+<!-- Custom Premium CSS -->
+<style>
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
+    }
+    .card-icon {
+        font-size: 2.5rem;
+        opacity: 0.15;
+        position: absolute;
+        right: 15px;
+        bottom: 10px;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .chart-container {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        background: #ffffff;
+        border: none;
+        margin-bottom: 20px;
+    }
+    .birthday-list {
+        max-height: 380px;
+        overflow-y: auto;
+    }
+    .birthday-item {
+        border-left: 4px solid #ffc107;
+        background-color: #fffbeb;
+        transition: background-color 0.2s ease;
+    }
+    .birthday-item:hover {
+        background-color: #fef3c7;
+    }
+</style>
+
+<!-- Key Metrics Row -->
+<div class="row mb-4">
+    <!-- Total Warga -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-primary text-white h-100">
             <div class="card-body">
-                <h1 class="card-title">{{ total_warga }}</h1>
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Total Warga</div>
+                <div class="stat-value">{{ total_warga }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-people-fill"></i> Penduduk Aktif</div>
+                <i class="bi bi-people-fill card-icon text-white"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total KK -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Kepala Keluarga</div>
+                <div class="stat-value">{{ total_kk }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-person-check-fill"></i> Kepala Keluarga</div>
+                <i class="bi bi-person-check-fill card-icon text-white"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hunian Kompleks -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Okupansi Rumah</div>
+                <div class="stat-value">{{ occupied_kompleks }} <span style="font-size: 1.1rem; font-weight: normal;">/ {{ total_kompleks }}</span></div>
+                <div class="trend-text mt-2"><i class="bi bi-house-door-fill"></i> {{ vacant_kompleks }} Rumah Kosong</div>
+                <i class="bi bi-house-door-fill card-icon text-white"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Iuran -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-dark-50">Iuran Terkumpul ({{ current_year }})</div>
+                <div class="stat-value text-dark" style="font-size: 1.6rem; padding-top: 6px; padding-bottom: 6px;">{{ total_iuran_year_formatted }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-cash-stack"></i> Akumulasi Tahun Ini</div>
+                <i class="bi bi-cash-stack card-icon text-dark"></i>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Row 1: Finance & Birthdays -->
 <div class="row">
-    <div class="col-md-3">
-        <div class="card text-center mb-3">
-            <div class="card-header">Warga Per Cluster</div>
+    <!-- Financial Chart -->
+    <div class="col-lg-8">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Penerimaan Iuran Bulanan ({{ current_year }})</h5>
+                <span class="badge bg-primary">Realisasi</span>
+            </div>
             <div class="card-body">
-                <canvas id="cluster-chart" class="chart-canvas" height="300px"></canvas>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="financial-chart"></canvas>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center mb-3">
-            <div class="card-header">Status Tinggal</div>
-            <div class="card-body">
-                <canvas id="status-tinggal-chart" class="chart-canvas" height="300px"></canvas>
+
+    <!-- Birthdays -->
+    <div class="col-lg-4">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Ulang Tahun Bulan Ini 🎉</h5>
+                <span class="small text-muted">{{ current_month_name }} {{ current_year }}</span>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center mb-3">
-            <div class="card-header">Jenis Kelamin</div>
-            <div class="card-body">
-                <canvas id="jenkel-chart" class="chart-canvas" height="300px"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center mb-3">
-            <div class="card-header">Agama</div>
-            <div class="card-body">
-                <canvas id="agama-chart" class="chart-canvas" height="300px"></canvas>
-            </div>
-        </div>
-    </div>
-    
-</div>
-<div class="row">
-    <div class="col-md-3">
-        <div class="card mb-3">
-            <div class="card-header">Cie Ulang Tahun</div>
-            <div class="card-body">
-                <ul>
+            <div class="card-body birthday-list">
+                {% if ultah %}
                     {% for warga in ultah %}
-                        <li>{{ warga.nama_lengkap}} [{{ warga.kompleks}}]</li>
+                        <div class="d-flex align-items-center p-2 mb-2 rounded birthday-item">
+                            <div class="flex-shrink-0 me-3">
+                                <span class="fs-3">🎂</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 font-weight-bold text-dark">{{ warga.nama_lengkap }}</h6>
+                                <p class="mb-0 text-muted small"><i class="bi bi-geo-alt"></i> {{ warga.kompleks }}</p>
+                            </div>
+                            {% if warga.tanggal_lahir %}
+                            <div class="text-end">
+                                <span class="badge bg-warning text-dark">{{ warga.tanggal_lahir|date:"d M" }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
                     {% endfor %}
-                </ul>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-gift-fill fs-1 opacity-50"></i>
+                        <p class="mt-2 mb-0">Tidak ada warga ulang tahun bulan ini.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
+<!-- Row 2: Age, Gender, Current Month Iuran Status -->
+<div class="row">
+    <!-- Current Month Collection Status -->
+    <div class="col-lg-4">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Status Iuran (Bulan Ini)</h5>
+                <span class="small text-muted">{{ current_month_name }} {{ current_year }}</span>
+            </div>
+            <div class="card-body text-center">
+                <div style="height: 200px; position: relative;">
+                    <canvas id="current-month-iuran-chart"></canvas>
+                </div>
+                <div class="mt-3">
+                    <div class="row">
+                        <div class="col-6 border-end">
+                            <div class="text-muted small">Lunas</div>
+                            <div class="h5 mb-0 text-success font-weight-bold">{{ paid_houses_count }} Rumah</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted small">Belum Lunas</div>
+                            <div class="h5 mb-0 text-danger font-weight-bold">{{ unpaid_houses_count }} Rumah</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Age Demographics -->
+    <div class="col-lg-4">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Demografi Umur</h5>
+                <span class="small text-muted">Berdasarkan kelompok usia</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 250px; position: relative;">
+                    <canvas id="age-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gender Demographics -->
+    <div class="col-lg-4">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Jenis Kelamin</h5>
+                <span class="small text-muted">Proporsi gender warga</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 250px; position: relative;">
+                    <canvas id="jenkel-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Cluster, Residence Status, Religion -->
+<div class="row">
+    <!-- Warga per Cluster -->
+    <div class="col-lg-4">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Warga per Cluster</h5>
+                <span class="small text-muted">Sebaran warga di tiap cluster</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 220px; position: relative;">
+                    <canvas id="cluster-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Tinggal -->
+    <div class="col-lg-4">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Status Tinggal</h5>
+                <span class="small text-muted">Status kepemilikan hunian</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 220px; position: relative;">
+                    <canvas id="status-tinggal-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agama -->
+    <div class="col-lg-4">
+        <div class="card chart-container p-3 mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0 font-weight-bold text-secondary">Agama</h5>
+                <span class="small text-muted">Proporsi keyakinan warga</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 220px; position: relative;">
+                    <canvas id="agama-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
+
 {% block jscript %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
 <script>
-    
-    const data = {
-        labels: {{ legend_jenkel | safe }},
-        datasets: [
-            {
+    // Global Chart.js options
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.responsive = true;
+    Chart.defaults.maintainAspectRatio = false;
+
+    // 1. Financial Chart (Bar Chart)
+    const ctxFinancial = document.getElementById('financial-chart').getContext('2d');
+    new Chart(ctxFinancial, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+            datasets: [{
+                label: 'Penerimaan (Rp)',
+                data: {{ monthly_income | safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.75)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + value.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Current Month Iuran Chart (Doughnut)
+    const ctxIuran = document.getElementById('current-month-iuran-chart').getContext('2d');
+    new Chart(ctxIuran, {
+        type: 'doughnut',
+        data: {
+            labels: ['Lunas', 'Belum Lunas'],
+            datasets: [{
+                data: [{{ paid_houses_count }}, {{ unpaid_houses_count }}],
+                backgroundColor: ['#28a745', '#dc3545'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 3. Age Demographics Chart (Doughnut)
+    const ctxAge = document.getElementById('age-chart').getContext('2d');
+    new Chart(ctxAge, {
+        type: 'doughnut',
+        data: {
+            labels: {{ legend_umur | safe }},
+            datasets: [{
+                data: {{ data_umur | safe }},
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 4. Gender Chart (Pie)
+    const ctxGender = document.getElementById('jenkel-chart').getContext('2d');
+    new Chart(ctxGender, {
+        type: 'pie',
+        data: {
+            labels: {{ legend_jenkel | safe }},
+            datasets: [{
                 data: {{ data_jenkel | safe }},
-                backgroundColor: ['#264653', '#e76f51'],
-            }
-        ]
-    };
-    const config = {
-        type: 'pie',
-        data: data,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-            }
+                backgroundColor: ['#4e73df', '#f6c23e'],
+                hoverOffset: 4
+            }]
         },
-    };
-
-    var chart_jenis_kelamin = document.getElementById('jenkel-chart').getContext('2d');
-    new Chart(chart_jenis_kelamin, config);
-
-    const data_agama = {
-        labels: {{ legend_agama | safe }},
-        datasets: [
-            {
-                data: {{ data_agama | safe }},
-                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
-            }
-        ]
-    };
-    const config_agama = {
-        type: 'pie',
-        data: data_agama,
         options: {
-            responsive: true,
             plugins: {
-                legend: {
-                    position: 'top',
-                },
+                legend: { position: 'bottom' }
             }
-        },
-    };
+        }
+    });
 
-    var chart_agama = document.getElementById('agama-chart').getContext('2d');
-    new Chart(chart_agama, config_agama);
-
-    const data_status_tinggal = {
-        labels: {{ legend_status_tinggal | safe }},
-        datasets: [
-            {
-                data: {{ data_status_tinggal | safe }},
-                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
-            }
-        ]
-    };
-
-    const config_status_tinggal = {
-        type: 'pie',
-        data: data_status_tinggal,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-            }
-        },
-    };
-
-    
-    var ctx = document.getElementById("status-tinggal-chart").getContext('2d');
-    new Chart(ctx, config_status_tinggal);
-
-    const data_cluster = {
-        labels: {{ legend_cluster | safe }},
-        datasets: [
-            {
+    // 5. Cluster Chart (Bar Chart)
+    const ctxCluster = document.getElementById('cluster-chart').getContext('2d');
+    new Chart(ctxCluster, {
+        type: 'bar',
+        data: {
+            labels: {{ legend_cluster | safe }},
+            datasets: [{
+                label: 'Jumlah Warga',
                 data: {{ data_cluster | safe }},
-                backgroundColor: ['#f6bd60', '#f7ede2', '#f5cac3', '#84a59d', '#f28482', '#4a4e69'],
-            }
-        ]
-    };
-
-    const config_cluster = {
-        type: 'pie',
-        data: data_cluster,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-            }
+                backgroundColor: '#36b9cc',
+                borderColor: '#2c9faf',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
         },
-    };
+        options: {
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            }
+        }
+    });
 
-    
-    var ctx = document.getElementById("cluster-chart").getContext('2d');
-    new Chart(ctx, config_cluster);
+    // 6. Residence Status Chart (Pie)
+    const ctxStatusTinggal = document.getElementById('status-tinggal-chart').getContext('2d');
+    new Chart(ctxStatusTinggal, {
+        type: 'pie',
+        data: {
+            labels: {{ legend_status_tinggal | safe }},
+            datasets: [{
+                data: {{ data_status_tinggal | safe }},
+                backgroundColor: ['#e74a3b', '#f6c23e', '#1cc88a', '#4e73df', '#858796'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
 
-    
+    // 7. Religion Chart (Doughnut)
+    const ctxAgama = document.getElementById('agama-chart').getContext('2d');
+    new Chart(ctxAgama, {
+        type: 'doughnut',
+        data: {
+            labels: {{ legend_agama | safe }},
+            datasets: [{
+                data: {{ data_agama | safe }},
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
 </script>
-
 {% endblock %}
