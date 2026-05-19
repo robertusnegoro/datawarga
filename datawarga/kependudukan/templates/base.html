@@ -1,93 +1,99 @@
 {% load static %}
-<html>
+<!DOCTYPE html>
+<html lang="id">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>DataWarga | {% block title %}{% endblock %}</title>
+        
+        <!-- Preconnect Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        
         <link href='{% static "dashboard/css/bootstrap.min.css" %}' rel="stylesheet">
-        <link href='{% static "dashboard/dashboard.css" %}?v=2' rel="stylesheet">
+        <link href='{% static "dashboard/dashboard.css" %}?v=3' rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
     </head>
     <body>
-        <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">Hello, {{request.user.username}}</a>
-            <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <header class="navbar navbar-expand-md navbar-light sticky-top bg-white border-bottom py-2 px-3 shadow-sm flex-md-nowrap p-0">
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-5 d-flex align-items-center gap-2" href="{% url 'kependudukan:dashboardWarga' %}">
+                <i class="bi bi-people-fill text-primary"></i>
+                <span class="fw-bold text-dark logo-text">DATA<span class="text-primary">WARGA</span></span>
+            </a>
+            
+            <button class="navbar-toggler position-absolute d-md-none collapsed border-0" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-        <div class="navbar-nav">
-            <div class="nav-item text-nowrap">
-                <form method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button class="nav-link px-3 d-sm-none d-md-block d-none d-sm-block btn btn-link">Log out</button>
-                </form>
+
+            <div class="navbar-nav ms-auto px-3 d-none d-md-flex align-items-center gap-3">
+                <div class="user-pill d-flex align-items-center gap-2">
+                    <span class="user-name-badge">
+                        <i class="bi bi-person-circle text-primary"></i> Hello, <strong>{{request.user.username}}</strong>
+                    </span>
+                    <form method="post" action="{% url 'logout' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">
+                            <i class="bi bi-box-arrow-right"></i> Log out
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
         </header>
 
         <div class="container-fluid">
             <div class="row">
-                <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse border-end">
                     <div class="position-sticky pt-3 sidebar-sticky">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:dashboardWarga' %}">
-                                    <span class="align-text-bottom"></span>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboardWarga' %}active{% endif %}" href="{% url 'kependudukan:dashboardWarga' %}">
                                     <i class="bi bi-house-door"></i> Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:statisticWarga' %}">
-                                    <span class="align-text-bottom"></span>
-                                    <i class="bi bi-clipboard-data-fill"></i> Statistic
+                                <a class="nav-link {% if request.resolver_match.url_name == 'statisticWarga' %}active{% endif %}" href="{% url 'kependudukan:statisticWarga' %}">
+                                    <i class="bi bi-bar-chart-line"></i> Statistic
                                 </a>
                             </li>
                         </ul>
 
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
                             <span>Kompleks Rumah</span>
-                            <a class="link-secondary" href="#" aria-label="warga">
-                                <i class="align-text-bottom bi-plus-circle"></i>
-                            </a>
                         </h6>
                         <ul class="nav flex-column">
                             {% if request.user.is_superuser %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:kompleksForm' %}">
-                                    <span class="align-text-bottom"></span>
-                                    <i class="bi bi-geo"></i> </i> Form Kompleks Rumah
+                                <a class="nav-link {% if request.resolver_match.url_name == 'kompleksForm' %}active{% endif %}" href="{% url 'kependudukan:kompleksForm' %}">
+                                    <i class="bi bi-geo"></i> Form Kompleks Rumah
                                 </a>
                             </li>
                             {% endif %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:listKompleksView' %}">
-                                    <span class="align-text-bottom"></span>
-                                    <i class="bi bi-map"></i> </i> Data Kompleks Rumah
+                                <a class="nav-link {% if request.resolver_match.url_name == 'listKompleksView' or request.resolver_match.url_name == 'detailKompleks' %}active{% endif %}" href="{% url 'kependudukan:listKompleksView' %}">
+                                    <i class="bi bi-map"></i> Data Kompleks Rumah
                                 </a>
                             </li>
                         </ul>
 
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
                             <span>Laporan Iuran</span>
-                            <a class="link-secondary" href="#" aria-label="warga">
-                                <i class="align-text-bottom bi-plus-circle"></i>
-                            </a>
                         </h6>
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 {% now "Y" as current_year %}
-                                <a class="nav-link" href="{% url 'kependudukan:pdfReportIuranBulanan' year=current_year %}">
-                                    <span class="align-text-bottom"></span>
-                                    <i class="bi bi-file-earmark-pdf"></i> Summary Iuran Bulanan Per Tahun
+                                <a class="nav-link {% if request.resolver_match.url_name == 'pdfReportIuranBulanan' or request.resolver_match.url_name == 'pdfReportIuranBulananForm' %}active{% endif %}" href="{% url 'kependudukan:pdfReportIuranBulanan' year=current_year %}">
+                                    <i class="bi bi-file-earmark-pdf"></i> Summary Iuran Bulanan
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:iuranIncomeStatementReportForm' %}">
-                                    <span class="align-text-bottom"></span>
-                                    <i class="bi bi-file-earmark-pdf"></i> Laporan Pemasukan Iuran Per Bulan
+                                <a class="nav-link {% if request.resolver_match.url_name == 'iuranIncomeStatementReportForm' %}active{% endif %}" href="{% url 'kependudukan:iuranIncomeStatementReportForm' %}">
+                                    <i class="bi bi-file-earmark-pdf"></i> Pemasukan Per Bulan
                                 </a>
-                                <a class="nav-link" href="{% url 'kependudukan:iuranYearly' %}">
-                                    <span class="align-text-bottom"></span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'iuranYearly' %}active{% endif %}" href="{% url 'kependudukan:iuranYearly' %}">
                                     <i class="bi bi-file-earmark-pdf"></i> Rekap Tahunan
                                 </a>
                             </li>
@@ -95,71 +101,74 @@
 
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
                             <span>Warga</span>
-                            <a class="link-secondary" href="#" aria-label="warga">
-                                <i class="align-text-bottom bi-plus-circle"></i>
-                            </a>
                         </h6>
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:formWarga' 0 %}">
-                                    <span class="align-text-bottom"></span>
-                                    <i class="bi bi-input-cursor-text"></i> </i>Form Warga
+                                <a class="nav-link {% if request.resolver_match.url_name == 'formWarga' or request.resolver_match.url_name == 'formWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:formWarga' 0 %}">
+                                    <i class="bi bi-input-cursor-text"></i> Form Warga
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:listWargaView' %}">
-                                    <span class="align-text-bottom"></span>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'listWargaView' %}active{% endif %}" href="{% url 'kependudukan:listWargaView' %}">
                                     <i class="bi bi-person-lines-fill"></i> Daftar Warga
                                 </a>
                             </li>
                         </ul>
                         
+                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                            <span>Utility</span>
+                        </h6>
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:formWargaReport' %}">
-                                    <span class="align-text-bottom"></span>
-                                    <i class="bi bi-file-earmark-pdf"></i> Print PDF Daftar Warga
+                                <a class="nav-link {% if request.resolver_match.url_name == 'formWargaReport' %}active{% endif %}" href="{% url 'kependudukan:formWargaReport' %}">
+                                    <i class="bi bi-file-earmark-pdf"></i> Print PDF Warga
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:utilImportWarga' %}">
-                                    <span class="align-text-bottom"></span>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'utilImportWarga' %}active{% endif %}" href="{% url 'kependudukan:utilImportWarga' %}">
                                     <i class="bi bi-filetype-csv"></i> Import Data Warga
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'kependudukan:utilAssignWargaRumah' %}">
-                                    <span class="align-text-bottom"></span>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'utilAssignWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:utilAssignWargaRumah' %}">
                                     <i class="bi bi-arrow-left-right"></i> Pindahkan Warga
                                 </a>
                             </li>
-                            <li class="nav-item d-sm-none">
-                                <form method="post" action="{% url 'logout' %}">
+                            
+                            <!-- Mobile-only logout button -->
+                            <li class="nav-item d-md-none mt-3 border-top pt-3">
+                                <div class="px-3 mb-2 small text-muted">
+                                    <i class="bi bi-person-circle"></i> {{request.user.username}}
+                                </div>
+                                <form method="post" action="{% url 'logout' %}" class="px-3">
                                     {% csrf_token %}
-                                    <button class="btn">
-                                        <span class="align-text-bottom"></span>
-                                        <i class="bi bi-plug-fill"></i> Logout
+                                    <button type="submit" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+                                        <i class="bi bi-box-arrow-right"></i> Log out
                                     </button>
                                 </form>
                             </li>
                         </ul>
                     </div>
                 </nav>
+                
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">{% block pagetitle %}{% endblock %}</h1>    
+                        <h1 class="h2 text-indigo fw-bold">{% block pagetitle %}{% endblock %}</h1>    
                     </div>
                     {% block content %}{% endblock %}
-                    <div class="footer mt-auto py-3 bg-light">
-                        <div class="container">
-                          <span class="text-muted"><a href="https://github.com/robertusnegoro">Github</a> | App Version: {{ app_version }}</span>
+                    
+                    <footer class="footer mt-auto py-3 bg-light">
+                        <div class="container text-center">
+                          <span>
+                              <a href="https://github.com/robertusnegoro" target="_blank" rel="noopener noreferrer">Github Repository</a> 
+                              <span class="mx-2 text-muted">•</span> 
+                              App Version: <strong>{{ app_version }}</strong>
+                          </span>
                         </div>
-                    </div>
+                    </footer>
                 </main>
-                
             </div>
         </div>
-        
         
         <script src='{% static "dashboard/js/bootstrap.bundle.min.js" %}' crossorigin="anonymous"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
