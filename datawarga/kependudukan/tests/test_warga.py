@@ -183,7 +183,7 @@ class WargaTestCase(TestCase):
     def test_statistic_warga(self):
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
-        
+
         # Create test data
         warga2 = Warga.objects.create(
             nama_lengkap="Test Stats 2",
@@ -191,68 +191,74 @@ class WargaTestCase(TestCase):
             kompleks=self.existing_kompleks,
             agama="ISLAM",
             jenis_kelamin="LAKI-LAKI",
-            status_tinggal="TETAP"
+            status_tinggal="TETAP",
         )
-        
+
         response = client.get(reverse("kependudukan:statisticWarga"))
         self.assertEqual(response.status_code, 200)
-        
+
         # Test context data
-        self.assertIn('all_data', response.context)
-        self.assertIn('jenis_kelamin', response.context)
-        self.assertIn('agama', response.context)
-        self.assertIn('status_tinggal', response.context)
-        
+        self.assertIn("all_data", response.context)
+        self.assertIn("jenis_kelamin", response.context)
+        self.assertIn("agama", response.context)
+        self.assertIn("status_tinggal", response.context)
+
         # Verify counts
-        all_data = response.context['all_data']
-        self.assertEqual(all_data[0]['num_warga'], 2)  # Should count both test warga
+        all_data = response.context["all_data"]
+        self.assertEqual(all_data[0]["num_warga"], 2)  # Should count both test warga
 
     def test_warga_age_filters(self):
         today = now().date()
-        
+
         # Create elderly person (>55 years)
         elderly = Warga.objects.create(
             nama_lengkap="Test Elderly",
             nik="elderly_test",
             kompleks=self.existing_kompleks,
-            tanggal_lahir=today - timedelta(days=56*365),
+            tanggal_lahir=today - timedelta(days=56 * 365),
             agama="ISLAM",
             jenis_kelamin="LAKI-LAKI",
-            status_tinggal="TETAP"
+            status_tinggal="TETAP",
         )
-        
+
         # Create child (<5 years)
         child = Warga.objects.create(
-            nama_lengkap="Test Child", 
+            nama_lengkap="Test Child",
             nik="child_test",
             kompleks=self.existing_kompleks,
-            tanggal_lahir=today - timedelta(days=3*365),
+            tanggal_lahir=today - timedelta(days=3 * 365),
             agama="ISLAM",
             jenis_kelamin="LAKI-LAKI",
-            status_tinggal="TETAP"
+            status_tinggal="TETAP",
         )
-        
+
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
-        
+
         # Test elderly filter
-        response = client.post(reverse("kependudukan:pdfWargaReport"), {
-            'file_type': 'pdf',
-            'cluster': 'all',
-            'status_tinggal': 'ALL',
-            'rt': '',
-            'usia': 'lansia'
-        })
+        response = client.post(
+            reverse("kependudukan:pdfWargaReport"),
+            {
+                "file_type": "pdf",
+                "cluster": "all",
+                "status_tinggal": "ALL",
+                "rt": "",
+                "usia": "lansia",
+            },
+        )
         self.assertEqual(response.status_code, 200)
-        
-        # Test child filter  
-        response = client.post(reverse("kependudukan:pdfWargaReport"), {
-            'file_type': 'pdf',
-            'cluster': 'all', 
-            'status_tinggal': 'ALL',
-            'rt': '',
-            'usia': 'balita'
-        })
+
+        # Test child filter
+        response = client.post(
+            reverse("kependudukan:pdfWargaReport"),
+            {
+                "file_type": "pdf",
+                "cluster": "all",
+                "status_tinggal": "ALL",
+                "rt": "",
+                "usia": "balita",
+            },
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_warga_moved_out(self):
@@ -263,15 +269,54 @@ class WargaTestCase(TestCase):
             kompleks=self.existing_kompleks,
             status_tinggal="PINDAH",
             agama="ISLAM",
-            jenis_kelamin="LAKI-LAKI"
+            jenis_kelamin="LAKI-LAKI",
         )
-        
+
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
-        
+
         response = client.get(reverse("kependudukan:statisticWarga"))
         self.assertEqual(response.status_code, 200)
-        
+
         # Verify moved warga is excluded from main stats
-        all_data = response.context['all_data']
-        self.assertEqual(all_data[0]['num_warga'], 1)  # Should only count non-moved warga
+        all_data = response.context["all_data"]
+        self.assertEqual(
+            all_data[0]["num_warga"], 1
+        )  # Should only count non-moved warga
+
+    def test_dashboard_with_none_cluster(self):
+        # Create a kompleks with cluster = None
+        none_cluster_kompleks = Kompleks.objects.create(
+            alamat="none cluster address",
+            cluster=None,
+            blok="N1",
+            nomor="10",
+            rt="001",
+            rw="002",
+        )
+        # Create a resident in that kompleks
+        Warga.objects.create(
+            nama_lengkap="None Cluster Warga",
+            nik="none_cluster_nik",
+            kompleks=none_cluster_kompleks,
+            status_tinggal="TETAP",
+            agama="ISLAM",
+            jenis_kelamin="LAKI-LAKI",
+        )
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # Test main dashboard
+        response = client.get(reverse("kependudukan:dashboardWarga"))
+        self.assertEqual(response.status_code, 200)
+        # Check that the mapped string "Tanpa Cluster" is present in the context and rendered page
+        self.assertIn("Tanpa Cluster", response.context["legend_cluster"])
+        self.assertContains(response, "Tanpa Cluster")
+
+        # Test public cluster dashboard
+        response_public = client.get(
+            reverse("kependudukan:publicDasboard", kwargs={"page": "cluster"})
+        )
+        self.assertEqual(response_public.status_code, 200)
+        self.assertIn("Tanpa Cluster", response_public.context["legend_cluster"])

@@ -1,142 +1,479 @@
 {% extends "base.html" %}
-{% block title %}Statistik{% endblock %}
-{% block pagetitle %}Statistik{% endblock %}
+{% block title %}Statistik Wilayah{% endblock %}
+{% block pagetitle %}Statistik Kependudukan Wilayah{% endblock %}
 {% block content %}
-<div class="row">
-    <div class="col-md-6">
-        <h5>Data Keseluruhan</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>RT</th>
-                    <th>RW</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in all_data %}
-                <tr>
-                    <td>{{ d.kompleks__rt }}</td>
-                    <td>{{ d.kompleks__rw }}</td>
-                    <td>{{ d.num_warga }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+<style>
+    /* Custom premium styling for statistics cards */
+    .stat-card {
+        border-radius: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        background-color: #ffffff;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+    }
+    .icon-box {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 1.25rem;
+    }
+    /* Theme colors for icons */
+    .bg-light-blue { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+    .bg-light-teal { background-color: rgba(20, 184, 166, 0.1); color: #14b8a6; }
+    .bg-light-red { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .bg-light-indigo { background-color: rgba(99, 102, 241, 0.1); color: #6366f1; }
+    .bg-light-orange { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .bg-light-purple { background-color: rgba(168, 85, 247, 0.1); color: #a855f7; }
+
+    /* Custom premium badge styles */
+    .badge-laki {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        border: 1px solid rgba(13, 110, 253, 0.15);
+    }
+    .badge-perempuan {
+        background-color: rgba(236, 72, 153, 0.1);
+        color: #ec4899;
+        border: 1px solid rgba(236, 72, 153, 0.15);
+    }
+    .badge-islam {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+    .badge-kristen {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+    .badge-katolik {
+        background-color: rgba(6, 182, 212, 0.1);
+        color: #06b6d4;
+        border: 1px solid rgba(6, 182, 212, 0.15);
+    }
+    .badge-hindu {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+        border: 1px solid rgba(139, 92, 246, 0.15);
+    }
+    .badge-buddha {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.15);
+    }
+    .badge-konghucu {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .badge-tetap {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+    .badge-kontrak {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.15);
+    }
+    .badge-kost {
+        background-color: rgba(6, 182, 212, 0.1);
+        color: #06b6d4;
+        border: 1px solid rgba(6, 182, 212, 0.15);
+    }
+    .badge-pindah {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+    .badge-lainnya {
+        background-color: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+        border: 1px solid rgba(107, 114, 128, 0.15);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Header Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <p class="text-muted fs-6">Ikhtisar data kependudukan berdasarkan pengelompokan RT, RW, jenis kelamin, keyakinan, dan status tempat tinggal.</p>
+        </div>
     </div>
 
-    <div class="col-md-6">
-        <h5>Jenis Kelamin</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>RT</th>
-                    <th>RW</th>
-                    <th>Jenis Kelamin</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in jenis_kelamin %}
-                <tr>
-                    <td>{{ d.kompleks__rt }}</td>
-                    <td>{{ d.kompleks__rw }}</td>
-                    <td>{{ d.jenis_kelamin }}</td>
-                    <td>{{ d.num_warga }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+    <!-- Search/Filter Realtime -->
+    <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px;">
+        <div class="card-body p-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="statsSearchInput" class="form-control border-start-0 py-2" placeholder="Cari berdasarkan RT atau RW (Contoh: RT 01 atau RW 02)..." onkeyup="filterTables()">
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end text-muted mt-2 mt-md-0 fs-7">
+                    <i class="bi-info-circle me-1"></i> Ketik wilayah RT/RW untuk menyaring seluruh tabel secara instan.
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="col-md-6">
-        <h5>Agama</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>RT</th>
-                    <th>RW</th>
-                    <th>Agama</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in agama %}
-                <tr>
-                    <td>{{ d.kompleks__rt }}</td>
-                    <td>{{ d.kompleks__rw }}</td>
-                    <td>{{ d.agama }}</td>
-                    <td>{{ d.num_warga }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <div class="row">
+        <!-- 1. Data Keseluruhan Warga -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 stat-card">
+                <div class="card-header bg-white border-0 py-3 d-flex align-items-center">
+                    <div class="icon-box bg-light-blue me-3">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-semibold text-secondary">Data Keseluruhan Warga</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 60%;">Wilayah (RT/RW)</th>
+                                    <th class="text-end pe-4" style="width: 40%;">Jumlah Penduduk</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% if all_data %}
+                                {% for d in all_data %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border border-primary-subtle me-1">RT {{ d.kompleks__rt|default:"-" }}</span>
+                                        <span class="badge bg-light text-dark border border-secondary-subtle">RW {{ d.kompleks__rw|default:"-" }}</span>
+                                    </td>
+                                    <td class="text-end pe-4 fw-semibold text-dark">{{ d.num_warga }} Jiwa</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="empty-row">
+                                    <td colspan="2" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i> Belum ada data
+                                    </td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="col-md-6">
-        <h5>Status Tinggal</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>RT</th>
-                    <th>RW</th>
-                    <th>Status Tinggal</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in status_tinggal %}
-                <tr>
-                    <td>{{ d.kompleks__rt }}</td>
-                    <td>{{ d.kompleks__rw }}</td>
-                    <td>{{ d.status_tinggal }}</td>
-                    <td>{{ d.num_warga }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="col-md-6">
-        <h5>Warga Sudah Pindah</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>RT</th>
-                    <th>RW</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in warga_pindah %}
-                <tr>
-                    <td>{{ d.kompleks__rt }}</td>
-                    <td>{{ d.kompleks__rw }}</td>
-                    <td>{{ d.num_warga }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="col-md-6">
-        <h5>Jumlah Kepala Keluarga</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>RT</th>
-                    <th>RW</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in kepala_keluarga %}
-                <tr>
-                    <td>{{ d.kompleks__rt }}</td>
-                    <td>{{ d.kompleks__rw }}</td>
-                    <td>{{ d.num_warga }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <!-- 2. Jumlah Kepala Keluarga -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 stat-card">
+                <div class="card-header bg-white border-0 py-3 d-flex align-items-center">
+                    <div class="icon-box bg-light-teal me-3">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-semibold text-secondary">Jumlah Kepala Keluarga</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 60%;">Wilayah (RT/RW)</th>
+                                    <th class="text-end pe-4" style="width: 40%;">Jumlah KK</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% if kepala_keluarga %}
+                                {% for d in kepala_keluarga %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border border-primary-subtle me-1">RT {{ d.kompleks__rt|default:"-" }}</span>
+                                        <span class="badge bg-light text-dark border border-secondary-subtle">RW {{ d.kompleks__rw|default:"-" }}</span>
+                                    </td>
+                                    <td class="text-end pe-4 fw-semibold text-dark">{{ d.num_warga }} Keluarga</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="empty-row">
+                                    <td colspan="2" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i> Belum ada data
+                                    </td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Warga Sudah Pindah -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 stat-card">
+                <div class="card-header bg-white border-0 py-3 d-flex align-items-center">
+                    <div class="icon-box bg-light-red me-3">
+                        <i class="bi bi-person-x-fill"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-semibold text-secondary">Warga Sudah Pindah</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 60%;">Wilayah (RT/RW)</th>
+                                    <th class="text-end pe-4" style="width: 40%;">Jumlah Warga Pindah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% if warga_pindah %}
+                                {% for d in warga_pindah %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border border-primary-subtle me-1">RT {{ d.kompleks__rt|default:"-" }}</span>
+                                        <span class="badge bg-light text-dark border border-secondary-subtle">RW {{ d.kompleks__rw|default:"-" }}</span>
+                                    </td>
+                                    <td class="text-end pe-4 fw-semibold text-danger">{{ d.num_warga }} Jiwa</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="empty-row">
+                                    <td colspan="2" class="text-center py-4 text-muted">
+                                        <i class="bi bi-check-circle-fill text-success fs-4 d-block mb-1"></i> Tidak ada warga pindah
+                                    </td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Jenis Kelamin -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 stat-card">
+                <div class="card-header bg-white border-0 py-3 d-flex align-items-center">
+                    <div class="icon-box bg-light-indigo me-3">
+                        <i class="bi bi-gender-ambiguous"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-semibold text-secondary">Proporsi Jenis Kelamin</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 40%;">Wilayah (RT/RW)</th>
+                                    <th style="width: 35%;">Jenis Kelamin</th>
+                                    <th class="text-end pe-4" style="width: 25%;">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% if jenis_kelamin %}
+                                {% for d in jenis_kelamin %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border border-primary-subtle me-1">RT {{ d.kompleks__rt|default:"-" }}</span>
+                                        <span class="badge bg-light text-dark border border-secondary-subtle">RW {{ d.kompleks__rw|default:"-" }}</span>
+                                    </td>
+                                    <td>
+                                        {% if d.jenis_kelamin == "LAKI-LAKI" %}
+                                            <span class="badge badge-laki"><i class="bi bi-gender-male me-1"></i>LAKI-LAKI</span>
+                                        {% elif d.jenis_kelamin == "PEREMPUAN" %}
+                                            <span class="badge badge-perempuan"><i class="bi bi-gender-female me-1"></i>PEREMPUAN</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary text-white">{{ d.jenis_kelamin|default:"-" }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4 fw-semibold text-dark">{{ d.num_warga }} Jiwa</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="empty-row">
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i> Belum ada data
+                                    </td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Penyebaran Agama -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 stat-card">
+                <div class="card-header bg-white border-0 py-3 d-flex align-items-center">
+                    <div class="icon-box bg-light-orange me-3">
+                        <i class="bi bi-moon-stars-fill"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-semibold text-secondary">Penyebaran Agama</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 40%;">Wilayah (RT/RW)</th>
+                                    <th style="width: 35%;">Agama</th>
+                                    <th class="text-end pe-4" style="width: 25%;">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% if agama %}
+                                {% for d in agama %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border border-primary-subtle me-1">RT {{ d.kompleks__rt|default:"-" }}</span>
+                                        <span class="badge bg-light text-dark border border-secondary-subtle">RW {{ d.kompleks__rw|default:"-" }}</span>
+                                    </td>
+                                    <td>
+                                        {% if d.agama == "ISLAM" %}
+                                            <span class="badge badge-islam">ISLAM</span>
+                                        {% elif d.agama == "KRISTEN" %}
+                                            <span class="badge badge-kristen">KRISTEN</span>
+                                        {% elif d.agama == "KATHOLIK" %}
+                                            <span class="badge badge-katolik">KATHOLIK</span>
+                                        {% elif d.agama == "HINDU" %}
+                                            <span class="badge badge-hindu">HINDU</span>
+                                        {% elif d.agama == "BUDDHA" %}
+                                            <span class="badge badge-buddha">BUDDHA</span>
+                                        {% elif d.agama == "KONGHUCU" %}
+                                            <span class="badge badge-konghucu">KONGHUCU</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary text-white">{{ d.agama|default:"-" }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4 fw-semibold text-dark">{{ d.num_warga }} Jiwa</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="empty-row">
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i> Belum ada data
+                                    </td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Status Tinggal -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 stat-card">
+                <div class="card-header bg-white border-0 py-3 d-flex align-items-center">
+                    <div class="icon-box bg-light-purple me-3">
+                        <i class="bi bi-house-check-fill"></i>
+                    </div>
+                    <h5 class="card-title mb-0 fw-semibold text-secondary">Status Tinggal</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 40%;">Wilayah (RT/RW)</th>
+                                    <th style="width: 35%;">Status Tinggal</th>
+                                    <th class="text-end pe-4" style="width: 25%;">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% if status_tinggal %}
+                                {% for d in status_tinggal %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-primary border border-primary-subtle me-1">RT {{ d.kompleks__rt|default:"-" }}</span>
+                                        <span class="badge bg-light text-dark border border-secondary-subtle">RW {{ d.kompleks__rw|default:"-" }}</span>
+                                    </td>
+                                    <td>
+                                        {% if d.status_tinggal == "TETAP" %}
+                                            <span class="badge badge-tetap">TETAP</span>
+                                        {% elif d.status_tinggal == "KONTRAK" %}
+                                            <span class="badge badge-kontrak">KONTRAK</span>
+                                        {% elif d.status_tinggal == "KOST" %}
+                                            <span class="badge badge-kost">KOST</span>
+                                        {% elif d.status_tinggal == "PINDAH" %}
+                                            <span class="badge badge-pindah">PINDAH</span>
+                                        {% else %}
+                                            <span class="badge badge-lainnya">{{ d.status_tinggal|default:"LAINNYA" }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4 fw-semibold text-dark">{{ d.num_warga }} Jiwa</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="empty-row">
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i> Belum ada data
+                                    </td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    function filterTables() {
+        const input = document.getElementById('statsSearchInput');
+        const filter = input.value.toLowerCase().trim();
+        const tables = document.querySelectorAll('table');
+
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tbody tr');
+            let visibleRowsCount = 0;
+            
+            rows.forEach(row => {
+                // If it's an empty or search empty state row, skip checking
+                if (row.classList.contains('empty-row') || row.classList.contains('search-empty-row')) {
+                    return;
+                }
+
+                const textContent = row.textContent.toLowerCase();
+                if (textContent.includes(filter)) {
+                    row.style.display = '';
+                    visibleRowsCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Handle empty state display when no rows match
+            let emptyStateRow = table.querySelector('.search-empty-row');
+            const totalRegularRows = Array.from(rows).filter(r => !r.classList.contains('empty-row') && !r.classList.contains('search-empty-row')).length;
+
+            if (visibleRowsCount === 0 && totalRegularRows > 0) {
+                if (!emptyStateRow) {
+                    const colsCount = table.querySelectorAll('thead th').length;
+                    emptyStateRow = document.createElement('tr');
+                    emptyStateRow.className = 'search-empty-row';
+                    emptyStateRow.innerHTML = `<td colspan="${colsCount}" class="text-center py-4 text-muted"><i class="bi bi-search fs-4 d-block mb-1"></i> Tidak ada data wilayah cocok</td>`;
+                    table.querySelector('tbody').appendChild(emptyStateRow);
+                } else {
+                    emptyStateRow.style.display = '';
+                }
+            } else if (emptyStateRow) {
+                emptyStateRow.style.display = 'none';
+            }
+        });
+    }
+</script>
 {% endblock %}
