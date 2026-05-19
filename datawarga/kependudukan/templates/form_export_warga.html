@@ -4,61 +4,103 @@
 {% block pagetitle %}Import Data Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
-<div class="col-lg-8 border-bottom">
-    <div class="py-2">
-        <p>Unggah file CSV berisi data warga yang ingin dientry secara bulk. 
-            <br>Unduh confoh format, dan jangan hapus headernya. 
-            <br>Buka file csv di aplikasi spreadsheet dan simpan / export kembali ke format CSV.
-            <br>Pastikan tidak ada NIK yang terduplikasi, bahkan dengan data yang sudah ada di sistem / database.
-            <br><a href='{% static "contoh.csv" %}''>Contoh File CSV</a>
-        </p>
-        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:utilImportWarga' %}">
-            {% csrf_token %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Card 1: Import Form -->
+        <div class="form-card mb-4">
+            <div class="form-card-header">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+                <h5>Unggah Data CSV</h5>
+            </div>
+            <div class="form-card-body">
+                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4" role="alert" style="border-radius: 12px; background: rgba(37, 99, 235, 0.08); color: #1e3a8a;">
+                    <i class="bi bi-info-circle-fill me-3 fs-5"></i>
+                    <div>
+                        Unggah file CSV berisi data warga untuk input secara bulk. Unduh format file contoh di bawah, dan pastikan header kolom tidak diubah atau dihapus. Pastikan NIK bersifat unik dan tidak terduplikasi.
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <a href='{% static "contoh.csv" %}' class="btn btn-outline-primary d-inline-flex align-items-center">
+                        <i class="bi bi-download me-2"></i> Unduh Contoh File CSV
+                    </a>
+                </div>
 
-            
-            {{ form.csv_file | as_crispy_field }}
-            <br>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-cloud-arrow-up"></i> Export</button>
-        </form>
-        <h5>Catatan</h5>
-        <p>
-            Berikut ini adalah petunjuk opsi yang bisa dipilih pada beberapa kolom data warga:
-            <br>
-            Opsi agama :
-            <ul>
-            {% for ag in agama %}
-                <li>{{ ag.0 | title  }}</li>
-            {% endfor %}
-            </ul>
-            <br>
-            Opsi status_kawin:
-            <ul>
-            {% for ag in status_kawin %}
-                <li>{{ ag.0 | title  }}</li>
-            {% endfor %}
-            </ul>
-            <br>
-            Opsi status_tinggal:
-            <ul>
-            {% for ag in status_tinggal %}
-                <li>{{ ag.0 | title  }}</li>
-            {% endfor %}
-            </ul>
-            <br>
-            Opsi pekerjaan:
-            <ul>
-            {% for ag in pekerjaan %}
-                <li>{{ ag.0 | title  }}</li>
-            {% endfor %}
-            </ul>
-            <br>
-            Opsi jenis_kelamin:
-            <ul>
-            {% for ag in jenis_kelamin %}
-                <li>{{ ag.0 | title  }}</li>
-            {% endfor %}
-            </ul>
-        </p>
+                <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:utilImportWarga' %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        {{ form.csv_file | as_crispy_field }}
+                    </div>
+                    <div class="border-top pt-3">
+                        <button type="submit" class="submit-btn">
+                            <i class="bi bi-cloud-arrow-up-fill"></i> Mulai Import Data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card 2: Formatting Guide -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <i class="bi bi-book-half"></i>
+                <h5>Petunjuk Format & Opsi Data</h5>
+            </div>
+            <div class="form-card-body">
+                <p class="text-muted small">Berikut adalah opsi string valid yang harus digunakan pada kolom format CSV:</p>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold text-dark mb-2">Agama</h6>
+                        <ul class="list-group list-group-flush small">
+                            {% for ag in agama %}
+                            <li class="list-group-item px-0 py-1 bg-transparent">{{ ag.0 | title }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold text-dark mb-2">Status Pernikahan</h6>
+                        <ul class="list-group list-group-flush small">
+                            {% for ag in status_kawin %}
+                            <li class="list-group-item px-0 py-1 bg-transparent">{{ ag.0 | title }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row border-top pt-3">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold text-dark mb-2">Status Tinggal</h6>
+                        <ul class="list-group list-group-flush small">
+                            {% for ag in status_tinggal %}
+                            <li class="list-group-item px-0 py-1 bg-transparent">{{ ag.0 | title }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold text-dark mb-2">Jenis Kelamin</h6>
+                        <ul class="list-group list-group-flush small">
+                            {% for ag in jenis_kelamin %}
+                            <li class="list-group-item px-0 py-1 bg-transparent">{{ ag.0 | title }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row border-top pt-3">
+                    <div class="col-12">
+                        <h6 class="font-weight-bold text-dark mb-2">Pekerjaan</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for ag in pekerjaan %}
+                            <span class="badge bg-light text-dark border p-2 small mb-1">{{ ag.0 | title }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

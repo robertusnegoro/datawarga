@@ -1,84 +1,376 @@
 {% extends "base.html" %}
-{% block title %}Data Warga{% endblock %}
-{% block pagetitle %}Data Warga{% endblock %}
+{% block title %}Form Data Warga{% endblock %}
+{% block pagetitle %}<i class="bi bi-person-lines-fill text-indigo"></i> Form Data Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
 {% load static %}
-<div class="row">
-    <div class="col-lg-8 border-bottom">
-        <div class="py-2">
+
+<style>
+    .warga-form-container {
+        color: #1e293b;
+    }
+
+    /* Custom Checkbox override for Kepala Keluarga */
+    .form-group .form-check {
+        padding-left: 2.5rem;
+        background: #f8fafc;
+        padding: 14px 16px 14px 3rem;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .form-group .form-check:hover {
+        border-color: #cbd5e1;
+        background: #f1f5f9;
+    }
+
+    .form-group .form-check-input {
+        width: 1.35em;
+        height: 1.35em;
+        margin-top: 0;
+        margin-left: -2rem;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1px solid #cbd5e1;
+        transition: all 0.2s ease;
+    }
+
+    .form-group .form-check-input:checked {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+    }
+
+    .form-group .form-check-label {
+        font-weight: 500;
+        color: #334155;
+        cursor: pointer;
+        font-size: 0.925rem;
+        margin-bottom: 0;
+    }
+
+    /* Profile Photo Card */
+    .profile-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+        position: sticky;
+        top: 80px;
+    }
+
+    .profile-avatar-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 32px auto 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 3px solid #f1f5f9;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        background: #f8fafc;
+    }
+
+    .profile-avatar {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Datepicker styling alignment */
+    .datepicker {
+        border-radius: 12px !important;
+        padding: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .datepicker td, .datepicker th {
+        border-radius: 6px !important;
+    }
+
+    .datepicker table tr td.active, .datepicker table tr td.active:hover {
+        background-image: none !important;
+        background-color: #4f46e5 !important;
+        color: #ffffff !important;
+    }
+
+    /* Custom File Input style override */
+    input[type="file"] {
+        padding: 8px !important;
+    }
+
+    input[type="file"]::-webkit-file-upload-button {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 6px 12px;
+        margin-right: 12px;
+        font-weight: 500;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    input[type="file"]::-webkit-file-upload-button:hover {
+        background: #e2e8f0;
+        border-color: #94a3b8;
+    }
+</style>
+
+<div class="warga-form-container mt-2">
+    <div class="row">
+        <!-- Form Fields Left Side -->
+        <div class="col-lg-8">
             {% if idkompleks > 0 %}
-            <div class="alert alert-primary" role="alert">
-                <p>Tambah warga penghuni <b>blok {{ data_kompleks.blok }} / No. {{ data_kompleks.nomor }}</b></p>
+            <div class="custom-alert">
+                <i class="bi bi-info-circle-fill"></i>
+                <p>Tambah warga penghuni ke <b>Blok {{ data_kompleks.blok }} / No. {{ data_kompleks.nomor }}</b></p>
             </div>
-            
             {% endif %}
+
             <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:formWargaSimpan' %}">
                 {% csrf_token %}
-    
-                
-                {{ form.nik | as_crispy_field }}
-                {{ form.no_kk | as_crispy_field }}
-                {{ form.nama_lengkap | as_crispy_field }}
-    
-                {{ form.jenis_kelamin | as_crispy_field }}
-                {{ form.agama | as_crispy_field }}
-    
-                {{ form.no_hp | as_crispy_field }}
-                {{ form.tanggal_lahir | as_crispy_field }}
-                {{ form.tempat_lahir | as_crispy_field }}
-    
-                {% if idkompleks == 0 %}
-                {{ form.kompleks | as_crispy_field }}
-                {% endif %}
-    
-                {{ form.alamat_ktp | as_crispy_field }}
-    
-                {{ form.status_tinggal | as_crispy_field }}
-                {{ form.status_keluarga | as_crispy_field }}
 
-                <br>
-                {{ form.kepala_keluarga | as_crispy_field }}
-                <br>
-    
-                {{ form.pekerjaan | as_crispy_field }}
-                {{ form.status | as_crispy_field }}
-                {{ form.kewarganegaraan | as_crispy_field }}
-    
-                {{ form.email | as_crispy_field }}
-                {{ form.foto_path | as_crispy_field }}
-    
+                <!-- Card 1: Identitas Warga -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="bi bi-person-badge"></i>
+                        <h5>Identitas Utama Warga</h5>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.nik | as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.no_kk | as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.nama_lengkap | as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.jenis_kelamin | as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.agama | as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.pekerjaan | as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status | as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.kewarganegaraan | as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Kelahiran & Kontak -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="bi bi-calendar3"></i>
+                        <h5>Kelahiran & Informasi Kontak</h5>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.tempat_lahir | as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.tanggal_lahir | as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.no_hp | as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.email | as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Domisili & Keluarga -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="bi bi-house-door"></i>
+                        <h5>Domisili & Status Keluarga</h5>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.status_tinggal | as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status_keluarga | as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.alamat_ktp | as_crispy_field }}
+                            </div>
+                        </div>
+                        {% if idkompleks == 0 %}
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.kompleks | as_crispy_field }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.kepala_keluarga | as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Upload Foto -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="bi bi-camera"></i>
+                        <h5>Foto Profil</h5>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.foto_path | as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden variables -->
                 {% if idwarga > 0 %}
-                <input type="hidden" id="idwarga" name="idwarga" value="{{ idwarga }}" >
+                <input type="hidden" id="idwarga" name="idwarga" value="{{ idwarga }}">
                 {% endif %}
                 {% if idkompleks > 0 %}
-                <input type="hidden" name="kompleks" id="id_kompleks" value="{{ idkompleks }}" >
-                <input type="hidden" name="idkompleks" id="idkompleks" value="{{ idkompleks }}" >
+                <input type="hidden" name="kompleks" id="id_kompleks" value="{{ idkompleks }}">
+                <input type="hidden" name="idkompleks" id="idkompleks" value="{{ idkompleks }}">
                 {% endif %}
-    
-                <hr>
-    
-                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan Data Warga</button>
+
+                <div class="my-4">
+                    <button type="submit" class="submit-btn">
+                        <i class="bi bi-save-fill"></i> Simpan Data Warga
+                    </button>
+                    <a href="{% url 'kependudukan:listWargaView' %}" class="btn btn-outline-secondary ms-2">Batal</a>
+                </div>
             </form>
         </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <h5 class="my-3">Foto</h5>
-                <img src="
-                    {% if datawarga.foto_path %}
-                        /media/{{ datawarga.foto_path }}
-                    
+
+        <!-- Right Side Sidebar: Visual Avatar Preview Card -->
+        <div class="col-lg-4">
+            <div class="profile-card text-center p-4">
+                <h5 class="font-weight-bold text-dark border-bottom pb-2">Visual Preview</h5>
+                <div class="profile-avatar-container">
+                    <img id="avatar-preview" src="
+                        {% if datawarga.foto_path %}
+                            /media/{{ datawarga.foto_path }}
+                        {% else %}
+                            {% static 'no-photo.png' %}
+                        {% endif %}" alt="avatar" class="profile-avatar">
+                </div>
+                <h4 class="h5 font-weight-bold mb-1" id="preview-name">{% if datawarga.nama_lengkap %}{{ datawarga.nama_lengkap }}{% else %}Penduduk Baru{% endif %}</h4>
+                <p class="text-muted small mb-0" id="preview-kompleks">
+                    {% if datawarga.kompleks %}
+                        Rumah: {{ datawarga.kompleks }}
                     {% else %}
-                    {% static 'no-photo.png' %}
-                {% endif %}" alt="avatar"
-                class="rounded img-fluid">
-                <p class="text-muted mb-1">{{ datawarga.nama_lengkap }}</p>
-                <p class="text-muted mb-4">{{ datawarga.kompleks }}</p>
+                        Rumah: Belum ditentukan
+                    {% endif %}
+                </p>
+                <div class="mt-3 text-muted small px-3">
+                    <p class="mb-1" id="preview-nik">NIK: {% if datawarga.nik %}{{ datawarga.nik }}{% else %}-{% endif %}</p>
+                    <p class="mb-0" id="preview-hp">HP: {% if datawarga.no_hp %}{{ datawarga.no_hp }}{% else %}-{% endif %}</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block jscript %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Live Photo Preview
+        const fileInput = document.getElementById('id_foto_path');
+        const avatarImg = document.getElementById('avatar-preview');
+
+        if (fileInput && avatarImg) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        avatarImg.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Live Name Preview
+        const nameInput = document.getElementById('id_nama_lengkap');
+        const previewName = document.getElementById('preview-name');
+        if (nameInput && previewName) {
+            nameInput.addEventListener('input', function(e) {
+                previewName.textContent = e.target.value.trim() || 'Penduduk Baru';
+            });
+        }
+
+        // Live NIK Preview
+        const nikInput = document.getElementById('id_nik');
+        const previewNik = document.getElementById('preview-nik');
+        if (nikInput && previewNik) {
+            nikInput.addEventListener('input', function(e) {
+                previewNik.textContent = 'NIK: ' + (e.target.value.trim() || '-');
+            });
+        }
+
+        // Live HP Preview
+        const hpInput = document.getElementById('id_no_hp');
+        const previewHp = document.getElementById('preview-hp');
+        if (hpInput && previewHp) {
+            hpInput.addEventListener('input', function(e) {
+                previewHp.textContent = 'HP: ' + (e.target.value.trim() || '-');
+            });
+        }
+
+        // Live Kompleks Dropdown Selection Preview
+        const kompleksSelect = document.getElementById('id_kompleks');
+        const previewKompleks = document.getElementById('preview-kompleks');
+        if (kompleksSelect && previewKompleks) {
+            kompleksSelect.addEventListener('change', function(e) {
+                const selectedText = kompleksSelect.options[kompleksSelect.selectedIndex].text;
+                if (selectedText && selectedText !== '---------') {
+                    previewKompleks.textContent = 'Rumah: ' + selectedText;
+                } else {
+                    previewKompleks.textContent = 'Rumah: Belum ditentukan';
+                }
+            });
+        }
+
+        // Auto-close datepicker on select and set beautiful focus triggers
+        $('#id_tanggal_lahir').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+    });
+</script>
 {% endblock %}

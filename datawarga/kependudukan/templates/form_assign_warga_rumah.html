@@ -1,55 +1,74 @@
 {% extends "base.html" %}
 {% block title %}Pindahkan Warga{% endblock %}
-{% block pagetitle %}Pindahkan Warga {% endblock %}
+{% block pagetitle %}Pindahkan Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-md-12">
-        <h5>Pindahkan Warga ke Rumah Tertentu</h5>
-        <p>Halaman ini digunakan untuk memindahkan warga yang belum dimasukkan ke data kompleks/rumah manapun (None).</p>
-        
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center" role="alert" style="border-radius: 12px; background: rgba(245, 158, 11, 0.08); color: #78350f;">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-4 text-warning"></i>
+            <div>
+                Halaman ini digunakan untuk memindahkan warga yang status kepemilikan kompleks/rumahnya belum terdefinisi (kosong / None) ke rumah tertentu.
+            </div>
+        </div>
     </div>
 </div>
+
 <div class="row">
-    <div class="col-md-6">
-        <h6>Warga</h6>
-        <div class="input-group mb-3">
-            {% csrf_token %}
-            <input type="text" class="form-control" placeholder="Cari Nama atau NIK" aria-label="Cari Warga" aria-describedby="btn_search_warga" id="search_box_warga">
-            <button class="btn btn-outline-secondary" type="button" id="btn_search_warga"><i class="bi bi-search"></i></button>
-        </div>
-        <div id="tabel-warga">
-            
+    <div class="col-lg-6 mb-4">
+        <div class="form-card h-100">
+            <div class="form-card-header">
+                <i class="bi bi-people-fill"></i>
+                <h5>Warga Belum Ter-assign</h5>
+            </div>
+            <div class="form-card-body">
+                <div class="input-group mb-3 shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                    {% csrf_token %}
+                    <input type="text" class="form-control border-end-0" placeholder="Cari nama atau NIK warga..." aria-label="Cari Warga" aria-describedby="btn_search_warga" id="search_box_warga">
+                    <button class="btn btn-primary px-3 d-flex align-items-center" type="button" id="btn_search_warga">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                <div id="tabel-warga" class="border rounded" style="max-height: 450px; overflow-y: auto; background: #fff;">
+                    <!-- Dynamically loaded -->
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <h6>Kompleks</h6>
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Cari Cluster atau Nomor (tanpa blok)" aria-label="Cari Cluster" aria-describedby="btn_search_kompleks" id="search_box_kompleks">
-            <button class="btn btn-outline-secondary" type="button" id="btn_search_kompleks"><i class="bi bi-search"></i></button>
-        </div>
-        <div id="tabel-kompleks">
-            <table class="table">
-                <tr>
-                    <td>Cluster</td>
-                    <td>Blok / No</td>
-                    <td><button type="button" class="btn btn-primary btn-sm"><i class="bi bi-arrow-right-circle-fill"></i> pindah</button></td>
-                </tr>
-            </table>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="form-card h-100">
+            <div class="form-card-header">
+                <i class="bi bi-house-door-fill"></i>
+                <h5>Daftar Rumah / Kompleks</h5>
+            </div>
+            <div class="form-card-body">
+                <div class="input-group mb-3 shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                    <input type="text" class="form-control border-end-0" placeholder="Cari cluster atau nomor rumah..." aria-label="Cari Cluster" aria-describedby="btn_search_kompleks" id="search_box_kompleks">
+                    <button class="btn btn-primary px-3 d-flex align-items-center" type="button" id="btn_search_kompleks">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                <div id="tabel-kompleks" class="border rounded" style="max-height: 450px; overflow-y: auto; background: #fff;">
+                    <!-- Dynamically loaded -->
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <strong class="me-auto">Message</strong>
-        <small>moment ago</small>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body" id="toast-body">
-      </div>
+        <div class="toast-header bg-primary text-white">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong class="me-auto">Notifikasi</strong>
+            <small>Baru saja</small>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body bg-white text-dark py-3" id="toast-body">
+        </div>
     </div>
-  </div>
+</div>
 {% endblock %}
 
 {% block jscript %}
@@ -63,21 +82,46 @@
         $("#btn_search_kompleks").click(function(){
             search_kompleks();
         });
+        
+        // Listen to Enter key on search boxes
+        $("#search_box_warga").keypress(function(e) {
+            if(e.which == 13) {
+                search_warga();
+            }
+        });
+        $("#search_box_kompleks").keypress(function(e) {
+            if(e.which == 13) {
+                search_kompleks();
+            }
+        });
     });
 
     function load_table_warga(data){
-        var tabel_warga = "<table class=\"table table-stripped\">";
-        $.each(data, function(key, value){
-            tabel_warga += "<tr><td><input class=\"form-check-input\" name=\"warga_ids[]\" type=\"checkbox\" value=\"" + value.pk + "\"></td><td>" + value.fields.nama_lengkap + "</td><td>" + value.fields.nik + "</td></tr>";
-        });
+        var tabel_warga = "<div class=\"table-responsive\"><table class=\"table table-hover align-middle mb-0\">";
+        tabel_warga += "<thead class=\"table-light\"><tr><th width=\"50\" class=\"ps-3\">Pilih</th><th>Nama Lengkap</th><th class=\"pe-3\">NIK</th></tr></thead><tbody>";
+        if (data.length === 0) {
+            tabel_warga += "<tr><td colspan=\"3\" class=\"text-center text-muted py-4\">Tidak ada warga tanpa rumah ditemukan</td></tr>";
+        } else {
+            $.each(data, function(key, value){
+                tabel_warga += "<tr><td class=\"ps-3\"><input class=\"form-check-input\" name=\"warga_ids[]\" type=\"checkbox\" value=\"" + value.pk + "\"></td><td class=\"font-weight-bold text-dark\">" + value.fields.nama_lengkap + "</td><td class=\"text-muted small pe-3\">" + value.fields.nik + "</td></tr>";
+            });
+        }
+        tabel_warga += "</tbody></table></div>";
         return tabel_warga;
     }
 
     function load_table_kompleks(data){
-        var tabel_kompleks = "<table class=\"table table-stripped\">";
-        $.each(data, function(key, value){
-            tabel_kompleks += "<tr><td>" + value.fields.cluster + "</td><td>" + value.fields.blok + "/" + value.fields.nomor + "</td><td><button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"pindah_exec('"+value.pk+"')\"><i class=\"bi bi-arrow-right-circle-fill\"></i> pindah</button></td></tr>";
-        });
+        var tabel_kompleks = "<div class=\"table-responsive\"><table class=\"table table-hover align-middle mb-0\">";
+        tabel_kompleks += "<thead class=\"table-light\"><tr><th class=\"ps-3\">Cluster</th><th>Blok / Nomor</th><th class=\"text-end pe-3\">Aksi</th></tr></thead><tbody>";
+        if (data.length === 0) {
+            tabel_kompleks += "<tr><td colspan=\"3\" class=\"text-center text-muted py-4\">Tidak ada kompleks/rumah ditemukan</td></tr>";
+        } else {
+            $.each(data, function(key, value){
+                var cluster = value.fields.cluster ? value.fields.cluster : '-';
+                tabel_kompleks += "<tr><td class=\"ps-3 text-muted small\">" + cluster + "</td><td class=\"font-weight-bold text-dark\">" + value.fields.blok + "/" + value.fields.nomor + "</td><td class=\"text-end pe-3\"><button type=\"button\" class=\"btn btn-primary btn-sm px-3 d-inline-flex align-items-center\" onclick=\"pindah_exec('"+value.pk+"')\"><i class=\"bi bi-arrow-right-circle-fill me-1\"></i> Hubungkan</button></td></tr>";
+            });
+        }
+        tabel_kompleks += "</tbody></table></div>";
         return tabel_kompleks;
     }
 
@@ -139,6 +183,14 @@
         }).get();
         var csrfmiddlewaretoken = $("input[name=csrfmiddlewaretoken]").val();
        
+        if (warga_ids.length === 0) {
+            const toastLiveExample = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastLiveExample);
+            $("#toast-body").html("<span class='text-danger'><i class='bi bi-x-circle-fill me-1'></i> Silakan pilih setidaknya satu warga terlebih dahulu.</span>");
+            toast.show();
+            return;
+        }
+
         var data = {'warga_ids': warga_ids, 'csrfmiddlewaretoken': csrfmiddlewaretoken, 'idkompleks': idkompleks}
 
         $.ajax({
@@ -148,23 +200,16 @@
             success: function(response) {
                 console.log(response);
                 load_warga_no_kompleks();
-                const toastTrigger = document.getElementById('liveToastBtn')
                 const toastLiveExample = document.getElementById('liveToast')
-                
-                
                 const toast = new bootstrap.Toast(toastLiveExample);
-                $("#toast-body").html(response.message);
+                $("#toast-body").html("<span class='text-success'><i class='bi bi-check-circle-fill me-1'></i> " + response.message + "</span>");
                 toast.show();
-                
             },
             error: function(xhr, status, error) {
                 console.log(error);
             },
             dataType: "json"
         });
-        
     }
-    
 </script>
-
 {% endblock %}

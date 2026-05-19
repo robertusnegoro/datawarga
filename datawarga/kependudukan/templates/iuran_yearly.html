@@ -5,45 +5,63 @@
 {% load crispy_forms_tags %}
 {% load humanize %}
 <div class="row">
-    <div class="col-md-4">
-        <h5>Form Iuran Bulanan</h5>
-        <form method="post" enctype="multipart/form-data" id="incomestatement-form" action="{% url 'kependudukan:iuranYearly' %}">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="periode_tahun" class="form-label">Tahun</label>
-                <select class="form-select" aria-label="Pilih Tahun" id="periode_tahun" name="periode_tahun">
-                    {% for y in range_tahun %}
-                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
-                    {% endfor %}
-                </select>
+    <div class="col-lg-4 mb-4">
+        <div class="form-card">
+            <div class="form-card-header">
+                <i class="bi bi-funnel-fill"></i>
+                <h5>Filter Rekap Tahunan</h5>
             </div>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-right"></i> Submit</button>
-        </form>
+            <div class="form-card-body">
+                <form method="post" enctype="multipart/form-data" id="incomestatement-form" action="{% url 'kependudukan:iuranYearly' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="periode_tahun" class="form-label font-weight-bold text-muted small">TAHUN</label>
+                        <select class="form-select" aria-label="Pilih Tahun" id="periode_tahun" name="periode_tahun">
+                            {% for y in range_tahun %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="submit-btn w-100">
+                            <i class="bi bi-search"></i> Tampilkan Rekap
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="col-md-4">
-        <h5>Rekapan Tahunan : {{ year }}</h5>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Bulan</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for transaksi in sum_transaksi %}
-                <tr>
-                    <td>{{ transaksi.month|date:"F" }}</td>
-                    <td class="text-end">{{ transaksi.total_amount|intcomma }}</td>
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td>Total</td>
-                    <td class="text-end">{{ grand_total|intcomma }}</td>
-                </tr>
-            </tbody>
-            
-
-        </table>
+    <div class="col-lg-6">
+        <div class="form-card">
+            <div class="form-card-header">
+                <i class="bi bi-calendar3"></i>
+                <h5>Rekapan Tahunan : {{ year }}</h5>
+            </div>
+            <div class="form-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Bulan</th>
+                                <th class="text-end pe-4">Jumlah (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaksi in sum_transaksi %}
+                            <tr>
+                                <td class="ps-4">{{ transaksi.month|date:"F" }}</td>
+                                <td class="text-end pe-4 font-weight-bold">{{ transaksi.total_amount|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-info font-weight-bold border-top-2">
+                                <td class="ps-4 text-primary">Total Pendapatan</td>
+                                <td class="text-end pe-4 text-primary font-weight-bold">{% if grand_total %}{{ grand_total|intcomma }}{% else %}0{% endif %}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
