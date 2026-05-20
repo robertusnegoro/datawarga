@@ -1,21 +1,16 @@
-from .forms import WargaForm, GenerateKompleksForm
+from .forms import GenerateKompleksForm
 from .models import Warga, Kompleks, WargaPermissionGroup, UserPermission
 from .utility import helper_finance_year_list
-from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core import serializers
 from django.db.models import Q, Count
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
-from django.views.static import serve
 from urllib.parse import urlencode
-from weasyprint import HTML
-from weasyprint.text.fonts import FontConfiguration
 import logging
 import json
 

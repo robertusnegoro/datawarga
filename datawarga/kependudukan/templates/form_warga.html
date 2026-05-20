@@ -226,6 +226,7 @@
                                 {{ form.alamat_ktp | as_crispy_field }}
                             </div>
                         </div>
+
                         {% if idkompleks == 0 %}
                         <div class="row">
                             <div class="col-12">
@@ -253,6 +254,34 @@
                                 {{ form.foto_path | as_crispy_field }}
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Upload KTP -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="bi bi-card-image"></i>
+                        <h5>Foto KTP</h5>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.ktp_image_path | as_crispy_field }}
+                            </div>
+                        </div>
+                        {% if datawarga.ktp_image_path %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label class="form-label text-muted d-block mb-2">KTP Terunggah saat ini:</label>
+                                <div class="text-center p-3 bg-light rounded border">
+                                    <a href="/media/{{ datawarga.ktp_image_path }}" target="_blank">
+                                        <img src="/media/{{ datawarga.ktp_image_path }}" class="img-fluid rounded border shadow-sm" style="max-height: 200px;" alt="KTP Warga">
+                                    </a>
+                                    <span class="d-block text-muted small mt-2"><i class="bi bi-info-circle"></i> Klik gambar untuk melihat ukuran penuh</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -307,6 +336,8 @@
 {% block jscript %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+
         // Live Photo Preview
         const fileInput = document.getElementById('id_foto_path');
         const avatarImg = document.getElementById('avatar-preview');

@@ -10,7 +10,6 @@ from kependudukan.models import (
 
 
 class GenerateDummyDataTestCase(TestCase):
-
     def test_default_generation(self) -> None:
         """Test standard execution with 10 complexes and 100% occupancy."""
         # Execute the command

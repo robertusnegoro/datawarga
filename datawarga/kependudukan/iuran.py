@@ -1,5 +1,5 @@
 from .forms import IuranBulananForm, BatchIuranBulananForm
-from .models import Warga, Kompleks, TransaksiIuranBulanan, SummaryTransaksiBulanan
+from .models import Kompleks, TransaksiIuranBulanan, SummaryTransaksiBulanan
 from .utility import helper_finance_year_list
 from datetime import datetime
 from django.conf import settings

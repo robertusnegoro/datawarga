@@ -1,5 +1,5 @@
-from .forms import WargaForm, GenerateKompleksForm
-from .models import Warga, Kompleks, WargaPermissionGroup, UserPermission
+from .forms import WargaForm
+from .models import Warga, Kompleks, UserPermission
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -468,7 +468,10 @@ def detailWarga(request, idwarga):
         try:
             current_permission_group = UserPermission.objects.get(user=request.user)
             if str(current_permission_group.permission_group).lower() != "all":
-                if warga.kompleks.permission_group != current_permission_group.permission_group:
+                if (
+                    warga.kompleks.permission_group
+                    != current_permission_group.permission_group
+                ):
                     return HttpResponse("Forbidden", status=403)
         except UserPermission.DoesNotExist:
             pass
@@ -476,19 +479,28 @@ def detailWarga(request, idwarga):
     # Fetch other household members (serumah)
     anggota_keluarga = []
     if warga.kompleks:
-        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(pk=warga.pk)
+        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(
+            pk=warga.pk
+        )
 
     # Fetch recent transactions for this complex
     transaksi = []
     if warga.kompleks:
         from .models import TransaksiIuranBulanan
-        transaksi = TransaksiIuranBulanan.objects.filter(kompleks=warga.kompleks).order_by("-periode_tahun", "-periode_bulan")[:5]
+
+        transaksi = TransaksiIuranBulanan.objects.filter(
+            kompleks=warga.kompleks
+        ).order_by("-periode_tahun", "-periode_bulan")[:5]
 
     umur = None
     if warga.tanggal_lahir:
         today = datetime.now().date()
         birth = warga.tanggal_lahir
-        umur = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+        umur = (
+            today.year
+            - birth.year
+            - ((today.month, today.day) < (birth.month, birth.day))
+        )
 
     context = {
         "warga": warga,
@@ -509,7 +521,10 @@ def pdfDetailWarga(request, idwarga):
         try:
             current_permission_group = UserPermission.objects.get(user=request.user)
             if str(current_permission_group.permission_group).lower() != "all":
-                if warga.kompleks.permission_group != current_permission_group.permission_group:
+                if (
+                    warga.kompleks.permission_group
+                    != current_permission_group.permission_group
+                ):
                     return HttpResponse("Forbidden", status=403)
         except UserPermission.DoesNotExist:
             pass
@@ -517,19 +532,28 @@ def pdfDetailWarga(request, idwarga):
     # Fetch other household members (serumah)
     anggota_keluarga = []
     if warga.kompleks:
-        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(pk=warga.pk)
+        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(
+            pk=warga.pk
+        )
 
     # Fetch recent transactions for this complex
     transaksi = []
     if warga.kompleks:
         from .models import TransaksiIuranBulanan
-        transaksi = TransaksiIuranBulanan.objects.filter(kompleks=warga.kompleks).order_by("-periode_tahun", "-periode_bulan")[:5]
+
+        transaksi = TransaksiIuranBulanan.objects.filter(
+            kompleks=warga.kompleks
+        ).order_by("-periode_tahun", "-periode_bulan")[:5]
 
     umur = None
     if warga.tanggal_lahir:
         today = datetime.now().date()
         birth = warga.tanggal_lahir
-        umur = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+        umur = (
+            today.year
+            - birth.year
+            - ((today.month, today.day) < (birth.month, birth.day))
+        )
 
     # For PDF generation, we should pass standard config variables too
     context = {
@@ -554,6 +578,7 @@ def pdfDetailWarga(request, idwarga):
 
     html = render_to_string("detail_warga_pdf.html", context, request=request)
     font_config = FontConfiguration()
-    HTML(string=html, base_url=request.build_absolute_uri('/')).write_pdf(response, font_config=font_config)
+    HTML(string=html, base_url=request.build_absolute_uri("/")).write_pdf(
+        response, font_config=font_config
+    )
     return response
-

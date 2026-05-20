@@ -347,7 +347,7 @@ async def bayar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     await update.message.reply_text(
-        "Mari catat pembayaran iuran.\n" "Masukkan alamat rumah (contoh: J2/5):"
+        "Mari catat pembayaran iuran.\nMasukkan alamat rumah (contoh: J2/5):"
     )
     return ALAMAT
 
@@ -435,9 +435,9 @@ async def bukti_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = payment_data[user_id]
     await update.message.reply_text(
         f"Konfirmasi pembayaran:\n\n"
-        f'Alamat: {data["alamat"]}\n'
-        f'Periode: {data["bulan"]}/{data["tahun"]}\n'
-        f'Jumlah: Rp {data["jumlah"]:,}\n\n'
+        f"Alamat: {data['alamat']}\n"
+        f"Periode: {data['bulan']}/{data['tahun']}\n"
+        f"Jumlah: Rp {data['jumlah']:,}\n\n"
         f'Ketik "ya" untuk konfirmasi atau "tidak" untuk membatalkan:'
     )
     return KONFIRMASI
@@ -495,7 +495,7 @@ async def konfirmasi_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if payment_response.status_code == 404:
             await update.message.reply_text(
-                f'Alamat Blok {data["alamat"]} tidak terdaftar.\n'
+                f"Alamat Blok {data['alamat']} tidak terdaftar.\n"
                 "Pastikan format penulisan benar (contoh: J2/5)"
             )
         elif payment_response.status_code == 400:

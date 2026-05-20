@@ -133,7 +133,7 @@
                         <span class="d-block small text-muted">Alamat Lengkap (KTP)</span>
                         <span class="text-dark fw-semibold">{{ warga.alamat_ktp|default:"-" }}</span>
                     </div>
-                    
+
                     {% if warga.kompleks %}
                     <div class="col-sm-6 border-top pt-3">
                         <span class="d-block small text-muted">Cluster / Blok / No. Rumah</span>
@@ -165,6 +165,27 @@
                     </div>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+
+        <!-- KTP Document Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-card-image text-primary me-2"></i> Dokumen KTP</h5>
+            </div>
+            <div class="card-body p-4 text-center">
+                {% if warga.ktp_image_path %}
+                <div class="d-inline-block position-relative">
+                    <a href="{{ MEDIA_URL }}{{ warga.ktp_image_path }}" target="_blank">
+                        <img src="{{ MEDIA_URL }}{{ warga.ktp_image_path }}" class="img-fluid rounded border shadow-sm" style="max-height: 250px;" alt="KTP Warga">
+                    </a>
+                    <span class="d-block text-muted small mt-2"><i class="bi bi-info-circle"></i> Klik gambar untuk melihat ukuran penuh</span>
+                </div>
+                {% else %}
+                <div class="text-muted py-3">
+                    <i class="bi bi-exclamation-circle me-1"></i> Warga belum mengunggah dokumen KTP.
+                </div>
+                {% endif %}
             </div>
         </div>
 

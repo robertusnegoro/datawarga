@@ -1,16 +1,7 @@
-from .forms import IuranBulananForm
-from .models import Warga, Kompleks, TransaksiIuranBulanan
+from .models import Kompleks, TransaksiIuranBulanan
 from .utility import helper_finance_year_list
-from datetime import datetime
-from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, Http404, JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.core import serializers
-from urllib.parse import urlencode
+from django.shortcuts import render
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 

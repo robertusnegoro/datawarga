@@ -79,14 +79,16 @@ docker run -d \
   --env-file /path/to/your/.env \
   --name datawarga \
   -v /path/to/your/service-account.json:/app/datawarga/google-creds.json \
+  -v /path/to/your/media:/app/datawarga/media \
   -e GOOGLE_CRED_PATH=/app/datawarga/google-creds.json \
   robeevanjava/datawarga:2.1.1
 ```
 
 - `-v /path/to/your/service-account.json:/app/datawarga/google-creds.json` — mount file kredensial ke path di dalam container.
+- `-v /path/to/your/media:/app/datawarga/media` — mount direktori media dari host ke container agar file yang di-upload (seperti foto profil, bukti bayar, dan foto KTP) tersimpan secara persisten di host machine.
 - `-e GOOGLE_CRED_PATH=/app/datawarga/google-creds.json` — path ini harus path **di dalam container** tempat file JSON ter-mount.
 
-Tanpa mount, file kredensial tidak ada di dalam container dan export ke Google Sheets akan gagal.
+Tanpa mount untuk media, file-file yang di-upload akan hilang setiap kali container di-restart atau di-recreate. Tanpa mount untuk Google credentials, file kredensial tidak ada di dalam container dan export ke Google Sheets akan gagal.
 
 ## Production Deployment
 

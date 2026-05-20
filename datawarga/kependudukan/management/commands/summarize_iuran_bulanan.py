@@ -1,5 +1,4 @@
 from kependudukan.models import (
-    Warga,
     Kompleks,
     TransaksiIuranBulanan,
     SummaryTransaksiBulanan,

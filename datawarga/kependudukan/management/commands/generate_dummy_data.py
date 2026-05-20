@@ -1,7 +1,7 @@
 from __future__ import annotations
 import random
 import string
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from django.conf import settings

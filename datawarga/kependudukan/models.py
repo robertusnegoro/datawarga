@@ -3,7 +3,6 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-import calendar
 import os
 
 
@@ -87,6 +86,7 @@ class Warga(models.Model):
         max_length=30, choices=STATUS_KELUARGA, default="N/A"
     )
     alamat_ktp = models.CharField(max_length=255, null=True, blank=True)
+    ktp_image_path = models.ImageField(upload_to="uploads/", blank=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
     kepala_keluarga = models.BooleanField(default=False)
 

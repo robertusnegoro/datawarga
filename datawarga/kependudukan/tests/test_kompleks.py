@@ -1,8 +1,7 @@
 from django.test import TestCase
 from ..models import Kompleks, WargaPermissionGroup
 from ..forms import GenerateKompleksForm
-from django.contrib.auth.models import User, Group
-from datetime import datetime
+from django.contrib.auth.models import User
 from django.test import Client
 from django.urls import reverse
 import random

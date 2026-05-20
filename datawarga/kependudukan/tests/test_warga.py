@@ -2,7 +2,6 @@ from django.test import TestCase
 from ..models import Warga, Kompleks
 from ..forms import WargaForm
 from django.contrib.auth.models import User
-from datetime import datetime
 from django.test import Client
 from django.urls import reverse
 import random
@@ -475,13 +474,16 @@ class WargaTestCase(TestCase):
 
     def test_detail_warga_logged(self):
         from ..models import UserPermission, WargaPermissionGroup
+
         group = WargaPermissionGroup.objects.create(group_name="all")
         UserPermission.objects.create(user=self.user, permission_group=group)
 
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
-        
-        detail_url = reverse("kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id})
+
+        detail_url = reverse(
+            "kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id}
+        )
         response = client.get(detail_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.test_nama_lengkap)
@@ -489,31 +491,37 @@ class WargaTestCase(TestCase):
 
     def test_detail_warga_unlogged(self):
         client = Client()
-        detail_url = reverse("kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id})
+        detail_url = reverse(
+            "kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id}
+        )
         response = client.get(detail_url)
         self.assertEqual(response.status_code, 302)
 
     def test_detail_warga_notfound(self):
         from ..models import UserPermission, WargaPermissionGroup
+
         group, _ = WargaPermissionGroup.objects.get_or_create(group_name="all")
         UserPermission.objects.get_or_create(user=self.user, permission_group=group)
 
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
-        
+
         detail_url = reverse("kependudukan:detailWarga", kwargs={"idwarga": 99999})
         response = client.get(detail_url)
         self.assertEqual(response.status_code, 404)
 
     def test_detail_warga_pdf_logged(self):
         from ..models import UserPermission, WargaPermissionGroup
+
         group, _ = WargaPermissionGroup.objects.get_or_create(group_name="all")
         UserPermission.objects.get_or_create(user=self.user, permission_group=group)
 
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
-        
-        pdf_url = reverse("kependudukan:pdfDetailWarga", kwargs={"idwarga": self.existing_warga.id})
+
+        pdf_url = reverse(
+            "kependudukan:pdfDetailWarga", kwargs={"idwarga": self.existing_warga.id}
+        )
         response = client.get(pdf_url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
@@ -521,18 +529,58 @@ class WargaTestCase(TestCase):
 
     def test_detail_warga_pdf_unlogged(self):
         client = Client()
-        pdf_url = reverse("kependudukan:pdfDetailWarga", kwargs={"idwarga": self.existing_warga.id})
+        pdf_url = reverse(
+            "kependudukan:pdfDetailWarga", kwargs={"idwarga": self.existing_warga.id}
+        )
         response = client.get(pdf_url)
         self.assertEqual(response.status_code, 302)
 
     def test_detail_warga_pdf_notfound(self):
         from ..models import UserPermission, WargaPermissionGroup
+
         group, _ = WargaPermissionGroup.objects.get_or_create(group_name="all")
         UserPermission.objects.get_or_create(user=self.user, permission_group=group)
 
         client = Client()
         client.login(username=self.test_user, password=self.test_pass)
-        
+
         pdf_url = reverse("kependudukan:pdfDetailWarga", kwargs={"idwarga": 99999})
         response = client.get(pdf_url)
         self.assertEqual(response.status_code, 404)
+
+    def test_warga_ktp_upload(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # 1x1 GIF
+        small_gif = (
+            b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00"
+            b",\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+        )
+        uploaded_ktp = SimpleUploadedFile(
+            "ktp.gif", small_gif, content_type="image/gif"
+        )
+
+        form_data = {
+            "nama_lengkap": "KTP Upload Test",
+            "nik": "999888777",
+            "agama": "ISLAM",
+            "no_hp": "08123456789",
+            "alamat_ktp": "jalan ktp",
+            "pekerjaan": "PNS",
+            "tanggal_lahir": "1990-01-01",
+            "status": "BELUM KAWIN",
+            "jenis_kelamin": "LAKI-LAKI",
+            "status_tinggal": "TETAP",
+            "status_keluarga": "SUAMI",
+            "kompleks": self.existing_kompleks.id,
+            "ktp_image_path": uploaded_ktp,
+        }
+
+        response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
+        self.assertEqual(response.status_code, 302)
+
+        warga = Warga.objects.get(nik="999888777")
+        self.assertTrue(warga.ktp_image_path.name.startswith("uploads/ktp"))
