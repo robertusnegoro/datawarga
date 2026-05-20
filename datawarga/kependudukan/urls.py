@@ -51,6 +51,8 @@ urlpatterns = [
         name="deleteformWarga",
     ),
     path("warga/form-warga-simpan", warga.formWargaSimpan, name="formWargaSimpan"),
+    path("warga/detail/<int:idwarga>", warga.detailWarga, name="detailWarga"),
+    path("warga/detail/<int:idwarga>/pdf", warga.pdfDetailWarga, name="pdfDetailWarga"),
     path("warga/list-warga-view", warga.WargaListView.as_view(), name="listWargaView"),
     path(
         "warga/daftar-kepala-keluarga",

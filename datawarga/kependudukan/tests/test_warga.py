@@ -472,3 +472,67 @@ class WargaTestCase(TestCase):
         response_kk = client.get(reverse("kependudukan:daftarKepalaKeluarga"))
         self.assertEqual(response_kk.status_code, 200)
         self.assertEqual(response_kk.context["cluster"], "all")
+
+    def test_detail_warga_logged(self):
+        from ..models import UserPermission, WargaPermissionGroup
+        group = WargaPermissionGroup.objects.create(group_name="all")
+        UserPermission.objects.create(user=self.user, permission_group=group)
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+        
+        detail_url = reverse("kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id})
+        response = client.get(detail_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.test_nama_lengkap)
+        self.assertTemplateUsed(response, "detail_warga.html")
+
+    def test_detail_warga_unlogged(self):
+        client = Client()
+        detail_url = reverse("kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id})
+        response = client.get(detail_url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_detail_warga_notfound(self):
+        from ..models import UserPermission, WargaPermissionGroup
+        group, _ = WargaPermissionGroup.objects.get_or_create(group_name="all")
+        UserPermission.objects.get_or_create(user=self.user, permission_group=group)
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+        
+        detail_url = reverse("kependudukan:detailWarga", kwargs={"idwarga": 99999})
+        response = client.get(detail_url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_detail_warga_pdf_logged(self):
+        from ..models import UserPermission, WargaPermissionGroup
+        group, _ = WargaPermissionGroup.objects.get_or_create(group_name="all")
+        UserPermission.objects.get_or_create(user=self.user, permission_group=group)
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+        
+        pdf_url = reverse("kependudukan:pdfDetailWarga", kwargs={"idwarga": self.existing_warga.id})
+        response = client.get(pdf_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("inline; filename=", response["Content-Disposition"])
+
+    def test_detail_warga_pdf_unlogged(self):
+        client = Client()
+        pdf_url = reverse("kependudukan:pdfDetailWarga", kwargs={"idwarga": self.existing_warga.id})
+        response = client.get(pdf_url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_detail_warga_pdf_notfound(self):
+        from ..models import UserPermission, WargaPermissionGroup
+        group, _ = WargaPermissionGroup.objects.get_or_create(group_name="all")
+        UserPermission.objects.get_or_create(user=self.user, permission_group=group)
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+        
+        pdf_url = reverse("kependudukan:pdfDetailWarga", kwargs={"idwarga": 99999})
+        response = client.get(pdf_url)
+        self.assertEqual(response.status_code, 404)

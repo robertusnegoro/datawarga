@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Profil {{ warga.nama_lengkap }}{% endblock %}
+{% block pagetitle %}
+    <i class="bi bi-person-badge-fill text-primary"></i> Detail Profil Warga
+{% endblock %}
+
+{% block content %}
+<!-- Top Action Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4 gap-2 flex-wrap">
+    <a href="{% url 'kependudukan:listWargaView' %}" class="btn btn-outline-secondary btn-sm px-3">
+        <i class="bi bi-arrow-left"></i> Kembali ke Daftar
+    </a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'kependudukan:pdfDetailWarga' warga.id %}" target="_blank" class="btn btn-info btn-sm px-3 text-white">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Cetak PDF
+        </a>
+        <a href="{% url 'kependudukan:formWarga' warga.id %}" class="btn btn-primary btn-sm px-3">
+            <i class="bi bi-pencil-square"></i> Ubah Data
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Quick Profile Card -->
+    <div class="col-lg-4 col-md-5">
+        <div class="card border-0 shadow-sm text-center p-4" style="border-radius: 16px; background: #ffffff;">
+            <!-- Profile Photo -->
+            <div class="mx-auto mb-3 position-relative" style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; border: 4px solid #f1f3f4; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                <img src="{% if warga.foto_path %}{{ MEDIA_URL }}{{ warga.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" 
+                     alt="{{ warga.nama_lengkap }}" 
+                     class="w-100 h-100" 
+                     style="object-fit: cover;">
+            </div>
+            
+            <h4 class="fw-bold text-dark mb-1">{{ warga.nama_lengkap }}</h4>
+            <p class="text-muted small mb-3">NIK: <code class="text-secondary">{{ warga.nik }}</code></p>
+            
+            <!-- Badges -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                {% if warga.kepala_keluarga %}
+                <span class="badge bg-danger rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                    <i class="bi bi-star-fill me-1"></i> Kepala Keluarga
+                </span>
+                {% endif %}
+                
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                    Hubungan: {{ warga.status_keluarga }}
+                </span>
+                
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                    Tinggal: {{ warga.status_tinggal }}
+                </span>
+            </div>
+            
+            <hr class="my-4 text-muted opacity-25">
+            
+            <!-- Quick Contact info -->
+            <div class="text-start">
+                <div class="d-flex align-items-center mb-3 text-secondary">
+                    <i class="bi bi-phone fs-5 me-3 text-primary"></i>
+                    <div>
+                        <span class="d-block small text-muted">No. Handphone</span>
+                        <strong class="text-dark">{{ warga.no_hp|default:"-" }}</strong>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3 text-secondary">
+                    <i class="bi bi-envelope fs-5 me-3 text-primary"></i>
+                    <div class="text-truncate" style="max-width: calc(100% - 40px);">
+                        <span class="d-block small text-muted">Email</span>
+                        <strong class="text-dark text-truncate d-block">{{ warga.email|default:"-" }}</strong>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center text-secondary">
+                    <i class="bi bi-card-list fs-5 me-3 text-primary"></i>
+                    <div>
+                        <span class="d-block small text-muted">No. Kartu Keluarga</span>
+                        <strong class="text-dark">{{ warga.no_kk|default:"-" }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Rich Detailed Info & Tables -->
+    <div class="col-lg-8 col-md-7">
+        <!-- Personal Details -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-person-fill text-primary me-2"></i> Data Pribadi</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <span class="d-block small text-muted">Tempat & Tanggal Lahir</span>
+                        <span class="text-dark fw-semibold">
+                            {{ warga.tempat_lahir|default:"-" }}, {{ warga.tanggal_lahir|date:"d F Y"|default:"-" }}
+                            {% if umur %}({{ umur }} Tahun){% endif %}
+                        </span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="d-block small text-muted">Jenis Kelamin</span>
+                        <span class="text-dark fw-semibold">{{ warga.jenis_kelamin }}</span>
+                    </div>
+                    <div class="col-sm-6 border-top pt-3">
+                        <span class="d-block small text-muted">Agama</span>
+                        <span class="text-dark fw-semibold">{{ warga.agama|upper }}</span>
+                    </div>
+                    <div class="col-sm-6 border-top pt-3">
+                        <span class="d-block small text-muted">Kewarganegaraan</span>
+                        <span class="text-dark fw-semibold">{{ warga.kewarganegaraan|default:"Indonesia/WNI" }}</span>
+                    </div>
+                    <div class="col-sm-6 border-top pt-3">
+                        <span class="d-block small text-muted">Pekerjaan</span>
+                        <span class="text-dark fw-semibold">{{ warga.pekerjaan|title }}</span>
+                    </div>
+                    <div class="col-sm-6 border-top pt-3">
+                        <span class="d-block small text-muted">Status Hubungan</span>
+                        <span class="text-dark fw-semibold">{{ warga.status|title }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Address & Residence Info -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-geo-alt-fill text-primary me-2"></i> Informasi Tempat Tinggal</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <span class="d-block small text-muted">Alamat Lengkap (KTP)</span>
+                        <span class="text-dark fw-semibold">{{ warga.alamat_ktp|default:"-" }}</span>
+                    </div>
+                    
+                    {% if warga.kompleks %}
+                    <div class="col-sm-6 border-top pt-3">
+                        <span class="d-block small text-muted">Cluster / Blok / No. Rumah</span>
+                        <span class="text-dark fw-semibold">
+                            Cluster: <strong>{{ warga.kompleks.cluster|default:"-" }}</strong>, 
+                            Blok: <strong>{{ warga.kompleks.blok|default:"-" }}</strong> / 
+                            No: <strong>{{ warga.kompleks.nomor|default:"-" }}</strong>
+                        </span>
+                    </div>
+                    <div class="col-sm-6 border-top pt-3">
+                        <span class="d-block small text-muted">RT / RW</span>
+                        <span class="text-dark fw-semibold">RT: {{ warga.kompleks.rt }} / RW: {{ warga.kompleks.rw }}</span>
+                    </div>
+                    <div class="col-sm-4 border-top pt-3">
+                        <span class="d-block small text-muted">Kelurahan</span>
+                        <span class="text-dark fw-semibold">{{ warga.kompleks.kelurahan }}</span>
+                    </div>
+                    <div class="col-sm-4 border-top pt-3">
+                        <span class="d-block small text-muted">Kecamatan</span>
+                        <span class="text-dark fw-semibold">{{ warga.kompleks.kecamatan }}</span>
+                    </div>
+                    <div class="col-sm-4 border-top pt-3">
+                        <span class="d-block small text-muted">Kota / Provinsi</span>
+                        <span class="text-dark fw-semibold">{{ warga.kompleks.kota }}, {{ warga.kompleks.provinsi }}</span>
+                    </div>
+                    {% else %}
+                    <div class="col-12 border-top pt-3 text-center text-muted py-3">
+                        <i class="bi bi-exclamation-circle me-1"></i> Warga belum memiliki data Kompleks Rumah.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Household Members Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i> Anggota Keluarga Serumah</h5>
+                <span class="badge bg-secondary rounded-pill">{{ anggota_keluarga|length|add:"1" }} Orang</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="table-light">
+                                <th class="ps-4">Nama Lengkap</th>
+                                <th>NIK</th>
+                                <th>Hubungan</th>
+                                <th>Status Tinggal</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Display current profile citizen first in bold/gray background -->
+                            <tr class="table-primary-subtle" style="background-color: var(--gcp-blue-light);">
+                                <td class="ps-4 fw-bold">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid var(--gcp-border);">
+                                            <img src="{% if warga.foto_path %}{{ MEDIA_URL }}{{ warga.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" class="w-100 h-100" style="object-fit: cover;">
+                                        </div>
+                                        <span>{{ warga.nama_lengkap }} (Anda)</span>
+                                    </div>
+                                </td>
+                                <td><code>{{ warga.nik }}</code></td>
+                                <td>
+                                    <span class="badge bg-primary text-white rounded-pill px-2 py-1">{{ warga.status_keluarga }}</span>
+                                </td>
+                                <td>{{ warga.status_tinggal }}</td>
+                                <td class="text-end pe-4">
+                                    <span class="text-muted small">Aktif</span>
+                                </td>
+                            </tr>
+                            
+                            {% for m in anggota_keluarga %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid var(--gcp-border);">
+                                            <img src="{% if m.foto_path %}{{ MEDIA_URL }}{{ m.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" class="w-100 h-100" style="object-fit: cover;">
+                                        </div>
+                                        <span>{{ m.nama_lengkap }}</span>
+                                    </div>
+                                </td>
+                                <td><code>{{ m.nik }}</code></td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-dark border rounded-pill px-2 py-1">{{ m.status_keluarga }}</span>
+                                </td>
+                                <td>{{ m.status_tinggal }}</td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'kependudukan:detailWarga' m.id %}" class="btn btn-outline-primary btn-sm py-1 px-2" title="Lihat Profil">
+                                        <i class="bi bi-eye"></i> Detail
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <!-- No other family members -->
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Fee Payment History -->
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-cash-coin text-primary me-2"></i> Riwayat Iuran Rumah (5 Bulan Terakhir)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="table-light">
+                                <th class="ps-4">Periode</th>
+                                <th>Tanggal Bayar</th>
+                                <th>Total Bayar</th>
+                                <th>Keterangan</th>
+                                <th class="text-end pe-4">Bukti</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transaksi %}
+                            <tr>
+                                <td class="ps-4 fw-semibold text-dark">
+                                    {{ t.get_periode_bulan_display }} {{ t.periode_tahun }}
+                                </td>
+                                <td>{{ t.tanggal_bayar|date:"d M Y" }}</td>
+                                <td><span class="fw-bold text-success">Rp {{ t.total_bayar|filesizeformat|slice:":-2" }}</span></td>
+                                <td><span class="text-muted small">{{ t.keterangan|default:"-" }}</span></td>
+                                <td class="text-end pe-4">
+                                    {% if t.bukti_bayar %}
+                                    <a href="{{ MEDIA_URL }}{{ t.bukti_bayar }}" target="_blank" class="btn btn-outline-info btn-sm py-1 px-2">
+                                        <i class="bi bi-file-image"></i> Lihat
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-cash fs-3 d-block mb-2"></i>
+                                    Belum ada data pembayaran iuran untuk kompleks ini.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

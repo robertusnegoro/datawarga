@@ -227,9 +227,21 @@ def detail_anggota_keluarga_snippet(request, idkompleks):
         key=lambda w: (role_order.get(w.status_keluarga, 8), w.nama_lengkap)
     )
 
+    no_kk = "-"
+    for w in data_warga:
+        if w.kepala_keluarga and w.no_kk:
+            no_kk = w.no_kk
+            break
+    if no_kk == "-" and data_warga:
+        for w in data_warga:
+            if w.no_kk:
+                no_kk = w.no_kk
+                break
+
     context = {
         "kompleks": kompleks,
         "anggota": data_warga,
+        "no_kk": no_kk,
         "MEDIA_URL": settings.MEDIA_URL,
     }
     return render(request, "anggota_keluarga_snippet.html", context)
@@ -445,3 +457,103 @@ def set_kepala_keluarga(request, idwarga):
     payload = urlencode({"message": "data saved!"})
     url_redir = "{}?{}".format(base_url, payload)
     return redirect(url_redir)
+
+
+@login_required
+def detailWarga(request, idwarga):
+    warga = get_object_or_404(Warga, pk=idwarga)
+
+    # Check permission group if the resident is assigned to a complex
+    if warga.kompleks:
+        try:
+            current_permission_group = UserPermission.objects.get(user=request.user)
+            if str(current_permission_group.permission_group).lower() != "all":
+                if warga.kompleks.permission_group != current_permission_group.permission_group:
+                    return HttpResponse("Forbidden", status=403)
+        except UserPermission.DoesNotExist:
+            pass
+
+    # Fetch other household members (serumah)
+    anggota_keluarga = []
+    if warga.kompleks:
+        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(pk=warga.pk)
+
+    # Fetch recent transactions for this complex
+    transaksi = []
+    if warga.kompleks:
+        from .models import TransaksiIuranBulanan
+        transaksi = TransaksiIuranBulanan.objects.filter(kompleks=warga.kompleks).order_by("-periode_tahun", "-periode_bulan")[:5]
+
+    umur = None
+    if warga.tanggal_lahir:
+        today = datetime.now().date()
+        birth = warga.tanggal_lahir
+        umur = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+
+    context = {
+        "warga": warga,
+        "anggota_keluarga": anggota_keluarga,
+        "transaksi": transaksi,
+        "umur": umur,
+        "MEDIA_URL": settings.MEDIA_URL,
+    }
+    return render(request, "detail_warga.html", context)
+
+
+@login_required
+def pdfDetailWarga(request, idwarga):
+    warga = get_object_or_404(Warga, pk=idwarga)
+
+    # Check permission group if the resident is assigned to a complex
+    if warga.kompleks:
+        try:
+            current_permission_group = UserPermission.objects.get(user=request.user)
+            if str(current_permission_group.permission_group).lower() != "all":
+                if warga.kompleks.permission_group != current_permission_group.permission_group:
+                    return HttpResponse("Forbidden", status=403)
+        except UserPermission.DoesNotExist:
+            pass
+
+    # Fetch other household members (serumah)
+    anggota_keluarga = []
+    if warga.kompleks:
+        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(pk=warga.pk)
+
+    # Fetch recent transactions for this complex
+    transaksi = []
+    if warga.kompleks:
+        from .models import TransaksiIuranBulanan
+        transaksi = TransaksiIuranBulanan.objects.filter(kompleks=warga.kompleks).order_by("-periode_tahun", "-periode_bulan")[:5]
+
+    umur = None
+    if warga.tanggal_lahir:
+        today = datetime.now().date()
+        birth = warga.tanggal_lahir
+        umur = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+
+    # For PDF generation, we should pass standard config variables too
+    context = {
+        "warga": warga,
+        "anggota_keluarga": anggota_keluarga,
+        "transaksi": transaksi,
+        "umur": umur,
+        "MEDIA_URL": settings.MEDIA_URL,
+        "rw": settings.RUKUNWARGA,
+        "rt": warga.kompleks.rt if warga.kompleks else "-",
+        "alamat": settings.ALAMAT,
+        "kelurahan": settings.KELURAHAN,
+        "kecamatan": settings.KECAMATAN,
+        "kota": settings.KOTA,
+        "provinsi": settings.PROVINSI,
+    }
+
+    # Generate PDF via WeasyPrint
+    response = HttpResponse(content_type="application/pdf")
+    safe_name = warga.nama_lengkap.replace(" ", "_").lower()
+    response["Content-Disposition"] = "inline; filename=profil-{}.pdf".format(safe_name)
+
+    html = render_to_string("detail_warga_pdf.html", context, request=request)
+    font_config = FontConfiguration()
+    HTML(string=html, base_url=request.build_absolute_uri('/')).write_pdf(response, font_config=font_config)
+    return response
+

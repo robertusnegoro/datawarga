@@ -83,8 +83,11 @@
                             <span class="text-muted">-</span>
                             {% endif %}
                         </td>
-                        <td class="text-end">
-                            <a class="btn btn-outline-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}" title="Edit">
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-outline-info btn-sm" href="{% url 'kependudukan:detailWarga' w.id %}" title="Lihat Profil">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm ms-1" href="{% url 'kependudukan:formWarga' w.id %}" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <a class="btn btn-outline-danger btn-sm ms-1" href="{% url 'kependudukan:deleteformWarga' w.id %}" title="Hapus">

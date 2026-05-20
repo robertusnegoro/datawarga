@@ -1,0 +1,430 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>Profil Warga - {{ warga.nama_lengkap }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 20mm 15mm 20mm 15mm;
+            @bottom-right {
+                content: "Halaman 1 dari 1";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #718096;
+            }
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2d3748;
+            line-height: 1.5;
+            font-size: 10pt;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header Styling */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+        
+        .header-logo {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1a73e8;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-logo span {
+            color: #2d3748;
+        }
+        
+        .header-subtitle {
+            font-size: 8pt;
+            color: #718096;
+            line-height: 1.3;
+        }
+        
+        .header-right {
+            text-align: right;
+            vertical-align: bottom;
+            font-size: 9pt;
+            color: #4a5568;
+        }
+
+        /* Profile Block */
+        .profile-section {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        
+        .profile-photo-container {
+            width: 110px;
+            text-align: right;
+            vertical-align: top;
+        }
+        
+        .profile-photo {
+            width: 100px;
+            height: 120px;
+            object-fit: cover;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+        }
+        
+        .profile-meta {
+            vertical-align: top;
+            padding-right: 20px;
+        }
+        
+        .profile-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #1a202c;
+            margin: 0 0 5px 0;
+        }
+        
+        .profile-nik {
+            font-size: 11pt;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 8pt;
+            font-weight: bold;
+            border-radius: 3px;
+            margin-right: 5px;
+            text-transform: uppercase;
+        }
+        
+        .badge-danger {
+            background-color: #fed7d7;
+            color: #9b2c2c;
+            border: 1px solid #feb2b2;
+        }
+        
+        .badge-primary {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            border: 1px solid #bee3f8;
+        }
+        
+        .badge-success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        /* Sections Grid */
+        .section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #1a73e8;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .details-table td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+        
+        .label {
+            font-size: 8.5pt;
+            color: #718096;
+            text-transform: uppercase;
+            width: 35%;
+        }
+        
+        .value {
+            font-weight: 600;
+            color: #2d3748;
+            width: 65%;
+        }
+        
+        /* Two Column Layout */
+        .columns-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .column-td {
+            width: 50%;
+            vertical-align: top;
+        }
+
+        /* List/Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 9pt;
+        }
+        
+        .data-table th {
+            background-color: #f7fafc;
+            border-bottom: 1.5px solid #cbd5e0;
+            color: #4a5568;
+            font-weight: bold;
+            text-align: left;
+            padding: 6px 8px;
+            font-size: 8pt;
+            text-transform: uppercase;
+        }
+        
+        .data-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2d3748;
+        }
+        
+        .data-table tr.current-row {
+            background-color: #f7fafc;
+            font-weight: bold;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-success {
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        .page-break-avoid {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <table class="header-table">
+        <tr>
+            <td>
+                <div class="header-logo">DATA<span>WARGA</span></div>
+                <div class="header-subtitle">
+                    Sistem Manajemen Kependudukan RT / RW<br>
+                    Rukun Warga {{ rw }}
+                </div>
+            </td>
+            <td class="header-right">
+                Dokumen Profil Resmi Warga<br>
+                Dicetak pada: {{ now|date:"d M Y H:i" }}
+            </td>
+        </tr>
+    </table>
+
+    <!-- Profile Summary Row -->
+    <table class="profile-section">
+        <tr>
+            <td class="profile-meta">
+                <h1 class="profile-name">{{ warga.nama_lengkap }}</h1>
+                <div class="profile-nik">NIK: <strong>{{ warga.nik }}</strong></div>
+                <div>
+                    {% if warga.kepala_keluarga %}
+                    <span class="badge badge-danger">Kepala Keluarga</span>
+                    {% endif %}
+                    <span class="badge badge-primary">Hubungan: {{ warga.status_keluarga }}</span>
+                    <span class="badge badge-success">Status Tinggal: {{ warga.status_tinggal }}</span>
+                </div>
+            </td>
+            <td class="profile-photo-container">
+                <img src="{% if warga.foto_path %}{{ MEDIA_URL }}{{ warga.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" 
+                     class="profile-photo" 
+                     alt="Foto Warga">
+            </td>
+        </tr>
+    </table>
+
+    <!-- Personal & Work Details (Side by side columns) -->
+    <table class="columns-table">
+        <tr>
+            <!-- Left Column: Personal info -->
+            <td class="column-td" style="padding-right: 15px;">
+                <div class="section-title">Data Personal</div>
+                <table class="details-table">
+                    <tr>
+                        <td class="label">No. KK</td>
+                        <td class="value">{{ warga.no_kk|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">TTL</td>
+                        <td class="value">
+                            {{ warga.tempat_lahir|default:"-" }}, {{ warga.tanggal_lahir|date:"d F Y"|default:"-" }}
+                            {% if umur %}({{ umur }} Thn){% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Gender</td>
+                        <td class="value">{{ warga.jenis_kelamin }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Agama</td>
+                        <td class="value">{{ warga.agama|upper }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Warganegara</td>
+                        <td class="value">{{ warga.kewarganegaraan|default:"Indonesia/WNI" }}</td>
+                    </tr>
+                </table>
+            </td>
+            <!-- Right Column: Contact & Employment -->
+            <td class="column-td" style="padding-left: 15px;">
+                <div class="section-title">Kontak & Pekerjaan</div>
+                <table class="details-table">
+                    <tr>
+                        <td class="label">No. HP</td>
+                        <td class="value">{{ warga.no_hp|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Email</td>
+                        <td class="value" style="word-break: break-all;">{{ warga.email|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Pekerjaan</td>
+                        <td class="value">{{ warga.pekerjaan|title }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Hub. Kawin</td>
+                        <td class="value">{{ warga.status|title }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Address details -->
+    <div class="page-break-avoid">
+        <div class="section-title">Alamat & Kompleks Rumah</div>
+        <table class="columns-table">
+            <tr>
+                <td class="column-td" style="padding-right: 15px;">
+                    <table class="details-table">
+                        <tr>
+                            <td class="label">Alamat KTP</td>
+                            <td class="value">{{ warga.alamat_ktp|default:"-" }}</td>
+                        </tr>
+                        {% if warga.kompleks %}
+                        <tr>
+                            <td class="label">Blok / Nomor</td>
+                            <td class="value">Blok {{ warga.kompleks.blok|default:"-" }} / No. {{ warga.kompleks.nomor|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Cluster</td>
+                            <td class="value">{{ warga.kompleks.cluster|default:"-" }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </td>
+                <td class="column-td" style="padding-left: 15px;">
+                    {% if warga.kompleks %}
+                    <table class="details-table">
+                        <tr>
+                            <td class="label">RT / RW</td>
+                            <td class="value">RT {{ warga.kompleks.rt }} / RW {{ warga.kompleks.rw }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Kelurahan</td>
+                            <td class="value">{{ warga.kompleks.kelurahan }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Kecamatan</td>
+                            <td class="value">{{ warga.kompleks.kecamatan }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Kota / Prov</td>
+                            <td class="value">{{ warga.kompleks.kota }} / {{ warga.kompleks.provinsi }}</td>
+                        </tr>
+                    </table>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Family Members -->
+    <div class="page-break-avoid" style="margin-top: 10px;">
+        <div class="section-title">Anggota Keluarga Serumah</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nama Lengkap</th>
+                    <th>NIK</th>
+                    <th>Hubungan</th>
+                    <th>Status Tinggal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="current-row">
+                    <td>{{ warga.nama_lengkap }} (Subjek)</td>
+                    <td>{{ warga.nik }}</td>
+                    <td>{{ warga.status_keluarga }}</td>
+                    <td>{{ warga.status_tinggal }}</td>
+                </tr>
+                {% for m in anggota_keluarga %}
+                <tr>
+                    <td>{{ m.nama_lengkap }}</td>
+                    <td>{{ m.nik }}</td>
+                    <td>{{ m.status_keluarga }}</td>
+                    <td>{{ m.status_tinggal }}</td>
+                </tr>
+                {% empty %}
+                <!-- No other members -->
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Iuran History -->
+    <div class="page-break-avoid" style="margin-top: 20px;">
+        <div class="section-title">Riwayat Pembayaran Iuran Rumah (5 Bulan Terakhir)</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Periode</th>
+                    <th>Tanggal Bayar</th>
+                    <th>Jumlah Iuran</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transaksi %}
+                <tr>
+                    <td>{{ t.get_periode_bulan_display }} {{ t.periode_tahun }}</td>
+                    <td>{{ t.tanggal_bayar|date:"d M Y" }}</td>
+                    <td class="text-success">Rp {{ t.total_bayar|filesizeformat|slice:":-2" }}</td>
+                    <td>{{ t.keterangan|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #718096; padding: 15px;">
+                        Belum ada riwayat transaksi pembayaran iuran.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

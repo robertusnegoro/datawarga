@@ -2,7 +2,10 @@
 <!-- House Summary Card -->
 <div class="px-4 py-3 text-white d-flex align-items-center justify-content-between mb-4 shadow-sm" style="background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%); margin-top: 0; border-radius: 0;">
     <div class="flex-grow-1">
-        <span class="text-uppercase small tracking-wider opacity-75 fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Detail Rumah & Lokasi</span>
+        <div class="d-flex align-items-center justify-content-between me-3">
+            <span class="text-uppercase small tracking-wider opacity-75 fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Detail Rumah & Lokasi</span>
+            <span class="text-uppercase small tracking-wider opacity-90 fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">KK: <strong class="text-white font-monospace">{{ no_kk }}</strong></span>
+        </div>
         <h4 class="h5 fw-bold mb-1 text-white mt-1">{% if kompleks %}{{ kompleks.alamat }}{% else %}-{% endif %}</h4>
         
         <div class="d-flex flex-wrap align-items-center mt-2 gap-2" style="font-size: 0.825rem;">
@@ -70,7 +73,10 @@
             </div>
             
             <!-- Quick Action Links -->
-            <div class="position-absolute top-0 end-0 mt-2 me-2">
+            <div class="position-absolute top-0 end-0 mt-2 me-2 d-flex gap-1">
+                <a href="{% url 'kependudukan:detailWarga' w.id %}" class="btn btn-link text-info p-1 shadow-none" title="Lihat Profil">
+                    <i class="bi bi-eye fs-5"></i>
+                </a>
                 <a href="{% url 'kependudukan:formWarga' w.id %}" class="btn btn-link text-primary p-1 shadow-none" title="Ubah Data Warga">
                     <i class="bi bi-pencil-square fs-5"></i>
                 </a>

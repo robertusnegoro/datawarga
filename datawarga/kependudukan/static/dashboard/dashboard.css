@@ -157,6 +157,12 @@ header.navbar .logo-text {
   letter-spacing: 0.02em;
 }
 
+header.navbar .navbar-toggler {
+  top: 12px;
+  right: 16px;
+}
+
+
 /* User profile widget in header */
 .user-name-badge {
   background-color: var(--gcp-gray-light);
