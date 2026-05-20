@@ -1,3 +1,30 @@
-<h3>Logged Out</h3>
-<br>
-<a href="{% url 'login' %}">Login lagi kah?</a>
+{% extends "base_plain.html" %}
+{% load static %}
+
+{% block title %}Signed Out{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrapper">
+    <div class="auth-card text-center">
+        <div class="auth-logo-container">
+            <img class="auth-logo" src='{% static "logo-data-warga.png" %}' alt="DataWarga Logo">
+        </div>
+        
+        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem; display: block; margin-bottom: 16px;"></i>
+        
+        <h1 class="auth-title">You've been signed out</h1>
+        <p class="auth-subtitle">Thank you for using DataWarga</p>
+
+        <div style="margin-top: 24px; margin-bottom: 8px;">
+            <a href="{% url 'login' %}" class="auth-btn-primary text-decoration-none">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span>Sign In Again</span>
+            </a>
+        </div>
+        
+        <div class="auth-card-footer">
+            <span>Powered by <a href="https://github.com/robertusnegoro" target="_blank" rel="noopener noreferrer">DataWarga</a></span>
+        </div>
+    </div>
+</div>
+{% endblock %}

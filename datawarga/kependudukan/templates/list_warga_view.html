@@ -1,81 +1,134 @@
 {% extends "base.html" %}
 {% block title %}Daftar Warga{% endblock %}
-{% block pagetitle %}Daftar Warga{% endblock %}
+{% block pagetitle %}<i class="bi bi-person-lines-fill text-primary"></i> Daftar Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}  
 
 {% if message %}
-<div class="alert alert-info alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="custom-alert alert-dismissible fade show" role="alert">
+    <i class="bi bi-info-circle-fill"></i>
+    <p>{{ message }}</p>
+    <button type="button" class="btn-close ms-auto bg-transparent border-0" data-bs-dismiss="alert" aria-label="Close">&times;</button>
 </div>
 {% endif %}
-<form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-3">
-    <div class="col-auto">
-        <input name="search" type="text" class="form-control" id="search" {% if search %} value="{{search}}" {% endif %}>
-    </div> 
-    <div class="col-auto">
-        <select class="form-select" aria-label="Pilih Cluster" id="cluster" name="cluster">
-            <option value="all" {% if cluster == "all" %}selected{% endif %}>* semua cluster *</option>
-            {% for c in daftar_cluster %}
-            <option value="{{ c.cluster }}" {% if cluster == c.cluster %}selected{% endif %}>{{ c.cluster }}</option>
-            {% endfor %}
-        </select>
-    </div> 
-    <div class="col-auto">
-        <button type="submit" id="submitBtn" class="btn btn-info">Cari</button>
-    </div>
-    
-</form>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Nama Lengkap</th>
-            <th>NIK / KK</th>
-            <th>No HP</th>
-            <th>Alamat</th>
-            <th>Cluster</th>
-            <th>Blok / No</th>
-            <th>Status Tinggal</th>
-            <th>Kepala Keluarga</th>
-            <th>Opsi</th>
-        </tr>
-    </thead>
-    
-    {% for w in page_obj %}
-    <tr>
-        <td>{{ w.nama_lengkap }}</td>
-        <td>{{ w.nik }} / {{ w.no_kk }}</td>
-        <td>{{ w.no_hp }}</td>
-        <td>{{ w.alamat }}</td>
-        <td>{{ w.kompleks.cluster }}</td>
-        <td>{{ w.kompleks }}</td>
-        <td>{{ w.status_tinggal }}</td>
-        <td>{% if w.kepala_keluarga %}<i class="bi bi-check-square-fill"></i>{% endif %}</td>
-        <td><a class="btn btn-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}"> <i class="bi bi-pencil"></i> </a> &nbsp; <a class="btn btn-danger btn-sm" href="{% url 'kependudukan:deleteformWarga' w.id %}"><i class="bi bi-trash"></i> </a></td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="6">Kosong</td>
-    </tr>
-    {% endfor %}
-</table>
 
-<div class="pagination">
-    <span class="step-links">
+<div class="form-card">
+    <div class="form-card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill"></i>
+            <h5 class="mb-0">Data Warga</h5>
+        </div>
+        <a class="btn btn-sm btn-primary" href="{% url 'kependudukan:formWarga' 0 %}">
+            <i class="bi bi-person-plus-fill"></i> Tambah Warga
+        </a>
+    </div>
+    <div class="form-card-body p-0">
+        <!-- Search filter bar -->
+        <div class="p-3 bg-light border-bottom">
+            <form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <label for="search" class="visually-hidden">Search</label>
+                    <input name="search" type="text" class="form-control" id="search" placeholder="Cari nama/nik..." {% if search %} value="{{search}}" {% endif %} style="padding: 6px 12px !important; font-size: 0.9rem !important; border-radius: 8px !important;">
+                </div> 
+                <div class="col-auto">
+                    <select class="form-select" aria-label="Pilih Cluster" id="cluster" name="cluster" style="padding: 6px 12px !important; font-size: 0.9rem !important; border-radius: 8px !important;">
+                        <option value="all" {% if cluster == "all" %}selected{% endif %}>* semua cluster *</option>
+                        {% for c in daftar_cluster %}
+                        <option value="{{ c.cluster }}" {% if cluster == c.cluster %}selected{% endif %}>{{ c.cluster }}</option>
+                        {% endfor %}
+                    </select>
+                </div> 
+                <div class="col-auto">
+                    <button type="submit" id="submitBtn" class="btn btn-sm btn-info">
+                        <i class="bi bi-search"></i> Cari
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Nama Lengkap</th>
+                        <th>NIK / KK</th>
+                        <th>No HP</th>
+                        <th>Alamat</th>
+                        <th>Cluster</th>
+                        <th>Blok / No</th>
+                        <th>Status Tinggal</th>
+                        <th class="text-center">KK</th>
+                        <th class="text-end">Opsi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in page_obj %}
+                    <tr>
+                        <td><span class="fw-bold text-dark">{{ w.nama_lengkap }}</span></td>
+                        <td>
+                            <div class="small">
+                                <div>NIK: <code class="text-dark">{{ w.nik }}</code></div>
+                                <div>KK: <code class="text-muted">{{ w.no_kk }}</code></div>
+                            </div>
+                        </td>
+                        <td>{{ w.no_hp|default:"-" }}</td>
+                        <td class="text-truncate" style="max-width: 150px;">{{ w.alamat }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ w.kompleks.cluster|default:"-" }}</span></td>
+                        <td><code>{{ w.kompleks }}</code></td>
+                        <td><span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">{{ w.status_tinggal }}</span></td>
+                        <td class="text-center">
+                            {% if w.kepala_keluarga %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1"><i class="bi bi-check-circle-fill"></i> KK</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-outline-primary btn-sm" href="{% url 'kependudukan:formWarga' w.id %}" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm ms-1" href="{% url 'kependudukan:deleteformWarga' w.id %}" title="Hapus">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+                            Tidak ada data warga ditemukan.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
         {% if page_obj.has_previous %}
-            <a href="?page=1{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">previous</a>
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">Previous</a>
+        </li>
         {% endif %}
 
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
+        <li class="page-item disabled">
+            <span class="page-link text-dark fw-bold">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">last &raquo;</a>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">Last &raquo;</a>
+        </li>
         {% endif %}
-    </span>
-</div>
+    </ul>
+</nav>
 {% endblock %}

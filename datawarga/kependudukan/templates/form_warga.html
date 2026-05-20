@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Form Data Warga{% endblock %}
-{% block pagetitle %}<i class="bi bi-person-lines-fill text-indigo"></i> Form Data Warga{% endblock %}
+{% block pagetitle %}<i class="bi bi-person-lines-fill text-primary"></i> Form Data Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
 {% load static %}
@@ -40,8 +40,8 @@
     }
 
     .form-group .form-check-input:checked {
-        background-color: #4f46e5;
-        border-color: #4f46e5;
+        background-color: var(--gcp-blue);
+        border-color: var(--gcp-blue);
     }
 
     .form-group .form-check-label {
@@ -95,7 +95,7 @@
 
     .datepicker table tr td.active, .datepicker table tr td.active:hover {
         background-image: none !important;
-        background-color: #4f46e5 !important;
+        background-color: var(--gcp-blue) !important;
         color: #ffffff !important;
     }
 

@@ -1,90 +1,126 @@
 {% extends "base.html" %}
 {% block title %}Daftar Kompleks Rumah{% endblock %}
-{% block pagetitle %}Daftar Kompleks Rumah{% endblock %}
+{% block pagetitle %}<i class="bi bi-map text-primary"></i> Daftar Kompleks Rumah{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}  
 
-<div class="col-md-9">
-    <ul class="nav">
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'kependudukan:deleteBlokForm' %}">Hapus Per Blok</a>
-        </li>
-    </ul>
-</div>
-
 {% if message %}
-<div class="alert alert-info alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="custom-alert alert-dismissible fade show" role="alert">
+    <i class="bi bi-info-circle-fill"></i>
+    <p>{{ message }}</p>
+    <button type="button" class="btn-close ms-auto bg-transparent border-0" data-bs-dismiss="alert" aria-label="Close">&times;</button>
 </div>
 {% endif %}
-<form method="get" action="{% url 'kependudukan:listKompleksView' %}" class="row g-3">
-    <div class="col-auto">
-        <input name="search" type="text" class="form-control" id="search" {% if search %} value="{{search}}" {% endif %}>
-    </div> 
-    <div class="col-auto">
-        <button type="submit" id="submitBtn" class="btn btn-info">Cari</button>
-    </div>
-    
-</form>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Cluster</th>
-            <th>Blok / Nomor</th>
-            <th>RT</th>
-            <th>RW</th>
-            <th>Catatan</th>
-            <th>Jumlah Warga</th>
-            <th>Opsi</th>
-        </tr>
-    </thead>
-    
-    {% for w in page_obj %}
-    <tr>
-        <td>{{ w.cluster }}</td>
-        <td>{{ w.blok }} / {{ w.nomor }}</td>
-        <td>{{ w.rt }}</td>
-        <td>{{ w.rw }}</td>
-        <td>
-            {% if w.description == None %}
-            
-            {% else %} 
-                {{ w.description }} 
-            {% endif %}
-        </td>
-        <td>{{ w.num_warga }}</td>
-        <td>
-            <a class="btn btn-secondary btn-sm" href="{% url 'kependudukan:detailKompleks' w.id %}">
-                <i class="bi bi-newspaper"></i>
-            </a> &nbsp; 
-            <a class="btn btn-danger btn-sm" href="{% url 'kependudukan:deleteRumahForm' w.id %}">
-                <i class="bi bi-trash"></i>
-            </a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="6">Kosong</td>
-    </tr>
-    {% endfor %}
-</table>
 
-<div class="pagination">
-    <span class="step-links">
+<div class="form-card">
+    <div class="form-card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-building"></i>
+            <h5 class="mb-0">Kompleks Rumah</h5>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'kependudukan:deleteBlokForm' %}">
+                <i class="bi bi-trash3-fill"></i> Hapus Per Blok
+            </a>
+            {% if request.user.is_superuser %}
+            <a class="btn btn-sm btn-primary" href="{% url 'kependudukan:kompleksForm' %}">
+                <i class="bi bi-plus-circle-fill"></i> Generate Kompleks
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="form-card-body p-0">
+        <!-- Search filter bar -->
+        <div class="p-3 bg-light border-bottom">
+            <form method="get" action="{% url 'kependudukan:listKompleksView' %}" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <label for="search" class="visually-hidden">Search</label>
+                    <input name="search" type="text" class="form-control" id="search" placeholder="Cari blok/nomor..." {% if search %} value="{{search}}" {% endif %} style="padding: 6px 12px !important; font-size: 0.9rem !important; border-radius: 8px !important;">
+                </div> 
+                <div class="col-auto">
+                    <button type="submit" id="submitBtn" class="btn btn-sm btn-info">
+                        <i class="bi bi-search"></i> Cari
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Cluster</th>
+                        <th>Blok / Nomor</th>
+                        <th>RT</th>
+                        <th>RW</th>
+                        <th>Catatan</th>
+                        <th>Jumlah Warga</th>
+                        <th class="text-end">Opsi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in page_obj %}
+                    <tr>
+                        <td><span class="fw-bold">{{ w.cluster|default:"-" }}</span></td>
+                        <td><code>{{ w.blok }} / {{ w.nomor }}</code></td>
+                        <td>{{ w.rt }}</td>
+                        <td>{{ w.rw }}</td>
+                        <td>
+                            {% if w.description == None %}
+                            -
+                            {% else %} 
+                                {{ w.description }} 
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">{{ w.num_warga }} Warga</span>
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-outline-primary btn-sm" href="{% url 'kependudukan:detailKompleks' w.id %}" title="Detail">
+                                <i class="bi bi-eye"></i> Detail
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm ms-1" href="{% url 'kependudukan:deleteRumahForm' w.id %}" title="Hapus">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+                            Tidak ada data kompleks ditemukan.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
         {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+        </li>
         {% endif %}
 
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
+        <li class="page-item disabled">
+            <span class="page-link text-dark fw-bold">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">Last &raquo;</a>
+        </li>
         {% endif %}
-    </span>
-</div>
+    </ul>
+</nav>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Data Rumah{% endblock %}
-{% block pagetitle %}<i class="bi bi-house-door text-indigo"></i> Data Rumah Blok {{ data.blok }} / Nomor {{ data.nomor }}{% endblock %}
+{% block pagetitle %}<i class="bi bi-house-door text-primary"></i> Data Rumah Blok {{ data.blok }} / Nomor {{ data.nomor }}{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
 {% load static %}
@@ -196,7 +196,7 @@
                 } else {
                     kepala_keluarga = "<a class=\"btn btn-outline-primary btn-sm\" href=\"/warga/set-kk/" + value.pk + "\"> <i class=\"bi bi-person-check-fill\"></i> Set KK </a>";
                 }
-                table += "<tr><td><code class=\"text-dark\">" + value.fields.nik + "</code></td><td><a href=\"/warga/form-warga/" + value.pk + "\" class=\"font-weight-bold text-indigo\" style=\"text-decoration: none;\">" + value.fields.nama_lengkap + "</a></td><td>" + (value.fields.no_hp || "-") + "</td><td><span class=\"badge bg-secondary px-2 py-1\">" + value.fields.status_tinggal + "</span></td><td class=\"text-center\">"+ kepala_keluarga +"</td></tr>";
+                table += "<tr><td><code class=\"text-dark\">" + value.fields.nik + "</code></td><td><a href=\"/warga/form-warga/" + value.pk + "\" class=\"font-weight-bold text-primary\" style=\"text-decoration: none;\">" + value.fields.nama_lengkap + "</a></td><td>" + (value.fields.no_hp || "-") + "</td><td><span class=\"badge bg-secondary px-2 py-1\">" + value.fields.status_tinggal + "</span></td><td class=\"text-center\">"+ kepala_keluarga +"</td></tr>";
             });
             table += "</tbody></table>";
             $("#tabelwarga").html(table);
@@ -208,7 +208,7 @@
     });
 
     function load_iuran_bulanan(year) {
-        $("#tabelIuranBulanan").html('<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-indigo" role="status"></div> Loading...</div>');
+        $("#tabelIuranBulanan").html('<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading...</div>');
         $.getJSON("{{ iuran_bulanan_url }}/" + year, function(response){
             console.log(response);
             var data = response.data;
@@ -225,7 +225,7 @@
                         bukti = "<a href=\"/media/"+ value.fields.bukti_bayar +"\" target=\"_blank\" class=\"btn btn-sm btn-outline-info\"><i class=\"bi bi-image-fill\"></i> Lihat Bukti</a>";
                     }
                     var delete_btn = "<a class=\"btn btn-sm btn-outline-danger\" href=\"/warga/delete-iuran-bulanan/"+value.pk+"\"><i class=\"bi bi-trash-fill\"></i></a>";
-                    table += "<tr><td><a href=\"/warga/form-iuran-bulanan/{{ data.id }}/"+value.fields.periode_tahun+"/"+value.pk+"\" class=\"font-weight-bold text-indigo\" style=\"text-decoration: none;\">" + indonesian_months[value.fields.periode_bulan] + "</a></td><td>" + bukti + "</td><td>" + (value.fields.keterangan || "-") + "</td><td class=\"text-end\">" + delete_btn + "</td></tr>";
+                    table += "<tr><td><a href=\"/warga/form-iuran-bulanan/{{ data.id }}/"+value.fields.periode_tahun+"/"+value.pk+"\" class=\"font-weight-bold text-primary\" style=\"text-decoration: none;\">" + indonesian_months[value.fields.periode_bulan] + "</a></td><td>" + bukti + "</td><td>" + (value.fields.keterangan || "-") + "</td><td class=\"text-end\">" + delete_btn + "</td></tr>";
                 });
                 table += "</tbody></table>";
                 $("#tabelIuranBulanan").html(table);
