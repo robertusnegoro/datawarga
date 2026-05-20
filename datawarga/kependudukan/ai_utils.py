@@ -94,4 +94,23 @@ def map_extracted_data(data: dict) -> dict:
             break
     normalized["agama"] = mapped_religion
 
+    # Normalize Tempat Lahir (Place of birth)
+    tempat_raw = data.get("tempat_lahir") or data.get("tempat") or ""
+    normalized["tempat_lahir"] = str(tempat_raw).strip().upper()
+
+    # Normalize and reformat Tanggal Lahir (Date of birth) from DD-MM-YYYY to YYYY-MM-DD
+    tgl_raw = str(data.get("tanggal_lahir") or data.get("tanggal") or "").strip()
+    match = re.search(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", tgl_raw)
+    if match:
+        dd, mm, yyyy = match.groups()
+        normalized["tanggal_lahir"] = f"{yyyy}-{mm.zfill(2)}-{dd.zfill(2)}"
+    else:
+        # Fallback if already in YYYY-MM-DD
+        match_iso = re.search(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})", tgl_raw)
+        if match_iso:
+            yyyy, mm, dd = match_iso.groups()
+            normalized["tanggal_lahir"] = f"{yyyy}-{mm.zfill(2)}-{dd.zfill(2)}"
+        else:
+            normalized["tanggal_lahir"] = ""
+
     return normalized

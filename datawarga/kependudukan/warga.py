@@ -75,7 +75,7 @@ def formWargaSimpan(request):
             form = WargaForm(request.POST, request.FILES)
         if form.is_valid():
             logger.info("Form warga is valid")
-            warga = form.save()
+            form.save()
             base_url = reverse("kependudukan:listWargaView")
             payload = urlencode({"message": "data saved!"})
             url_redir = "{}?{}".format(base_url, payload)
@@ -676,7 +676,15 @@ def scan_ktp_ajax(request):
         success_fields = []
         failed_fields = []
 
-        for field in ["nama_lengkap", "nik", "alamat_ktp", "jenis_kelamin", "agama"]:
+        for field in [
+            "nama_lengkap",
+            "nik",
+            "alamat_ktp",
+            "jenis_kelamin",
+            "agama",
+            "tempat_lahir",
+            "tanggal_lahir",
+        ]:
             if extracted_data.get(field):
                 success_fields.append(field)
             else:
@@ -688,6 +696,8 @@ def scan_ktp_ajax(request):
             "alamat_ktp": "Alamat",
             "jenis_kelamin": "Jenis Kelamin",
             "agama": "Agama",
+            "tempat_lahir": "Tempat Lahir",
+            "tanggal_lahir": "Tanggal Lahir",
         }
 
         success_labels = [field_labels[f] for f in success_fields]

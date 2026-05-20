@@ -15,9 +15,11 @@ PROMPT = (
     "2. Nama (Full name as written on KTP)\n"
     "3. Alamat (Full address, street, block, number, RT/RW, etc.)\n"
     "4. Jenis Kelamin (Gender: output either 'LAKI-LAKI' or 'PEREMPUAN')\n"
-    "5. Agama (Religion: output either 'ISLAM', 'KATHOLIK', 'KRISTEN', 'HINDU', 'BUDDHA', or 'KONGHUCU')\n\n"
+    "5. Agama (Religion: output either 'ISLAM', 'KATHOLIK', 'KRISTEN', 'HINDU', 'BUDDHA', or 'KONGHUCU')\n"
+    "6. Tempat Lahir (Place of birth, e.g. 'JAKARTA')\n"
+    "7. Tanggal Lahir (Date of birth in DD-MM-YYYY format, e.g. '31-12-2026')\n\n"
     "You must respond ONLY with a raw JSON object containing these keys: "
-    '"nik", "nama", "alamat_ktp", "jenis_kelamin", "agama". '
+    '"nik", "nama", "alamat_ktp", "jenis_kelamin", "agama", "tempat_lahir", "tanggal_lahir". '
     "Do not include any explanation or markdown formatting."
 )
 

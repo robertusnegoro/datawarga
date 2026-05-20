@@ -64,6 +64,8 @@ class AIUtilsTestCase(TestCase):
             "alamat_ktp": "Jl. Merdeka No. 1",
             "jenis_kelamin": "LAKI - LAKI (MALE)",
             "agama": "ISLAM  ",
+            "tempat_lahir": "  Jakarta ",
+            "tanggal_lahir": "31-12-2026",
         }
         mapped = map_extracted_data(raw_data)
         self.assertEqual(mapped["nik"], "1234567890123456")
@@ -71,6 +73,8 @@ class AIUtilsTestCase(TestCase):
         self.assertEqual(mapped["alamat_ktp"], "Jl. Merdeka No. 1")
         self.assertEqual(mapped["jenis_kelamin"], "LAKI-LAKI")
         self.assertEqual(mapped["agama"], "ISLAM")
+        self.assertEqual(mapped["tempat_lahir"], "JAKARTA")
+        self.assertEqual(mapped["tanggal_lahir"], "2026-12-31")
 
     def test_map_extracted_data_religion_gender_fallbacks(self):
         raw_data = {
@@ -79,6 +83,8 @@ class AIUtilsTestCase(TestCase):
             "alamat": "Jl. Kenanga",
             "gender": "perempuan / female",
             "religion": "kristen protestan",
+            "tempat": "BANDUNG",
+            "tanggal": "1990/05/17",
         }
         mapped = map_extracted_data(raw_data)
         self.assertEqual(mapped["nik"], "12345")
@@ -86,6 +92,35 @@ class AIUtilsTestCase(TestCase):
         self.assertEqual(mapped["alamat_ktp"], "Jl. Kenanga")
         self.assertEqual(mapped["jenis_kelamin"], "PEREMPUAN")
         self.assertEqual(mapped["agama"], "KRISTEN")
+        self.assertEqual(mapped["tempat_lahir"], "BANDUNG")
+        self.assertEqual(mapped["tanggal_lahir"], "1990-05-17")
+
+    def test_map_extracted_data_date_formats(self):
+        # DD-MM-YYYY format
+        self.assertEqual(
+            map_extracted_data({"tanggal_lahir": "05-08-1995"})["tanggal_lahir"],
+            "1995-08-05",
+        )
+        # DD/MM/YYYY format
+        self.assertEqual(
+            map_extracted_data({"tanggal_lahir": "22/11/1988"})["tanggal_lahir"],
+            "1988-11-22",
+        )
+        # YYYY-MM-DD format
+        self.assertEqual(
+            map_extracted_data({"tanggal_lahir": "2001-02-28"})["tanggal_lahir"],
+            "2001-02-28",
+        )
+        # Single digit padding check
+        self.assertEqual(
+            map_extracted_data({"tanggal_lahir": "5-6-1990"})["tanggal_lahir"],
+            "1990-06-05",
+        )
+        # Invalid format fallback
+        self.assertEqual(
+            map_extracted_data({"tanggal_lahir": "someday in 1990"})["tanggal_lahir"],
+            "",
+        )
 
 
 class AIServiceTestCase(TestCase):
@@ -248,6 +283,8 @@ class KTPScanViewTestCase(TestCase):
             "alamat_ktp": "Jl. AI Result",
             "jenis_kelamin": "PEREMPUAN",
             "agama": "KRISTEN",
+            "tempat_lahir": "BANDUNG",
+            "tanggal_lahir": "1995-08-05",
         }
 
         # Make a dummy png image to upload
@@ -266,6 +303,8 @@ class KTPScanViewTestCase(TestCase):
         self.assertTrue(data["success"])
         self.assertEqual(data["data"]["nik"], "1111222233334444")
         self.assertEqual(data["data"]["nama_lengkap"], "SCAN SUCCESS")
+        self.assertEqual(data["data"]["tempat_lahir"], "BANDUNG")
+        self.assertEqual(data["data"]["tanggal_lahir"], "1995-08-05")
         self.assertFalse(data["quota_warning"])
 
     @patch("kependudukan.ai_service.OllamaProvider.extract_ktp_data")

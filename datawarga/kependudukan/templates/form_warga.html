@@ -136,6 +136,44 @@
             <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:formWargaSimpan' %}">
                 {% csrf_token %}
 
+                <!-- Card 5: Upload KTP -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="bi bi-card-image"></i>
+                        <h5>Foto KTP</h5>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.ktp_image_path | as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button type="button" id="btn-scan-ktp" class="btn btn-primary d-inline-flex align-items-center gap-2" style="background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%); border: none; padding: 10px 18px; border-radius: 8px; font-weight: 500; box-shadow: 0 4px 6px rgba(26, 115, 232, 0.2); transition: all 0.2s ease;">
+                                    <i class="bi bi-cpu" id="scan-icon"></i>
+                                    <span id="scan-text">Pindai KTP dengan AI</span>
+                                    <span id="scan-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                </button>
+                                <div id="scan-feedback-container" class="mt-3 w-100 d-none"></div>
+                            </div>
+                        </div>
+                        {% if datawarga.ktp_image_path %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label class="form-label text-muted d-block mb-2">KTP Terunggah saat ini:</label>
+                                <div class="text-center p-3 bg-light rounded border">
+                                    <a href="/media/{{ datawarga.ktp_image_path }}" target="_blank">
+                                        <img src="/media/{{ datawarga.ktp_image_path }}" class="img-fluid rounded border shadow-sm" style="max-height: 200px;" alt="KTP Warga">
+                                    </a>
+                                    <span class="d-block text-muted small mt-2"><i class="bi bi-info-circle"></i> Klik gambar untuk melihat ukuran penuh</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <!-- Card 1: Identitas Warga -->
                 <div class="form-card">
                     <div class="form-card-header">
@@ -254,44 +292,6 @@
                                 {{ form.foto_path | as_crispy_field }}
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Card 5: Upload KTP -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="bi bi-card-image"></i>
-                        <h5>Foto KTP</h5>
-                    </div>
-                    <div class="form-card-body">
-                        <div class="row">
-                            <div class="col-12">
-                                {{ form.ktp_image_path | as_crispy_field }}
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-12">
-                                <button type="button" id="btn-scan-ktp" class="btn btn-primary d-inline-flex align-items-center gap-2" style="background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%); border: none; padding: 10px 18px; border-radius: 8px; font-weight: 500; box-shadow: 0 4px 6px rgba(26, 115, 232, 0.2); transition: all 0.2s ease;">
-                                    <i class="bi bi-cpu" id="scan-icon"></i>
-                                    <span id="scan-text">Pindai KTP dengan AI</span>
-                                    <span id="scan-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                </button>
-                                <div id="scan-feedback-container" class="mt-3 w-100 d-none"></div>
-                            </div>
-                        </div>
-                        {% if datawarga.ktp_image_path %}
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <label class="form-label text-muted d-block mb-2">KTP Terunggah saat ini:</label>
-                                <div class="text-center p-3 bg-light rounded border">
-                                    <a href="/media/{{ datawarga.ktp_image_path }}" target="_blank">
-                                        <img src="/media/{{ datawarga.ktp_image_path }}" class="img-fluid rounded border shadow-sm" style="max-height: 200px;" alt="KTP Warga">
-                                    </a>
-                                    <span class="d-block text-muted small mt-2"><i class="bi bi-info-circle"></i> Klik gambar untuk melihat ukuran penuh</span>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
 
@@ -493,6 +493,18 @@
                             const agamaSelect = document.getElementById('id_agama');
                             if (agamaSelect) {
                                 agamaSelect.value = data.agama;
+                            }
+                        }
+                        if (data.tempat_lahir) {
+                            document.getElementById('id_tempat_lahir').value = data.tempat_lahir;
+                        }
+                        if (data.tanggal_lahir) {
+                            const dateInput = document.getElementById('id_tanggal_lahir');
+                            if (dateInput) {
+                                dateInput.value = data.tanggal_lahir;
+                                if (window.jQuery && $(dateInput).data('datepicker')) {
+                                    $(dateInput).datepicker('update', data.tanggal_lahir);
+                                }
                             }
                         }
 
