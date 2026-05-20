@@ -21,7 +21,7 @@ class wargaViewSet(viewsets.ModelViewSet):
     def search(self, request, *args, **kwargs):
         if request.method == "POST":
             search_term = request.data.get("search", "")
-            
+
             # Check if search term contains blok/nomor format
             if "/" in search_term:
                 split_keyword = search_term.split("/")
@@ -30,12 +30,12 @@ class wargaViewSet(viewsets.ModelViewSet):
                     kompleks__nomor=split_keyword[1].strip(),
                 )
             else:
-                # Original search plus kompleks search
                 queryset = self.queryset.filter(
-                    Q(nama_lengkap__icontains=search_term) | 
-                    Q(nik__icontains=search_term) |
-                    Q(kompleks__blok__icontains=search_term) |
-                    Q(kompleks__nomor__icontains=search_term)
+                    Q(nama_lengkap__icontains=search_term)
+                    | Q(nik__icontains=search_term)
+                    | Q(no_kk__icontains=search_term)
+                    | Q(kompleks__blok__icontains=search_term)
+                    | Q(kompleks__nomor__icontains=search_term)
                 )
             logger.info(f"search to warga models with keyword {search_term}")
         else:
@@ -80,7 +80,7 @@ class kompleksViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], url_path="warga")
     def warga(self, request, *args, **kwargs):
         queryset = Warga.objects.none()  # Initialize with empty queryset
-        
+
         if request.method == "POST":
             search_term = request.data.get("blok_no", "")
 
@@ -107,18 +107,20 @@ class kompleksViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], url_path="iuran")
     def iuran(self, request, *args, **kwargs):
         queryset = TransaksiIuranBulanan.objects.none()
-        
+
         if request.method == "POST":
-            if request.content_type == 'application/json':
+            if request.content_type == "application/json":
                 data = request.data
             else:
                 data = request.POST
-                
+
             search_term = data.get("blok_no", "")
             try:
                 tahun = int(data.get("tahun", 0))
             except (TypeError, ValueError):
-                return Response({"error": "Invalid year"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Invalid year"}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             if "/" in search_term:
                 split_keyword = search_term.split("/")
@@ -149,7 +151,10 @@ class kompleksViewSet(viewsets.ModelViewSet):
         bukti_bayar = request.FILES.get("bukti_bayar")
 
         if "/" not in search_term:
-            return Response({"error": "Format alamat tidak valid"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Format alamat tidak valid"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         split_keyword = search_term.split("/")
         data_kompleks = self.queryset.filter(
@@ -158,19 +163,23 @@ class kompleksViewSet(viewsets.ModelViewSet):
         )
 
         if not data_kompleks.exists():
-            return Response({"error": "Alamat tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Alamat tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Check if payment already exists
         existing_payment = TransaksiIuranBulanan.objects.filter(
             kompleks=data_kompleks[0],
             periode_bulan=periode_bulan,
-            periode_tahun=periode_tahun
+            periode_tahun=periode_tahun,
         ).exists()
 
         if existing_payment:
             return Response(
-                {"error": f"Pembayaran untuk periode {periode_bulan}/{periode_tahun} sudah ada"}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {
+                    "error": f"Pembayaran untuk periode {periode_bulan}/{periode_tahun} sudah ada"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Record payment
@@ -180,13 +189,13 @@ class kompleksViewSet(viewsets.ModelViewSet):
                 periode_bulan=periode_bulan,
                 periode_tahun=periode_tahun,
                 total_bayar=total_bayar,
-                bukti_bayar=bukti_bayar
+                bukti_bayar=bukti_bayar,
             )
             serializer = iuranSerializer(payment)
             return Response(serializer.data)
         except Exception as e:
             logger.error(f"Failed to record payment: {str(e)}")
             return Response(
-                {"error": "Gagal mencatat pembayaran"}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Gagal mencatat pembayaran"},
+                status=status.HTTP_400_BAD_REQUEST,
             )

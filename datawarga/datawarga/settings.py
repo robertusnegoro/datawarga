@@ -24,7 +24,9 @@ LOGIN_REDIRECT_URL = "/"
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DATA_WARGA_SECRET", "django-insecure-fallback-secret-key-for-local-dev-only-12345")
+SECRET_KEY = os.getenv(
+    "DATA_WARGA_SECRET", "django-insecure-fallback-secret-key-for-local-dev-only-12345"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 WG_ENV = os.getenv("WG_ENV", "dev")
@@ -109,7 +111,7 @@ DB_PORT = int(os.getenv("DB_PORT", 5432))
 DB_USER = os.getenv("DB_USER", "robi")
 DB_SSL = os.getenv("DB_SSL", "False").lower() in ("true", "1", "t", "y", "yes")
 
-if "test" in sys.argv:
+if "test" in sys.argv or os.getenv("USE_SQLITE") == "True":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -233,23 +235,23 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'kependudukan.throttles.BotUserRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
-        'rest_framework.throttling.AnonRateThrottle',
+    "DEFAULT_THROTTLE_CLASSES": [
+        "kependudukan.throttles.BotUserRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'user': '18000/day',
-        'anon': '10/hour',
-    }
+    "DEFAULT_THROTTLE_RATES": {
+        "user": "18000/day",
+        "anon": "10/hour",
+    },
 }
 
 APPEND_SLASH = False
 
 # Telegram Bot Settings
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-BOT_API_USER = os.getenv('BOT_API_USER', 'bot_api')
-BOT_API_PASS = os.getenv('BOT_API_PASS', '')
-SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+BOT_API_USER = os.getenv("BOT_API_USER", "bot_api")
+BOT_API_PASS = os.getenv("BOT_API_PASS", "")
+SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
 # Comma-separated list of allowed Telegram usernames
-TELEGRAM_ALLOWED_USERS = os.getenv('TELEGRAM_ALLOWED_USERS', '').split(',')
+TELEGRAM_ALLOWED_USERS = os.getenv("TELEGRAM_ALLOWED_USERS", "").split(",")

@@ -52,6 +52,16 @@ urlpatterns = [
     ),
     path("warga/form-warga-simpan", warga.formWargaSimpan, name="formWargaSimpan"),
     path("warga/list-warga-view", warga.WargaListView.as_view(), name="listWargaView"),
+    path(
+        "warga/daftar-kepala-keluarga",
+        warga.KepalaKeluargaListView.as_view(),
+        name="daftarKepalaKeluarga",
+    ),
+    path(
+        "warga/detail-anggota-keluarga/<int:idkompleks>",
+        warga.detail_anggota_keluarga_snippet,
+        name="detailAnggotaKeluarga",
+    ),
     path("warga/test-view", warga.testView, name="testView"),
     path("warga/form-warga-report", warga.listWargaReportForm, name="formWargaReport"),
     path("warga/data-warga-pdf-print", warga.pdfWargaReport, name="pdfWargaReport"),
@@ -119,9 +129,9 @@ urlpatterns = [
         name="formIuranBulananYear",
     ),
     path(
-        'warga/kompleks/<int:idkompleks>/iuran/batch/<str:year>',
+        "warga/kompleks/<int:idkompleks>/iuran/batch/<str:year>",
         iuran.form_batch_iuran_bulanan,
-        name='batchIuranBulanan'
+        name="batchIuranBulanan",
     ),
     path(
         "warga/form-iuran-bulanan/<int:idkompleks>/<int:year>/<int:idtransaksi>",

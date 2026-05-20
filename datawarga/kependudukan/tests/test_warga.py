@@ -320,3 +320,155 @@ class WargaTestCase(TestCase):
         )
         self.assertEqual(response_public.status_code, 200)
         self.assertIn("Tanpa Cluster", response_public.context["legend_cluster"])
+
+    def test_daftar_kepala_keluarga_view(self):
+        # Create user permission so user can list
+        from ..models import UserPermission, WargaPermissionGroup
+
+        group = WargaPermissionGroup.objects.create(group_name="all")
+        UserPermission.objects.create(user=self.user, permission_group=group)
+
+        # Create KK warga
+        kk_warga = Warga.objects.create(
+            nama_lengkap="Kepala Keluarga Test",
+            nik="nik_kk_test",
+            no_kk="12345",
+            kompleks=self.existing_kompleks,
+            kepala_keluarga=True,
+            status_tinggal="TETAP",
+        )
+        # Create non-KK warga
+        non_kk_warga = Warga.objects.create(
+            nama_lengkap="Anggota Test",
+            nik="nik_anggota_test",
+            no_kk="12345",
+            kompleks=self.existing_kompleks,
+            kepala_keluarga=False,
+            status_keluarga="ISTRI",
+            status_tinggal="TETAP",
+        )
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # Test Daftar Kepala Keluarga page
+        response = client.get(reverse("kependudukan:daftarKepalaKeluarga"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Kepala Keluarga Test")
+        self.assertNotContains(response, "Anggota Test")
+
+        # Test AJAX endpoint
+        ajax_url = reverse(
+            "kependudukan:detailAnggotaKeluarga",
+            kwargs={"idkompleks": self.existing_kompleks.id},
+        )
+        response_ajax = client.get(ajax_url)
+        self.assertEqual(response_ajax.status_code, 200)
+        self.assertContains(response_ajax, "Kepala Keluarga Test")
+        self.assertContains(response_ajax, "Anggota Test")
+        self.assertContains(response_ajax, "Istri")
+
+    def test_csv_import_status_keluarga(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        # Prepare CSV data
+        csv_content = (
+            "nama_lengkap,nik,no_kk,no_hp,pekerjaan,agama,status_kawin,tanggal_lahir,tempat_lahir,jenis_kelamin,status_tinggal,alamat_ktp,status_keluarga\n"
+            "Imported Suami,nik-import-1,kk-import,081,SWASTA,islam,KAWIN,1990-01-01,Jakarta,Laki-laki,TETAP,-,SUAMI\n"
+            "Imported Istri,nik-import-2,kk-import,081,SWASTA,islam,KAWIN,1992-01-01,Jakarta,Perempuan,TETAP,-, ISTRI \n"  # with space
+            "Imported Child,nik-import-3,kk-import,081,SWASTA,islam,BELUM KAWIN,2015-01-01,Jakarta,Perempuan,TETAP,-,INVALID_VALUE\n"  # invalid
+        )
+        csv_file = SimpleUploadedFile(
+            "test_warga.csv", csv_content.encode("utf-8"), content_type="text/csv"
+        )
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        response = client.post(
+            reverse("kependudukan:utilImportWarga"),
+            {"csv_file": csv_file, "submit": "1"},
+        )
+        if response.status_code != 302:
+            print("CSV Import Failure Content:", response.content.decode("utf-8"))
+        self.assertEqual(response.status_code, 302)
+
+        # Verify database records
+        suami = Warga.objects.get(nik="nik-import-1")
+        self.assertEqual(suami.status_keluarga, "SUAMI")
+
+        istri = Warga.objects.get(nik="nik-import-2")
+        self.assertEqual(istri.status_keluarga, "ISTRI")  # verify trimming works!
+
+        child = Warga.objects.get(nik="nik-import-3")
+        self.assertEqual(
+            child.status_keluarga, "N/A"
+        )  # verify invalid value falls back to N/A
+
+    def test_warga_list_search_by_no_kk(self):
+        # Create user permission so user can list
+        from ..models import UserPermission, WargaPermissionGroup
+
+        group = WargaPermissionGroup.objects.create(group_name="all")
+        UserPermission.objects.create(user=self.user, permission_group=group)
+
+        # Create Warga with specific KK number
+        Warga.objects.create(
+            nama_lengkap="Special KK Member",
+            nik="nik_special_kk",
+            no_kk="9876543210123456",
+            kompleks=self.existing_kompleks,
+            status_tinggal="TETAP",
+            agama="ISLAM",
+            jenis_kelamin="LAKI-LAKI",
+        )
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # 1. Search by partial KK (wildcard) on main list view
+        response = client.get(
+            reverse("kependudukan:listWargaView"), {"search": "76543210"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Special KK Member")
+
+        # 2. Search by partial KK (wildcard) on API search view
+        import json
+
+        token_response = client.post(
+            reverse("kependudukan:token_obtain_pair"),
+            data=json.dumps({"username": self.test_user, "password": self.test_pass}),
+            content_type="application/json",
+        )
+        self.assertEqual(token_response.status_code, 200)
+        token = token_response.json()["access"]
+
+        response_api = client.post(
+            reverse("kependudukan:warga-search"),
+            data=json.dumps({"search": "76543210"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response_api.status_code, 200)
+        self.assertContains(response_api, "Special KK Member")
+
+    def test_warga_list_context_defaults(self):
+        # Create user permission so user can list
+        from ..models import UserPermission, WargaPermissionGroup
+
+        group = WargaPermissionGroup.objects.create(group_name="all")
+        UserPermission.objects.create(user=self.user, permission_group=group)
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # GET request without cluster query param should default to "all"
+        response = client.get(reverse("kependudukan:listWargaView"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["cluster"], "all")
+
+        # GET request for Kepala Keluarga list without cluster query param should also default to "all"
+        response_kk = client.get(reverse("kependudukan:daftarKepalaKeluarga"))
+        self.assertEqual(response_kk.status_code, 200)
+        self.assertEqual(response_kk.context["cluster"], "all")

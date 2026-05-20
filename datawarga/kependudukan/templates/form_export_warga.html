@@ -99,6 +99,17 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row border-top pt-3">
+                    <div class="col-12">
+                        <h6 class="font-weight-bold text-dark mb-2">Hubungan Keluarga (Kolom: status_keluarga)</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for ag in status_keluarga %}
+                            <span class="badge bg-light text-dark border p-2 small mb-1">{{ ag.0 | title }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

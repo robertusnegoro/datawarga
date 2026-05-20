@@ -61,25 +61,23 @@ class IuranBulananForm(forms.ModelForm):
 
 class BatchIuranBulananForm(forms.Form):
     BULAN_CHOICES = [
-        ('1', 'Januari'),
-        ('2', 'Februari'), 
-        ('3', 'Maret'),
-        ('4', 'April'),
-        ('5', 'Mei'),
-        ('6', 'Juni'),
-        ('7', 'Juli'),
-        ('8', 'Agustus'),
-        ('9', 'September'),
-        ('10', 'Oktober'),
-        ('11', 'November'),
-        ('12', 'Desember')
+        ("1", "Januari"),
+        ("2", "Februari"),
+        ("3", "Maret"),
+        ("4", "April"),
+        ("5", "Mei"),
+        ("6", "Juni"),
+        ("7", "Juli"),
+        ("8", "Agustus"),
+        ("9", "September"),
+        ("10", "Oktober"),
+        ("11", "November"),
+        ("12", "Desember"),
     ]
-    
+
     periode_tahun = forms.CharField(max_length=4)
     bulan = forms.MultipleChoiceField(
-        choices=BULAN_CHOICES,
-        widget=forms.CheckboxSelectMultiple,
-        required=True
+        choices=BULAN_CHOICES, widget=forms.CheckboxSelectMultiple, required=True
     )
     total_bayar = forms.IntegerField(initial=settings.IURAN_BULANAN)
     keterangan = forms.CharField(max_length=255, required=False)

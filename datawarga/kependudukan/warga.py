@@ -107,8 +107,7 @@ class WargaListView(ListView):
         context["daftar_cluster"] = list_cluster
         if "message" in self.request.GET:
             context["message"] = self.request.GET["message"]
-        if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
-            context["cluster"] = str(self.request.GET["cluster"])
+        context["cluster"] = self.request.GET.get("cluster", "all")
         if "search" in self.request.GET:
             context["search"] = str(self.request.GET["search"])
         return context
@@ -136,12 +135,104 @@ class WargaListView(ListView):
                 queryset = queryset.filter(
                     Q(nama_lengkap__icontains=search_keyword)
                     | Q(nik__icontains=search_keyword)
+                    | Q(no_kk__icontains=search_keyword)
                 )
         if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
             cluster = str(self.request.GET["cluster"])
             queryset = queryset.filter(kompleks__cluster__icontains=cluster)
 
         return queryset
+
+
+@method_decorator(login_required, name="dispatch")
+class KepalaKeluargaListView(ListView):
+    paginate_by = 50
+    template_name = "daftar_kepala_keluarga.html"
+    queryset = (
+        Warga.objects.filter(kepala_keluarga=True)
+        .exclude(status_tinggal="PINDAH")
+        .order_by("kompleks__blok", "kompleks__nomor")
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        list_cluster = Kompleks.objects.order_by().values("cluster").distinct()
+        context["daftar_cluster"] = list_cluster
+        if "message" in self.request.GET:
+            context["message"] = self.request.GET["message"]
+        context["cluster"] = self.request.GET.get("cluster", "all")
+        if "search" in self.request.GET:
+            context["search"] = str(self.request.GET["search"])
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        try:
+            current_permission_group = UserPermission.objects.get(
+                user=self.request.user
+            )
+            if str(current_permission_group.permission_group).lower() != "all":
+                queryset = queryset.filter(
+                    kompleks__permission_group=current_permission_group.permission_group.id
+                )
+        except UserPermission.DoesNotExist:
+            pass
+
+        if "search" in self.request.GET:
+            search_keyword = str(self.request.GET["search"])
+
+            if "/" in search_keyword:
+                split_keyword = search_keyword.split("/")
+                queryset = queryset.filter(
+                    kompleks__blok__icontains=split_keyword[0].strip(),
+                    kompleks__nomor=split_keyword[1].strip(),
+                )
+            else:
+                queryset = queryset.filter(
+                    Q(nama_lengkap__icontains=search_keyword)
+                    | Q(nik__icontains=search_keyword)
+                    | Q(no_kk__icontains=search_keyword)
+                )
+        if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
+            cluster = str(self.request.GET["cluster"])
+            queryset = queryset.filter(kompleks__cluster__icontains=cluster)
+
+        return queryset
+
+
+@login_required
+def detail_anggota_keluarga_snippet(request, idkompleks):
+    kompleks = get_object_or_404(Kompleks, pk=idkompleks)
+    try:
+        current_permission_group = UserPermission.objects.get(user=request.user)
+        if str(current_permission_group.permission_group).lower() != "all":
+            if kompleks.permission_group != current_permission_group.permission_group:
+                return HttpResponse("Forbidden", status=403)
+    except UserPermission.DoesNotExist:
+        pass
+
+    data_warga = list(
+        Warga.objects.filter(kompleks=kompleks).exclude(status_tinggal="PINDAH")
+    )
+    role_order = {
+        "SUAMI": 1,
+        "ISTRI": 2,
+        "ANAK": 3,
+        "ORANG TUA": 4,
+        "SAUDARA": 5,
+        "LAINNYA": 6,
+        "N/A": 7,
+    }
+    data_warga.sort(
+        key=lambda w: (role_order.get(w.status_keluarga, 8), w.nama_lengkap)
+    )
+
+    context = {
+        "kompleks": kompleks,
+        "anggota": data_warga,
+        "MEDIA_URL": settings.MEDIA_URL,
+    }
+    return render(request, "anggota_keluarga_snippet.html", context)
 
 
 @login_required

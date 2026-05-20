@@ -299,6 +299,16 @@ def import_data_warga_form(request):
 
             for row in csv_reader:
                 logger.info(row)
+
+                status_keluarga_val = row.get("status_keluarga")
+                if status_keluarga_val is not None:
+                    status_keluarga_val = str(status_keluarga_val).strip().upper()
+                    valid_choices = [c[0] for c in Warga.STATUS_KELUARGA]
+                    if status_keluarga_val not in valid_choices:
+                        status_keluarga_val = "N/A"
+                else:
+                    status_keluarga_val = "N/A"
+
                 data_list.append(
                     Warga(
                         agama=str(row["agama"]).upper(),
@@ -313,6 +323,7 @@ def import_data_warga_form(request):
                         jenis_kelamin=str(row["jenis_kelamin"]).upper(),
                         status_tinggal=str(row["status_tinggal"]).upper(),
                         alamat_ktp=row["alamat_ktp"],
+                        status_keluarga=status_keluarga_val,
                         kompleks=None,
                     )
                 )
@@ -337,6 +348,7 @@ def import_data_warga_form(request):
         "status_tinggal": Warga.STATUS_TINGGAL,
         "pekerjaan": Warga.PEKERJAAN,
         "jenis_kelamin": Warga.JENIS_KELAMIN,
+        "status_keluarga": Warga.STATUS_KELUARGA,
     }
 
     return render(
