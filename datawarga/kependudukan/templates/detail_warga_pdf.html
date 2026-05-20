@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -413,7 +414,7 @@
                 <tr>
                     <td>{{ t.get_periode_bulan_display }} {{ t.periode_tahun }}</td>
                     <td>{{ t.tanggal_bayar|date:"d M Y" }}</td>
-                    <td class="text-success">Rp {{ t.total_bayar|filesizeformat|slice:":-2" }}</td>
+                    <td class="text-success">Rp {{ t.total_bayar|intcomma }}</td>
                     <td>{{ t.keterangan|default:"-" }}</td>
                 </tr>
                 {% empty %}

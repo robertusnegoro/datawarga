@@ -39,6 +39,13 @@ class BaseAIProvider(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def chat_completion(self, messages: list[dict], response_format: dict = None, correlation_id: str = None) -> str:
+        """
+        Sends conversation history to the AI model and returns the response string.
+        """
+        pass
+
     def is_quota_low(self, correlation_id: str = None) -> bool:
         """
         Checks if the quota is low based on the configured warning threshold.
@@ -111,6 +118,64 @@ class OllamaProvider(BaseAIProvider):
     def get_remaining_quota(self, correlation_id: str = None) -> float | None:
         # Ollama runs locally and has unlimited quota
         return None
+
+    def chat_completion(self, messages: list[dict], response_format: dict = None, correlation_id: str = None) -> str:
+        corr_id = correlation_id or str(uuid.uuid4())
+        url = f"{settings.OLLAMA_API_URL}/api/chat"
+        model = settings.OLLAMA_MODEL
+
+        logger.info(
+            f"[AI_CHAT_START] [CorrelationID: {corr_id}] "
+            f"Provider: Ollama, Model: {model}, URL: {url}, Messages: {len(messages)}"
+        )
+
+        payload = {
+            "model": model,
+            "messages": messages,
+            "stream": False,
+            "options": {"temperature": 0.0},
+        }
+
+        if response_format and response_format.get("type") == "json_object":
+            payload["format"] = "json"
+
+        headers = {}
+        api_key = getattr(settings, "OLLAMA_API_KEY", None)
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        start_time = time.time()
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if response.status_code != 200:
+                logger.error(
+                    f"[AI_CHAT_FAIL] [CorrelationID: {corr_id}] "
+                    f"HTTP Status: {response.status_code}, Error: {response.text}"
+                )
+                raise RuntimeError(
+                    f"Ollama server returned status code {response.status_code}"
+                )
+
+            resp_data = response.json()
+            message_content = resp_data.get("message", {}).get("content", "")
+
+            logger.info(
+                f"[AI_CHAT_SUCCESS] [CorrelationID: {corr_id}] "
+                f"Duration: {duration_ms}ms, Content length: {len(message_content)}"
+            )
+
+            return message_content
+
+        except Exception as e:
+            duration_ms = int((time.time() - start_time) * 1000)
+            logger.error(
+                f"[AI_CHAT_FAIL] [CorrelationID: {corr_id}] "
+                f"Duration: {duration_ms}ms, Exception: {str(e)}",
+                exc_info=True,
+            )
+            raise
 
 
 class OpenRouterProvider(BaseAIProvider):
@@ -255,6 +320,74 @@ class OpenRouterProvider(BaseAIProvider):
                 exc_info=True,
             )
             return None
+
+    def chat_completion(self, messages: list[dict], response_format: dict = None, correlation_id: str = None) -> str:
+        corr_id = correlation_id or str(uuid.uuid4())
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        model = settings.OPENROUTER_MODEL
+        api_key = settings.OPENROUTER_API_KEY
+
+        logger.info(
+            f"[AI_CHAT_START] [CorrelationID: {corr_id}] "
+            f"Provider: OpenRouter, Model: {model}, URL: {url}, Messages: {len(messages)}"
+        )
+
+        if not api_key:
+            logger.error(
+                f"[AI_CHAT_FAIL] [CorrelationID: {corr_id}] "
+                f"Error: OPENROUTER_API_KEY is not set."
+            )
+            raise ValueError("OPENROUTER_API_KEY is not configured.")
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8000",
+            "X-Title": "DataWarga",
+        }
+
+        payload = {
+            "model": model,
+            "messages": messages,
+        }
+
+        if response_format:
+            payload["response_format"] = response_format
+
+        start_time = time.time()
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if response.status_code != 200:
+                logger.error(
+                    f"[AI_CHAT_FAIL] [CorrelationID: {corr_id}] "
+                    f"HTTP Status: {response.status_code}, Error: {response.text}"
+                )
+                raise RuntimeError(
+                    f"OpenRouter server returned status code {response.status_code}"
+                )
+
+            resp_data = response.json()
+            message_content = (
+                resp_data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            )
+
+            logger.info(
+                f"[AI_CHAT_SUCCESS] [CorrelationID: {corr_id}] "
+                f"Duration: {duration_ms}ms, Content length: {len(message_content)}"
+            )
+
+            return message_content
+
+        except Exception as e:
+            duration_ms = int((time.time() - start_time) * 1000)
+            logger.error(
+                f"[AI_CHAT_FAIL] [CorrelationID: {corr_id}] "
+                f"Duration: {duration_ms}ms, Exception: {str(e)}",
+                exc_info=True,
+            )
+            raise
 
 
 def get_ai_provider() -> BaseAIProvider:

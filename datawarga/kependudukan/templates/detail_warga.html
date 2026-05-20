@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
 {% block title %}Profil {{ warga.nama_lengkap }}{% endblock %}
 {% block pagetitle %}
     <i class="bi bi-person-badge-fill text-primary"></i> Detail Profil Warga
@@ -282,7 +283,7 @@
                                     {{ t.get_periode_bulan_display }} {{ t.periode_tahun }}
                                 </td>
                                 <td>{{ t.tanggal_bayar|date:"d M Y" }}</td>
-                                <td><span class="fw-bold text-success">Rp {{ t.total_bayar|filesizeformat|slice:":-2" }}</span></td>
+                                <td><span class="fw-bold text-success">Rp {{ t.total_bayar|intcomma }}</span></td>
                                 <td><span class="text-muted small">{{ t.keterangan|default:"-" }}</span></td>
                                 <td class="text-end pe-4">
                                     {% if t.bukti_bayar %}
