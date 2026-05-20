@@ -3,6 +3,7 @@ from .models import Warga, Kompleks, UserPermission
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.core import serializers
 from django.db.models import Q
 from django.http import HttpResponse, Http404, JsonResponse
@@ -582,3 +583,154 @@ def pdfDetailWarga(request, idwarga):
         response, font_config=font_config
     )
     return response
+
+
+@login_required
+@require_POST
+def scan_ktp_ajax(request):
+    import uuid
+    from .ai_service import get_ai_provider
+    from .ai_utils import optimize_image
+
+    correlation_id = str(uuid.uuid4())
+    logger.info(
+        f"[SCAN_KTP_REQUEST] [CorrelationID: {correlation_id}] User: {request.user.username}"
+    )
+
+    image_bytes = None
+    filename = ""
+
+    if "ktp_image" in request.FILES:
+        ktp_file = request.FILES["ktp_image"]
+        filename = ktp_file.name
+        image_bytes = ktp_file.read()
+        logger.info(
+            f"[SCAN_KTP_IMAGE] [CorrelationID: {correlation_id}] Uploaded file: {filename}, size: {len(image_bytes)} bytes"
+        )
+    elif "idwarga" in request.POST and request.POST["idwarga"]:
+        try:
+            idwarga = int(request.POST["idwarga"])
+            warga_record = Warga.objects.get(pk=idwarga)
+            if warga_record.ktp_image_path:
+                filename = warga_record.ktp_image_path.name
+                warga_record.ktp_image_path.open("rb")
+                image_bytes = warga_record.ktp_image_path.read()
+                warga_record.ktp_image_path.close()
+                logger.info(
+                    f"[SCAN_KTP_IMAGE] [CorrelationID: {correlation_id}] Loaded existing image for warga {idwarga}: {filename}, size: {len(image_bytes)} bytes"
+                )
+            else:
+                logger.warning(
+                    f"[SCAN_KTP_IMAGE] [CorrelationID: {correlation_id}] Resident {idwarga} has no uploaded KTP image."
+                )
+        except Warga.DoesNotExist:
+            logger.error(
+                f"[SCAN_KTP_IMAGE] [CorrelationID: {correlation_id}] Resident with ID {request.POST.get('idwarga')} not found."
+            )
+            return JsonResponse(
+                {"success": False, "message": "Data warga tidak ditemukan."}, status=404
+            )
+        except Exception as e:
+            logger.error(
+                f"[SCAN_KTP_IMAGE] [CorrelationID: {correlation_id}] Error reading citizen KTP image: {str(e)}",
+                exc_info=True,
+            )
+            return JsonResponse(
+                {"success": False, "message": f"Gagal membaca file KTP: {str(e)}"},
+                status=500,
+            )
+
+    if not image_bytes:
+        logger.warning(
+            f"[SCAN_KTP_IMAGE] [CorrelationID: {correlation_id}] No KTP file uploaded and no valid resident ID with KTP provided."
+        )
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Pilih file foto KTP terlebih dahulu atau simpan data warga dengan foto KTP.",
+            },
+            status=400,
+        )
+
+    try:
+        optimized_bytes = optimize_image(image_bytes)
+        logger.info(
+            f"[SCAN_KTP_OPTIMIZE] [CorrelationID: {correlation_id}] Optimized size: {len(optimized_bytes)} bytes (Original: {len(image_bytes)} bytes)"
+        )
+    except Exception as e:
+        logger.error(
+            f"[SCAN_KTP_OPTIMIZE_FAIL] [CorrelationID: {correlation_id}] Image optimization failed: {str(e)}",
+            exc_info=True,
+        )
+        return JsonResponse(
+            {"success": False, "message": f"Gagal mengoptimalkan gambar KTP: {str(e)}"},
+            status=500,
+        )
+
+    try:
+        provider = get_ai_provider()
+        extracted_data = provider.extract_ktp_data(
+            optimized_bytes, correlation_id=correlation_id
+        )
+
+        success_fields = []
+        failed_fields = []
+
+        for field in ["nama_lengkap", "nik", "alamat_ktp", "jenis_kelamin", "agama"]:
+            if extracted_data.get(field):
+                success_fields.append(field)
+            else:
+                failed_fields.append(field)
+
+        field_labels = {
+            "nama_lengkap": "Nama",
+            "nik": "NIK",
+            "alamat_ktp": "Alamat",
+            "jenis_kelamin": "Jenis Kelamin",
+            "agama": "Agama",
+        }
+
+        success_labels = [field_labels[f] for f in success_fields]
+        failed_labels = [field_labels[f] for f in failed_fields]
+
+        status_message = "Scan KTP selesai."
+        if success_labels:
+            status_message += f" Berhasil mengenali: {', '.join(success_labels)}."
+        if failed_labels:
+            status_message += f" Gagal mengenali: {', '.join(failed_labels)}."
+
+        quota_warning = False
+        quota_message = ""
+        try:
+            if provider.is_quota_low(correlation_id=correlation_id):
+                quota_warning = True
+                remaining = provider.get_remaining_quota(correlation_id=correlation_id)
+                quota_message = f"Peringatan: Kuota penyedia AI hampir habis (Sisa kuota: {remaining if remaining is not None else 'rendah'})."
+        except Exception as q_err:
+            logger.warning(
+                f"[SCAN_KTP_QUOTA_ERROR] Could not check quota: {str(q_err)}"
+            )
+
+        logger.info(
+            f"[SCAN_KTP_SUCCESS] [CorrelationID: {correlation_id}] Fields extracted: {success_fields}, Quota warning: {quota_warning}"
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "data": extracted_data,
+                "message": status_message,
+                "quota_warning": quota_warning,
+                "quota_message": quota_message,
+            }
+        )
+
+    except Exception as e:
+        logger.error(
+            f"[SCAN_KTP_FAIL] [CorrelationID: {correlation_id}] Extraction failed: {str(e)}",
+            exc_info=True,
+        )
+        return JsonResponse(
+            {"success": False, "message": f"Gagal memproses KTP dengan AI: {str(e)}"},
+            status=500,
+        )

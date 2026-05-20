@@ -269,6 +269,16 @@
                                 {{ form.ktp_image_path | as_crispy_field }}
                             </div>
                         </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button type="button" id="btn-scan-ktp" class="btn btn-primary d-inline-flex align-items-center gap-2" style="background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%); border: none; padding: 10px 18px; border-radius: 8px; font-weight: 500; box-shadow: 0 4px 6px rgba(26, 115, 232, 0.2); transition: all 0.2s ease;">
+                                    <i class="bi bi-cpu" id="scan-icon"></i>
+                                    <span id="scan-text">Pindai KTP dengan AI</span>
+                                    <span id="scan-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                </button>
+                                <div id="scan-feedback-container" class="mt-3 w-100 d-none"></div>
+                            </div>
+                        </div>
                         {% if datawarga.ktp_image_path %}
                         <div class="row mt-3">
                             <div class="col-12">
@@ -394,6 +404,141 @@
                     previewKompleks.textContent = 'Rumah: Belum ditentukan';
                 }
             });
+        }
+
+        // Scan KTP with AI Handler
+        const btnScanKtp = document.getElementById('btn-scan-ktp');
+        const scanSpinner = document.getElementById('scan-spinner');
+        const scanIcon = document.getElementById('scan-icon');
+        const scanText = document.getElementById('scan-text');
+        const feedbackContainer = document.getElementById('scan-feedback-container');
+        const ktpInput = document.getElementById('id_ktp_image_path');
+        const idWargaInput = document.querySelector('input[name="idwarga"]');
+
+        if (btnScanKtp) {
+            btnScanKtp.addEventListener('click', function() {
+                // Clear feedback container
+                feedbackContainer.classList.add('d-none');
+                feedbackContainer.innerHTML = '';
+
+                // Get file or warga ID
+                const file = ktpInput ? ktpInput.files[0] : null;
+                const idwarga = idWargaInput ? idWargaInput.value : '';
+
+                if (!file && (!idwarga || idwarga === '0' || idwarga === 'None')) {
+                    alert('Silakan pilih file foto KTP terlebih dahulu.');
+                    return;
+                }
+
+                // Prepare Form Data
+                const formData = new FormData();
+                if (file) {
+                    formData.append('ktp_image', file);
+                } else if (idwarga && idwarga !== '0' && idwarga !== 'None') {
+                    formData.append('idwarga', idwarga);
+                }
+
+                // Add CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                // Show loading state
+                btnScanKtp.disabled = true;
+                scanSpinner.classList.remove('d-none');
+                scanIcon.classList.add('d-none');
+                scanText.textContent = 'Memindai KTP...';
+
+                fetch('{% url "kependudukan:scan_ktp_ajax" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(res => {
+                    // Reset button state
+                    btnScanKtp.disabled = false;
+                    scanSpinner.classList.add('d-none');
+                    scanIcon.classList.remove('d-none');
+                    scanText.textContent = 'Pindai KTP dengan AI';
+
+                    if (res.success) {
+                        // Populate form fields
+                        const data = res.data;
+                        if (data.nama_lengkap) {
+                            document.getElementById('id_nama_lengkap').value = data.nama_lengkap;
+                            // Trigger live preview
+                            document.getElementById('id_nama_lengkap').dispatchEvent(new Event('input'));
+                        }
+                        if (data.nik) {
+                            document.getElementById('id_nik').value = data.nik;
+                            // Trigger live preview
+                            document.getElementById('id_nik').dispatchEvent(new Event('input'));
+                        }
+                        if (data.alamat_ktp) {
+                            document.getElementById('id_alamat_ktp').value = data.alamat_ktp;
+                        }
+                        if (data.jenis_kelamin) {
+                            const jkSelect = document.getElementById('id_jenis_kelamin');
+                            if (jkSelect) {
+                                jkSelect.value = data.jenis_kelamin;
+                            }
+                        }
+                        if (data.agama) {
+                            const agamaSelect = document.getElementById('id_agama');
+                            if (agamaSelect) {
+                                agamaSelect.value = data.agama;
+                            }
+                        }
+
+                        // Build feedback alert HTML
+                        let alertHtml = `
+                            <div class="alert alert-success d-flex flex-column gap-1 border-0 shadow-sm" style="border-radius: 12px; background-color: #e6f4ea; color: #137333; font-size: 0.95rem; line-height: 1.4;">
+                                <div class="d-flex align-items-center gap-2 font-weight-bold">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span>${res.message}</span>
+                                </div>
+                        `;
+                        if (res.quota_warning) {
+                            alertHtml += `
+                                <div class="mt-2 text-warning d-flex align-items-center gap-2 font-weight-bold" style="color: #b06000;">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <span>${res.quota_message}</span>
+                                </div>
+                            `;
+                        }
+                        alertHtml += '</div>';
+
+                        feedbackContainer.innerHTML = alertHtml;
+                        feedbackContainer.classList.remove('d-none');
+                    } else {
+                        showError(res.message || 'Gagal memproses gambar KTP.');
+                    }
+                })
+                .catch(err => {
+                    btnScanKtp.disabled = false;
+                    scanSpinner.classList.add('d-none');
+                    scanIcon.classList.remove('d-none');
+                    scanText.textContent = 'Pindai KTP dengan AI';
+                    
+                    showError(err.message || 'Terjadi kesalahan saat memproses request.');
+                });
+            });
+        }
+
+        function showError(msg) {
+            feedbackContainer.innerHTML = `
+                <div class="alert alert-danger d-flex align-items-center gap-2 border-0 shadow-sm" style="border-radius: 12px; background-color: #fce8e6; color: #c5221f; font-size: 0.95rem; line-height: 1.4;">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <span>${msg}</span>
+                </div>
+            `;
+            feedbackContainer.classList.remove('d-none');
         }
 
         // Auto-close datepicker on select and set beautiful focus triggers

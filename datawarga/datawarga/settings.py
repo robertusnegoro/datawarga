@@ -255,3 +255,13 @@ BOT_API_PASS = os.getenv("BOT_API_PASS", "")
 SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
 # Comma-separated list of allowed Telegram usernames
 TELEGRAM_ALLOWED_USERS = os.getenv("TELEGRAM_ALLOWED_USERS", "").split(",")
+
+# AI KTP OCR Settings
+KTP_AI_PROVIDER = os.getenv("KTP_AI_PROVIDER", "ollama")
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2-vision")
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", None)
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", None)
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+OPENROUTER_QUOTA_THRESHOLD = float(os.getenv("OPENROUTER_QUOTA_THRESHOLD", "1.0"))
+
