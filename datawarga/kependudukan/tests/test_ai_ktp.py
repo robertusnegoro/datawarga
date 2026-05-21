@@ -126,7 +126,9 @@ class AIUtilsTestCase(TestCase):
 class AIServiceTestCase(TestCase):
     @patch("requests.post")
     @override_settings(
-        OLLAMA_API_URL="http://ollama-test:11434", OLLAMA_MODEL="test-vision"
+        OLLAMA_API_URL="http://ollama-test:11434",
+        OLLAMA_MODEL="test-vision",
+        OLLAMA_API_KEY=None,
     )
     def test_ollama_provider_extract(self, mock_post):
         # Mock response

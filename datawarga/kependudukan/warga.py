@@ -75,19 +75,13 @@ def formWargaSimpan(request):
             form = WargaForm(request.POST, request.FILES)
         if form.is_valid():
             logger.info("Form warga is valid")
-            form.save()
-            base_url = reverse("kependudukan:listWargaView")
+            warga = form.save()
+            base_url = reverse(
+                "kependudukan:detailWarga",
+                kwargs={"idwarga": warga.id},
+            )
             payload = urlencode({"message": "data saved!"})
             url_redir = "{}?{}".format(base_url, payload)
-
-            if "idkompleks" in request.POST:
-                base_url = reverse(
-                    "kependudukan:detailKompleks",
-                    kwargs={"idkompleks": int(request.POST["idkompleks"])},
-                )
-                payload = urlencode({"message": "data saved!"})
-                url_redir = "{}?{}".format(base_url, payload)
-
             return redirect(url_redir)
         else:
             logger.info(form.errors)
@@ -100,7 +94,9 @@ def formWargaSimpan(request):
 class WargaListView(ListView):
     paginate_by = 50
     template_name = "list_warga_view.html"
-    queryset = Warga.objects.order_by("kompleks__blok", "kompleks__nomor")
+    queryset = Warga.objects.exclude(
+        status_tinggal__in=["PINDAH", "MENINGGAL"]
+    ).order_by("kompleks__blok", "kompleks__nomor")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -151,7 +147,7 @@ class KepalaKeluargaListView(ListView):
     template_name = "daftar_kepala_keluarga.html"
     queryset = (
         Warga.objects.filter(kepala_keluarga=True)
-        .exclude(status_tinggal="PINDAH")
+        .exclude(status_tinggal__in=["PINDAH", "MENINGGAL"])
         .order_by("kompleks__blok", "kompleks__nomor")
     )
 
@@ -213,7 +209,9 @@ def detail_anggota_keluarga_snippet(request, idkompleks):
         pass
 
     data_warga = list(
-        Warga.objects.filter(kompleks=kompleks).exclude(status_tinggal="PINDAH")
+        Warga.objects.filter(kompleks=kompleks).exclude(
+            status_tinggal__in=["PINDAH", "MENINGGAL"]
+        )
     )
     role_order = {
         "SUAMI": 1,
@@ -251,6 +249,7 @@ def detail_anggota_keluarga_snippet(request, idkompleks):
 @login_required
 def deleteFormWarga(request, idwarga=0):
     warga_record = get_object_or_404(Warga, pk=idwarga)
+    next_url = request.GET.get("next")
     if request.POST:
         warga_record.delete()
         logger.info(
@@ -258,6 +257,8 @@ def deleteFormWarga(request, idwarga=0):
             % (idwarga, warga_record.nama_lengkap)
         )
         base_url = reverse("kependudukan:listWargaView")
+        if next_url == "arsip":
+            base_url = reverse("kependudukan:arsipWargaView")
         payload = urlencode(
             {"message": "data %s was deleted!" % (warga_record.nama_lengkap)}
         )
@@ -267,8 +268,62 @@ def deleteFormWarga(request, idwarga=0):
         return render(
             request=request,
             template_name="delete_form_warga.html",
-            context={"idwarga": idwarga, "warga": warga_record},
+            context={"idwarga": idwarga, "warga": warga_record, "next": next_url},
         )
+
+
+@method_decorator(login_required, name="dispatch")
+class ArsipWargaListView(ListView):
+    paginate_by = 50
+    template_name = "arsip_warga.html"
+    queryset = Warga.objects.filter(
+        status_tinggal__in=["PINDAH", "MENINGGAL"]
+    ).order_by("kompleks__blok", "kompleks__nomor")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        list_cluster = Kompleks.objects.order_by().values("cluster").distinct()
+        context["daftar_cluster"] = list_cluster
+        if "message" in self.request.GET:
+            context["message"] = self.request.GET["message"]
+        context["cluster"] = self.request.GET.get("cluster", "all")
+        if "search" in self.request.GET:
+            context["search"] = str(self.request.GET["search"])
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        try:
+            current_permission_group = UserPermission.objects.get(
+                user=self.request.user
+            )
+            if str(current_permission_group.permission_group).lower() != "all":
+                queryset = queryset.filter(
+                    kompleks__permission_group=current_permission_group.permission_group.id
+                )
+        except UserPermission.DoesNotExist:
+            pass
+
+        if "search" in self.request.GET:
+            search_keyword = str(self.request.GET["search"])
+
+            if "/" in search_keyword:
+                split_keyword = search_keyword.split("/")
+                queryset = queryset.filter(
+                    kompleks__blok__icontains=split_keyword[0].strip(),
+                    kompleks__nomor=split_keyword[1].strip(),
+                )
+            else:
+                queryset = queryset.filter(
+                    Q(nama_lengkap__icontains=search_keyword)
+                    | Q(nik__icontains=search_keyword)
+                    | Q(no_kk__icontains=search_keyword)
+                )
+        if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
+            cluster = str(self.request.GET["cluster"])
+            queryset = queryset.filter(kompleks__cluster__icontains=cluster)
+
+        return queryset
 
 
 def testView(request):
@@ -480,8 +535,10 @@ def detailWarga(request, idwarga):
     # Fetch other household members (serumah)
     anggota_keluarga = []
     if warga.kompleks:
-        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(
-            pk=warga.pk
+        anggota_keluarga = (
+            Warga.objects.filter(kompleks=warga.kompleks)
+            .exclude(pk=warga.pk)
+            .exclude(status_tinggal__in=["PINDAH", "MENINGGAL"])
         )
 
     # Fetch recent transactions for this complex
@@ -533,8 +590,10 @@ def pdfDetailWarga(request, idwarga):
     # Fetch other household members (serumah)
     anggota_keluarga = []
     if warga.kompleks:
-        anggota_keluarga = Warga.objects.filter(kompleks=warga.kompleks).exclude(
-            pk=warga.pk
+        anggota_keluarga = (
+            Warga.objects.filter(kompleks=warga.kompleks)
+            .exclude(pk=warga.pk)
+            .exclude(status_tinggal__in=["PINDAH", "MENINGGAL"])
         )
 
     # Fetch recent transactions for this complex

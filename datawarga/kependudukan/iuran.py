@@ -108,7 +108,7 @@ def form_iuran_bulanan_save(request):
                     logger.error(error_message)
                     return HttpResponse(error_message)
 
-            iuran = form.save()
+            form.save()
 
             base_url = reverse(
                 "kependudukan:detailKompleks",

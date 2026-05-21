@@ -30,6 +30,7 @@ def get_or_create_conversation(user_id: int) -> AgentConversation:
         agent_conversations[user_id] = AgentConversation(user_id)
     return agent_conversations[user_id]
 
+
 # Define states for conversation
 ALAMAT, BULAN, TAHUN, JUMLAH, BUKTI, KONFIRMASI = range(6)
 
@@ -463,7 +464,7 @@ async def konfirmasi_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if "bukti_path" in payment_data[user_id]:
                 try:
                     os.remove(payment_data[user_id]["bukti_path"])
-                except:
+                except OSError:
                     pass
             del payment_data[user_id]
         await update.message.reply_text("Pembayaran dibatalkan.")
@@ -528,7 +529,7 @@ async def konfirmasi_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if "bukti_path" in data:
             try:
                 os.remove(data["bukti_path"])
-            except:
+            except OSError:
                 pass
         del payment_data[user_id]
 
@@ -542,7 +543,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if "bukti_path" in payment_data[user_id]:
             try:
                 os.remove(payment_data[user_id]["bukti_path"])
-            except:
+            except OSError:
                 pass
         del payment_data[user_id]
 
@@ -565,7 +566,9 @@ async def handle_agent_message(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text("Percakapan direset.")
         return
 
-    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    await context.bot.send_chat_action(
+        chat_id=update.effective_chat.id, action="typing"
+    )
 
     try:
         conv = get_or_create_conversation(user_id)
@@ -576,16 +579,18 @@ async def handle_agent_message(update: Update, context: ContextTypes.DEFAULT_TYP
         system_adapter = DjangoSystemAdapter()
 
         from asgiref.sync import sync_to_async
+
         reply = await sync_to_async(agent_service.run_agent_turn)(
-            messages=conv.messages,
-            system_adapter=system_adapter
+            messages=conv.messages, system_adapter=system_adapter
         )
 
         conv.add_assistant_message(reply)
         await update.message.reply_text(reply)
     except Exception as e:
         logger.error(f"Error handling agent message: {str(e)}", exc_info=True)
-        await update.message.reply_text("Maaf, terjadi kesalahan saat memproses pesan Anda.")
+        await update.message.reply_text(
+            "Maaf, terjadi kesalahan saat memproses pesan Anda."
+        )
 
 
 async def handle_agent_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -595,12 +600,16 @@ async def handle_agent_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user_id = update.effective_user.id
     photo = update.message.photo[-1]
 
-    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    await context.bot.send_chat_action(
+        chat_id=update.effective_chat.id, action="typing"
+    )
 
     try:
         file = await context.bot.get_file(photo.file_id)
         temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, f"ktp_agent_{user_id}_{photo.file_unique_id}.jpg")
+        temp_path = os.path.join(
+            temp_dir, f"ktp_agent_{user_id}_{photo.file_unique_id}.jpg"
+        )
         await file.download_to_drive(temp_path)
 
         with open(temp_path, "rb") as f:
@@ -608,15 +617,18 @@ async def handle_agent_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         try:
             os.remove(temp_path)
-        except:
+        except OSError:
             pass
 
         from kependudukan.ai_utils import optimize_image, map_extracted_data
         from asgiref.sync import sync_to_async
+
         optimized_bytes = await sync_to_async(optimize_image)(image_bytes)
 
         ai_provider = get_ai_provider()
-        raw_extracted = await sync_to_async(ai_provider.extract_ktp_data)(optimized_bytes)
+        raw_extracted = await sync_to_async(ai_provider.extract_ktp_data)(
+            optimized_bytes
+        )
         mapped_data = map_extracted_data(raw_extracted)
 
         if not mapped_data.get("nama_lengkap") and not mapped_data.get("nik"):
@@ -638,8 +650,7 @@ async def handle_agent_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         system_adapter = DjangoSystemAdapter()
 
         reply = await sync_to_async(agent_service.run_agent_turn)(
-            messages=conv.messages,
-            system_adapter=system_adapter
+            messages=conv.messages, system_adapter=system_adapter
         )
 
         conv.add_assistant_message(reply)
@@ -647,7 +658,9 @@ async def handle_agent_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     except Exception as e:
         logger.error(f"Error handling agent photo: {str(e)}", exc_info=True)
-        await update.message.reply_text("Maaf, terjadi kesalahan saat memproses foto KTP Anda.")
+        await update.message.reply_text(
+            "Maaf, terjadi kesalahan saat memproses foto KTP Anda."
+        )
 
 
 def run_telegram_bot():
@@ -693,7 +706,9 @@ def run_telegram_bot():
         app.add_handler(payment_conv)  # Add conversation handler
 
         # Add agent handlers for general message and photo fallbacks
-        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_agent_message))
+        app.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_agent_message)
+        )
         app.add_handler(MessageHandler(filters.PHOTO, handle_agent_photo))
 
         logger.info("Telegram bot started successfully")

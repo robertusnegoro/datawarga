@@ -7,7 +7,6 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from urllib.parse import urlencode
-from django.core.exceptions import *
 from datetime import datetime
 import logging
 import csv
@@ -266,7 +265,7 @@ def generate_data_warga(request, count=10):
         random_records = list(Kompleks.objects.all())
         random_komplek = random.sample(random_records, 1)[0]
         nama_lengkap = "%s %s" % (random.choice(first_name), random.choice(last_name))
-        data_warga = Warga.objects.create(
+        Warga.objects.create(
             nama_lengkap=nama_lengkap,
             nik=random.randint(100000000, 200000000),
             agama=random.choice(Warga.RELIGIONS)[0],

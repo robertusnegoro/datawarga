@@ -93,8 +93,8 @@ class kompleksViewSet(viewsets.ModelViewSet):
                 total_kompleks = len(data_kompleks)
                 if total_kompleks > 0:
                     idkompleks = data_kompleks[0].pk
-                    queryset = Warga.objects.filter(kompleks=idkompleks).filter(
-                        ~Q(status_tinggal="PINDAH")
+                    queryset = Warga.objects.filter(kompleks=idkompleks).exclude(
+                        status_tinggal__in=["PINDAH", "MENINGGAL"]
                     )
                 else:
                     return Response({}, status=status.HTTP_204_NO_CONTENT)

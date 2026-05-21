@@ -3,7 +3,7 @@
 {% block pagetitle %}<i class="bi bi-trash"></i> Hapus Data Warga{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}  
-<form method="post" enctype="multipart/form-data" id="delete-warga-form" action="{% url 'kependudukan:deleteformWarga' idwarga %}">
+<form method="post" enctype="multipart/form-data" id="delete-warga-form" action="{% url 'kependudukan:deleteformWarga' idwarga %}{% if next %}?next={{ next }}{% endif %}">
     {% csrf_token %}
     <p>Nama : {{ warga.nama_lengkap }}</p>
     <p>NIK : {{ warga.nik }}</p>

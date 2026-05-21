@@ -54,6 +54,11 @@ urlpatterns = [
     path("warga/detail/<int:idwarga>/pdf", warga.pdfDetailWarga, name="pdfDetailWarga"),
     path("warga/list-warga-view", warga.WargaListView.as_view(), name="listWargaView"),
     path(
+        "warga/arsip-warga-view",
+        warga.ArsipWargaListView.as_view(),
+        name="arsipWargaView",
+    ),
+    path(
         "warga/daftar-kepala-keluarga",
         warga.KepalaKeluargaListView.as_view(),
         name="daftarKepalaKeluarga",

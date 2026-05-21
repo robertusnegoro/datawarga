@@ -133,7 +133,8 @@ class WargaTestCase(TestCase):
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)
         resp_url = response.url.split("?")[0]
-        self.assertEqual(resp_url, reverse("kependudukan:listWargaView"))
+        new_warga = Warga.objects.get(nik=form_data["nik"])
+        self.assertEqual(resp_url, reverse("kependudukan:detailWarga", kwargs={"idwarga": new_warga.id}))
 
     def test_form_update(self):
         client = Client()
@@ -160,7 +161,7 @@ class WargaTestCase(TestCase):
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)
         resp_url = response.url.split("?")[0]
-        self.assertEqual(resp_url, reverse("kependudukan:listWargaView"))
+        self.assertEqual(resp_url, reverse("kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id}))
 
     def test_delete_warga_notfound(self):
         client = Client()
@@ -184,7 +185,7 @@ class WargaTestCase(TestCase):
         client.login(username=self.test_user, password=self.test_pass)
 
         # Create test data
-        warga2 = Warga.objects.create(
+        Warga.objects.create(
             nama_lengkap="Test Stats 2",
             nik="stats_test_2",
             kompleks=self.existing_kompleks,
@@ -210,7 +211,7 @@ class WargaTestCase(TestCase):
         today = now().date()
 
         # Create elderly person (>55 years)
-        elderly = Warga.objects.create(
+        Warga.objects.create(
             nama_lengkap="Test Elderly",
             nik="elderly_test",
             kompleks=self.existing_kompleks,
@@ -221,7 +222,7 @@ class WargaTestCase(TestCase):
         )
 
         # Create child (<5 years)
-        child = Warga.objects.create(
+        Warga.objects.create(
             nama_lengkap="Test Child",
             nik="child_test",
             kompleks=self.existing_kompleks,
@@ -262,7 +263,7 @@ class WargaTestCase(TestCase):
 
     def test_warga_moved_out(self):
         # Create warga who moved out
-        moved_warga = Warga.objects.create(
+        Warga.objects.create(
             nama_lengkap="Test Moved",
             nik="moved_test",
             kompleks=self.existing_kompleks,
@@ -328,7 +329,7 @@ class WargaTestCase(TestCase):
         UserPermission.objects.create(user=self.user, permission_group=group)
 
         # Create KK warga
-        kk_warga = Warga.objects.create(
+        Warga.objects.create(
             nama_lengkap="Kepala Keluarga Test",
             nik="nik_kk_test",
             no_kk="12345",
@@ -337,7 +338,7 @@ class WargaTestCase(TestCase):
             status_tinggal="TETAP",
         )
         # Create non-KK warga
-        non_kk_warga = Warga.objects.create(
+        Warga.objects.create(
             nama_lengkap="Anggota Test",
             nik="nik_anggota_test",
             no_kk="12345",
@@ -584,3 +585,70 @@ class WargaTestCase(TestCase):
 
         warga = Warga.objects.get(nik="999888777")
         self.assertTrue(warga.ktp_image_path.name.startswith("uploads/ktp"))
+
+    def test_archive_and_filtering(self):
+        # Create user permission so user can list
+        from ..models import UserPermission, WargaPermissionGroup
+
+        group, _ = WargaPermissionGroup.objects.get_or_create(group_name="all")
+        UserPermission.objects.get_or_create(user=self.user, permission_group=group)
+
+        # 1. Create different statuses
+        Warga.objects.create(
+            nama_lengkap="Warga Tetap",
+            nik="nik_tetap",
+            kompleks=self.existing_kompleks,
+            status_tinggal="TETAP",
+            agama="ISLAM",
+            jenis_kelamin="LAKI-LAKI",
+        )
+        warga_pindah = Warga.objects.create(
+            nama_lengkap="Warga Pindah",
+            nik="nik_pindah",
+            kompleks=self.existing_kompleks,
+            status_tinggal="PINDAH",
+            agama="ISLAM",
+            jenis_kelamin="LAKI-LAKI",
+        )
+        Warga.objects.create(
+            nama_lengkap="Warga Meninggal",
+            nik="nik_meninggal",
+            kompleks=self.existing_kompleks,
+            status_tinggal="MENINGGAL",
+            agama="ISLAM",
+            jenis_kelamin="LAKI-LAKI",
+        )
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # 2. Verify listWargaView filters out PINDAH and MENINGGAL
+        response = client.get(reverse("kependudukan:listWargaView"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Warga Tetap")
+        self.assertNotContains(response, "Warga Pindah")
+        self.assertNotContains(response, "Warga Meninggal")
+
+        # 3. Verify arsipWargaView shows PINDAH and MENINGGAL, excludes TETAP
+        response_arsip = client.get(reverse("kependudukan:arsipWargaView"))
+        self.assertEqual(response_arsip.status_code, 200)
+        self.assertNotContains(response_arsip, "Warga Tetap")
+        self.assertContains(response_arsip, "Warga Pindah")
+        self.assertContains(response_arsip, "Warga Meninggal")
+
+        # 4. Verify search on arsipWargaView
+        response_search = client.get(
+            reverse("kependudukan:arsipWargaView"), {"search": "Meninggal"}
+        )
+        self.assertEqual(response_search.status_code, 200)
+        self.assertContains(response_search, "Warga Meninggal")
+        self.assertNotContains(response_search, "Warga Pindah")
+
+        # 5. Verify delete redirects back to archive when next=arsip
+        delete_url = (
+            reverse("kependudukan:deleteformWarga", kwargs={"idwarga": warga_pindah.id})
+            + "?next=arsip"
+        )
+        response_delete = client.post(delete_url, data={"idwarga": warga_pindah.id})
+        self.assertEqual(response_delete.status_code, 302)
+        self.assertIn(reverse("kependudukan:arsipWargaView"), response_delete.url)

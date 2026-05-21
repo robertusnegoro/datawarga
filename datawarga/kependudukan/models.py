@@ -27,6 +27,7 @@ class Warga(models.Model):
         ("KOST", "KOST"),
         ("TETAP", "TETAP"),
         ("PINDAH", "PINDAH"),
+        ("MENINGGAL", "MENINGGAL"),
         ("LAINNYA", "LAINNYA"),
     )
     PEKERJAAN = (

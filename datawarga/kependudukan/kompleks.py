@@ -218,8 +218,8 @@ def detail_kompleks(request, idkompleks):
 
 @login_required
 def warga_rumah(request, idkompleks):
-    data_warga = Warga.objects.filter(kompleks=idkompleks).filter(
-        ~Q(status_tinggal="PINDAH")
+    data_warga = Warga.objects.filter(kompleks=idkompleks).exclude(
+        status_tinggal__in=["PINDAH", "MENINGGAL"]
     )
     total_warga = len(data_warga)
     data = serializers.serialize("json", data_warga)

@@ -118,6 +118,11 @@
                                     <i class="bi bi-people"></i> Daftar Kepala Keluarga
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'arsipWargaView' %}active{% endif %}" href="{% url 'kependudukan:arsipWargaView' %}">
+                                    <i class="bi bi-archive-fill"></i> Arsip Data Warga
+                                </a>
+                            </li>
                         </ul>
                         
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">

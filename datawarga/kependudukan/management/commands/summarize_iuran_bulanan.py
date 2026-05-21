@@ -19,7 +19,7 @@ def summarize(year, blok):
         summary_data = create_if_not_exists(year, rumah)
         for bayar in iuran:
             print(bayar.periode_bulan)
-            update_summary = summary_data.update_month_field(bayar.periode_bulan, True)
+            summary_data.update_month_field(bayar.periode_bulan, True)
 
         print("--------------------")
 
@@ -44,4 +44,4 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        kompleks = summarize(options["year"], options["blok"])
+        summarize(options["year"], options["blok"])

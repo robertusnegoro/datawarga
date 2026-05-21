@@ -40,7 +40,12 @@ class BaseAIProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def chat_completion(self, messages: list[dict], response_format: dict = None, correlation_id: str = None) -> str:
+    def chat_completion(
+        self,
+        messages: list[dict],
+        response_format: dict = None,
+        correlation_id: str = None,
+    ) -> str:
         """
         Sends conversation history to the AI model and returns the response string.
         """
@@ -119,7 +124,12 @@ class OllamaProvider(BaseAIProvider):
         # Ollama runs locally and has unlimited quota
         return None
 
-    def chat_completion(self, messages: list[dict], response_format: dict = None, correlation_id: str = None) -> str:
+    def chat_completion(
+        self,
+        messages: list[dict],
+        response_format: dict = None,
+        correlation_id: str = None,
+    ) -> str:
         corr_id = correlation_id or str(uuid.uuid4())
         url = f"{settings.OLLAMA_API_URL}/api/chat"
         model = settings.OLLAMA_MODEL
@@ -321,7 +331,12 @@ class OpenRouterProvider(BaseAIProvider):
             )
             return None
 
-    def chat_completion(self, messages: list[dict], response_format: dict = None, correlation_id: str = None) -> str:
+    def chat_completion(
+        self,
+        messages: list[dict],
+        response_format: dict = None,
+        correlation_id: str = None,
+    ) -> str:
         corr_id = correlation_id or str(uuid.uuid4())
         url = "https://openrouter.ai/api/v1/chat/completions"
         model = settings.OPENROUTER_MODEL
