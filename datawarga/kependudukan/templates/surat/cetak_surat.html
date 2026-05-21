@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cetak {{ surat.get_jenis_surat_display }}</title>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            line-height: 1.5;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+        .page {
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 2cm;
+            margin: 1cm auto;
+            border: 1px solid #D3D3D3;
+            border-radius: 5px;
+            background: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+        .kop-surat {
+            text-align: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .kop-surat h2, .kop-surat h3, .kop-surat p {
+            margin: 0;
+        }
+        .kop-surat h2 {
+            font-size: 18pt;
+            text-transform: uppercase;
+        }
+        .kop-surat h3 {
+            font-size: 16pt;
+        }
+        .kop-surat p {
+            font-size: 12pt;
+        }
+        .judul-surat {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .judul-surat h4 {
+            margin: 0;
+            text-decoration: underline;
+            font-size: 14pt;
+            text-transform: uppercase;
+        }
+        .judul-surat p {
+            margin: 0;
+            font-size: 12pt;
+        }
+        .isi-surat {
+            font-size: 12pt;
+            text-align: justify;
+        }
+        .tabel-identitas {
+            margin: 10px 0 10px 30px;
+        }
+        .tabel-identitas td {
+            vertical-align: top;
+            padding-bottom: 5px;
+        }
+        .tanda-tangan {
+            margin-top: 50px;
+            float: right;
+            text-align: center;
+            width: 250px;
+        }
+        .tanda-tangan p {
+            margin: 0;
+        }
+        .tanda-tangan .nama-ttd {
+            margin-top: 80px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .clear {
+            clear: both;
+        }
+        
+        .no-print {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .btn {
+            display: inline-block;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.25rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-success {
+            color: #fff;
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        @media print {
+            body, .page {
+                margin: 0;
+                border: initial;
+                border-radius: initial;
+                width: initial;
+                min-height: initial;
+                box-shadow: initial;
+                background: initial;
+                page-break-after: always;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="btn btn-primary" onclick="window.print()">Cetak (Print)</button>
+        <a href="{% url 'kependudukan:cetak_surat_pdf' surat.id %}" class="btn btn-success">Download PDF</a>
+        <a href="{% url 'kependudukan:detailWarga' warga.id %}" class="btn btn-primary" style="background-color: #6c757d; border-color: #6c757d;">Kembali</a>
+    </div>
+
+    <div class="page">
+        <div class="kop-surat">
+            <h2>PENGURUS RUKUN TETANGGA {{ rt }} RUKUN WARGA {{ rw }}</h2>
+            <h3>KELURAHAN {{ kelurahan }} KECAMATAN {{ kecamatan }}</h3>
+            <p>KOTA {{ kota }} PROVINSI {{ provinsi }}</p>
+            <p>Sekretariat: {{ alamat }}</p>
+        </div>
+
+        <div class="judul-surat">
+            <h4>{{ surat.get_jenis_surat_display }}</h4>
+            <p>Nomor: {{ surat.nomor_surat|default:"..../RT..../RW..../..../...." }}</p>
+        </div>
+
+        <div class="isi-surat">
+            <p>Yang bertanda tangan di bawah ini, Ketua RT {{ rt }} RW {{ rw }} Kelurahan {{ kelurahan }} Kecamatan {{ kecamatan }}, menerangkan dengan sebenarnya bahwa:</p>
+            
+            <table class="tabel-identitas">
+                <tr>
+                    <td style="width: 150px;">Nama Lengkap</td>
+                    <td style="width: 10px;">:</td>
+                    <td><b>{{ warga.nama_lengkap }}</b></td>
+                </tr>
+                <tr>
+                    <td>Jenis Kelamin</td>
+                    <td>:</td>
+                    <td>{{ warga.jenis_kelamin }}</td>
+                </tr>
+                <tr>
+                    <td>Tempat, Tgl Lahir</td>
+                    <td>:</td>
+                    <td>{{ warga.tempat_lahir|default:"-" }}, {{ warga_tanggal_lahir_indo }}</td>
+                </tr>
+                <tr>
+                    <td>Kewarganegaraan</td>
+                    <td>:</td>
+                    <td>{{ warga.kewarganegaraan }}</td>
+                </tr>
+                <tr>
+                    <td>Agama</td>
+                    <td>:</td>
+                    <td>{{ warga.agama }}</td>
+                </tr>
+                <tr>
+                    <td>Pekerjaan</td>
+                    <td>:</td>
+                    <td>{{ warga.pekerjaan }}</td>
+                </tr>
+                <tr>
+                    <td>No. KTP / NIK</td>
+                    <td>:</td>
+                    <td>{{ warga.nik }}</td>
+                </tr>
+                <tr>
+                    <td>Alamat</td>
+                    <td>:</td>
+                    <td>
+                        {% if kompleks %}
+                            Blok {{ kompleks.blok }} No. {{ kompleks.nomor }}, RT {{ rt }} RW {{ rw }}
+                        {% else %}
+                            {{ warga.alamat_ktp|default:"-" }}
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <p>Orang tersebut di atas adalah benar-benar warga RT {{ rt }} RW {{ rw }} Kelurahan {{ kelurahan }}, yang menetap di alamat tersebut di atas.</p>
+            
+            <p>Surat keterangan ini dibuat untuk keperluan: <b>{{ surat.keperluan }}</b></p>
+            
+            <p>Demikian surat keterangan ini kami buat dengan sebenarnya, untuk dipergunakan sebagaimana mestinya.</p>
+        </div>
+
+        <div class="tanda-tangan">
+            <p>{{ kota|title }}, {{ surat_tanggal_surat_indo }}</p>
+            <p>{{ penandatangan.jabatan|default:"Ketua RT" }}</p>
+            <p class="nama-ttd">{{ penandatangan.nama|default:"........................" }}</p>
+        </div>
+        
+        <div class="clear"></div>
+    </div>
+</body>
+</html>

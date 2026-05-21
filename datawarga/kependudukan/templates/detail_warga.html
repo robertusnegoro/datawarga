@@ -13,6 +13,9 @@
         <i class="bi bi-arrow-left"></i> Kembali ke Daftar
     </a>
     <div class="d-flex gap-2">
+        <a href="{% url 'kependudukan:form_surat' warga.id %}" class="btn btn-success btn-sm px-3">
+            <i class="bi bi-file-earmark-text"></i> Buat Surat
+        </a>
         <a href="{% url 'kependudukan:pdfDetailWarga' warga.id %}" target="_blank" class="btn btn-info btn-sm px-3 text-white">
             <i class="bi bi-file-earmark-pdf-fill"></i> Cetak PDF
         </a>
@@ -30,7 +33,7 @@
             <div class="mx-auto mb-3 position-relative" style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; border: 4px solid #f1f3f4; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
                 <img src="{% if warga.foto_path %}{{ MEDIA_URL }}{{ warga.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" 
                      alt="{{ warga.nama_lengkap }}" 
-                     class="w-100 h-100" 
+                     class="w-100 h-100 enlargeable-image" 
                      style="object-fit: cover;">
             </div>
             
@@ -178,7 +181,7 @@
                 {% if warga.ktp_image_path %}
                 <div class="d-inline-block position-relative">
                     <a href="{{ MEDIA_URL }}{{ warga.ktp_image_path }}" target="_blank">
-                        <img src="{{ MEDIA_URL }}{{ warga.ktp_image_path }}" class="img-fluid rounded border shadow-sm" style="max-height: 250px;" alt="KTP Warga">
+                        <img src="{{ MEDIA_URL }}{{ warga.ktp_image_path }}" class="img-fluid rounded border shadow-sm enlargeable-image" style="max-height: 250px;" alt="KTP Warga">
                     </a>
                     <span class="d-block text-muted small mt-2"><i class="bi bi-info-circle"></i> Klik gambar untuk melihat ukuran penuh</span>
                 </div>
@@ -187,6 +190,54 @@
                     <i class="bi bi-exclamation-circle me-1"></i> Warga belum mengunggah dokumen KTP.
                 </div>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Document Generator History Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-envelope-paper text-primary me-2"></i> Riwayat Pembuatan Surat</h5>
+                <a href="{% url 'kependudukan:form_surat' warga.id %}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                    <i class="bi bi-plus-circle"></i> Buat Surat
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="table-light">
+                                <th class="ps-4">Tanggal</th>
+                                <th>Jenis Surat</th>
+                                <th>Keperluan</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for surat in warga.surat_set.all %}
+                            <tr>
+                                <td class="ps-4 text-muted">{{ surat.tanggal_surat_indo }}</td>
+                                <td><span class="fw-semibold">{{ surat.get_jenis_surat_display }}</span></td>
+                                <td>{{ surat.keperluan|truncatechars:30 }}</td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'kependudukan:cetak_surat' surat.id %}" class="btn btn-outline-primary btn-sm py-1 px-2" target="_blank" title="Cetak HTML">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                    <a href="{% url 'kependudukan:cetak_surat_pdf' surat.id %}" class="btn btn-outline-danger btn-sm py-1 px-2" title="Cetak PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="bi bi-file-earmark-x fs-3 d-block mb-2"></i>
+                                    Belum ada riwayat pembuatan surat.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

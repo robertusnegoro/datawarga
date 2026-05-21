@@ -35,51 +35,53 @@
 
     <div class="d-flex flex-column gap-3">
         {% for w in anggota %}
-        <div class="card border border-light-subtle shadow-sm p-3 position-relative" style="border-radius: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
-            <div class="d-flex align-items-center gap-3">
-                <!-- Avatar -->
-                <div class="flex-shrink-0" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; border: 2px solid #e2e8f0; background-color: #f8fafc;">
-                    <img src="{% if w.foto_path %}{{ MEDIA_URL }}{{ w.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" alt="{{ w.nama_lengkap|upper }}" class="w-100 h-100" style="object-fit: cover;">
-                </div>
-                
-                <!-- Information -->
-                <div class="flex-grow-1 min-w-0">
-                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                        <h6 class="fw-bold text-dark mb-0 text-truncate" style="max-width: 220px;">{{ w.nama_lengkap|upper }}</h6>
-                        
-                        <!-- Badge Mapping -->
-                        {% if w.status_keluarga == "SUAMI" %}
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Suami</span>
-                        {% elif w.status_keluarga == "ISTRI" %}
-                        <span class="badge border rounded-pill small px-2 py-1" style="font-size: 0.72rem; background-color: #fbcfe8; color: #be185d; border-color: #fbcfe8;">Istri</span>
-                        {% elif w.status_keluarga == "ANAK" %}
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Anak</span>
-                        {% elif w.status_keluarga == "ORANG TUA" %}
-                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Orang Tua</span>
-                        {% elif w.status_keluarga == "SAUDARA" %}
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Saudara</span>
-                        {% else %}
-                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Lain-lain</span>
-                        {% endif %}
-
-                        {% if w.kepala_keluarga %}
-                        <span class="badge bg-danger text-white rounded-pill px-2 py-1" style="font-size: 0.65rem;"><i class="bi bi-star-fill"></i> Kepala Keluarga</span>
-                        {% endif %}
+        <div class="card border border-light-subtle shadow-sm p-3" style="border-radius: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-start gap-3 flex-grow-1 min-w-0 w-100">
+                    <!-- Avatar -->
+                    <div class="flex-shrink-0" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; border: 2px solid #e2e8f0; background-color: #f8fafc;">
+                        <img src="{% if w.foto_path %}{{ MEDIA_URL }}{{ w.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" alt="{{ w.nama_lengkap|upper }}" class="w-100 h-100 enlargeable-image" style="object-fit: cover;">
                     </div>
                     
-                    <p class="mb-0 text-muted small"><i class="bi bi-card-text me-1"></i> NIK: <span class="text-dark">{{ w.nik }}</span></p>
-                    <p class="mb-0 text-muted small"><i class="bi bi-briefcase me-1"></i> Pekerjaan: <span class="text-dark">{{ w.pekerjaan | title }}</span></p>
+                    <!-- Information -->
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h6 class="fw-bold text-dark mb-0 text-break">{{ w.nama_lengkap|upper }}</h6>
+                            
+                            <!-- Badge Mapping -->
+                            {% if w.status_keluarga == "SUAMI" %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Suami</span>
+                            {% elif w.status_keluarga == "ISTRI" %}
+                            <span class="badge border rounded-pill small px-2 py-1" style="font-size: 0.72rem; background-color: #fbcfe8; color: #be185d; border-color: #fbcfe8;">Istri</span>
+                            {% elif w.status_keluarga == "ANAK" %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Anak</span>
+                            {% elif w.status_keluarga == "ORANG TUA" %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Orang Tua</span>
+                            {% elif w.status_keluarga == "SAUDARA" %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Saudara</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill small px-2 py-1" style="font-size: 0.72rem;">Lain-lain</span>
+                            {% endif %}
+
+                            {% if w.kepala_keluarga %}
+                            <span class="badge bg-danger text-white rounded-pill px-2 py-1" style="font-size: 0.65rem;"><i class="bi bi-star-fill"></i> Kepala Keluarga</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="mb-0 text-muted small"><i class="bi bi-card-text me-1"></i> NIK: <span class="text-dark">{{ w.nik }}</span></p>
+                        <p class="mb-0 text-muted small"><i class="bi bi-briefcase me-1"></i> Pekerjaan: <span class="text-dark">{{ w.pekerjaan | title }}</span></p>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Quick Action Links -->
-            <div class="position-absolute top-0 end-0 mt-2 me-2 d-flex gap-1">
-                <a href="{% url 'kependudukan:detailWarga' w.id %}" class="btn btn-link text-info p-1 shadow-none" title="Lihat Profil">
-                    <i class="bi bi-eye fs-5"></i>
-                </a>
-                <a href="{% url 'kependudukan:formWarga' w.id %}" class="btn btn-link text-primary p-1 shadow-none" title="Ubah Data Warga">
-                    <i class="bi bi-pencil-square fs-5"></i>
-                </a>
+                
+                <!-- Quick Action Links -->
+                <div class="d-flex gap-2 flex-shrink-0 align-self-end align-self-md-center mt-2 mt-md-0">
+                    <a href="{% url 'kependudukan:detailWarga' w.id %}" class="btn btn-outline-info btn-sm px-3 shadow-sm d-flex align-items-center gap-2" style="border-radius: 8px;" title="Lihat Profil">
+                        <i class="bi bi-eye"></i> <span class="d-md-none d-lg-inline">Detail</span>
+                    </a>
+                    <a href="{% url 'kependudukan:formWarga' w.id %}" class="btn btn-outline-primary btn-sm px-3 shadow-sm d-flex align-items-center gap-2" style="border-radius: 8px;" title="Ubah Data Warga">
+                        <i class="bi bi-pencil-square"></i> <span class="d-md-none d-lg-inline">Ubah</span>
+                    </a>
+                </div>
             </div>
         </div>
         {% endfor %}

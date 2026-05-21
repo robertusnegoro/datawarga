@@ -18,3 +18,27 @@ const indonesian_months = [
     "November",
     "Desember",
 ];
+
+// Image Lightbox Viewer
+$(document).ready(function() {
+    $(document).on('click', '.enlargeable-image', function(e) {
+        e.preventDefault();
+        
+        var src = "";
+        if ($(this).is('img')) {
+            src = $(this).attr('src');
+            var parentAnchor = $(this).closest('a');
+            if (parentAnchor.length > 0 && parentAnchor.attr('href') && parentAnchor.attr('href') !== '#') {
+                src = parentAnchor.attr('href');
+            }
+        } else if ($(this).is('a')) {
+            src = $(this).attr('href');
+        }
+        
+        if (src) {
+            $('#lightboxImage').attr('src', src);
+            var myModal = new bootstrap.Modal(document.getElementById('imageLightbox'));
+            myModal.show();
+        }
+    });
+});

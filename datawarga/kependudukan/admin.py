@@ -7,6 +7,8 @@ from .models import (
     TransaksiIuranBulanan,
     WargaPermissionGroup,
     UserPermission,
+    Penandatangan,
+    Surat,
 )
 
 
@@ -26,6 +28,8 @@ admin.site.register(Warga)
 admin.site.register(Kompleks)
 admin.site.register(TransaksiIuranBulanan)
 admin.site.register(WargaPermissionGroup)
+admin.site.register(Penandatangan)
+admin.site.register(Surat)
 
 # reregister the user
 admin.site.unregister(User)

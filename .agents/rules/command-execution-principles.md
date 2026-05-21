@@ -40,6 +40,13 @@ description: When executing external commands, shell scripts, or system processe
 - Set timeouts for long-running commands  
 - Handle "command not found" gracefully
 
+### Environment
+
+**Python Virtual Environment:**
+
+- Always use the virtual environment's Python executable (e.g., `.venv/bin/python` or `.venv/bin/pip`) instead of the global `python` or `pip` command when executing scripts, `manage.py`, or installing packages.
+- Do not assume the virtual environment is already activated in the terminal session. Use the explicit path to the `.venv/bin` executable to guarantee the correct environment is used.
+
 ### Command Execution Checklist
 
 - [ ] Is user input sanitized/validated before use in commands?

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Daftar Surat{% endblock %}
+{% block pagetitle %}<i class="bi bi-file-text text-primary"></i> Daftar Surat Warga{% endblock %}
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Histori Pembuatan Surat</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Jenis Surat</th>
+                            <th>Nomor Surat</th>
+                            <th>Warga</th>
+                            <th>Keperluan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for surat in surat_list %}
+                        <tr>
+                            <td>{{ surat.tanggal_surat_indo }}</td>
+                            <td>{{ surat.get_jenis_surat_display }}</td>
+                            <td>{{ surat.nomor_surat|default:"-" }}</td>
+                            <td>
+                                <a href="{% url 'kependudukan:detailWarga' surat.warga.id %}">{{ surat.warga.nama_lengkap }}</a>
+                            </td>
+                            <td>{{ surat.keperluan|truncatechars:50 }}</td>
+                            <td>
+                                <a href="{% url 'kependudukan:cetak_surat' surat.id %}" class="btn btn-sm btn-primary" target="_blank">
+                                    <i class="bi bi-printer"></i> Cetak
+                                </a>
+                                <a href="{% url 'kependudukan:cetak_surat_pdf' surat.id %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Belum ada surat yang dibuat.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

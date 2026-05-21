@@ -1,5 +1,5 @@
 from django.urls import path, re_path, include
-from . import utility, kompleks, warga, iuran, iuran_public, api_view
+from . import utility, kompleks, warga, iuran, iuran_public, api_view, views_surat
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from rest_framework.permissions import AllowAny
@@ -190,6 +190,18 @@ urlpatterns = [
     ),
     path("warga/iuran-yearly", iuran.iuranYearly, name="iuranYearly"),
     path("warga/scan-ktp", warga.scan_ktp_ajax, name="scan_ktp_ajax"),
+    path(
+        "warga/detail/<int:idwarga>/buat-surat",
+        views_surat.form_surat,
+        name="form_surat",
+    ),
+    path("surat/cetak/<int:idsurat>", views_surat.cetak_surat, name="cetak_surat"),
+    path(
+        "surat/cetak/<int:idsurat>/pdf",
+        views_surat.cetak_surat_pdf,
+        name="cetak_surat_pdf",
+    ),
+    path("surat/list", views_surat.list_surat, name="list_surat"),
     path("api/", include(router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

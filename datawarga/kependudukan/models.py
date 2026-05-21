@@ -235,3 +235,41 @@ class UserPermission(models.Model):
     permission_group = models.ForeignKey(
         "WargaPermissionGroup", on_delete=models.SET_NULL, null=True
     )
+
+
+class Penandatangan(models.Model):
+    nama = models.CharField(max_length=150)
+    jabatan = models.CharField(max_length=100)
+    aktif = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.nama} ({self.jabatan})"
+
+
+class Surat(models.Model):
+    JENIS_SURAT = (
+        ("PENGANTAR_RT", "Surat Pengantar RT"),
+        ("KETERANGAN_DOMISILI", "Surat Keterangan Domisili"),
+        ("KETERANGAN_TIDAK_MAMPU", "Surat Keterangan Tidak Mampu"),
+    )
+    warga = models.ForeignKey(Warga, on_delete=models.CASCADE)
+    jenis_surat = models.CharField(max_length=50, choices=JENIS_SURAT)
+    nomor_surat = models.CharField(max_length=100, blank=True, null=True)
+    keperluan = models.TextField()
+    tanggal_surat = models.DateField(auto_now_add=True)
+    penandatangan = models.ForeignKey(
+        Penandatangan, on_delete=models.SET_NULL, null=True
+    )
+
+    def __str__(self):
+        return f"{self.jenis_surat} - {self.warga.nama_lengkap}"
+        
+    @property
+    def tanggal_surat_indo(self):
+        if not self.tanggal_surat:
+            return "-"
+        indonesian_months = (
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        )
+        return f"{self.tanggal_surat.day} {indonesian_months[self.tanggal_surat.month - 1]} {self.tanggal_surat.year}"

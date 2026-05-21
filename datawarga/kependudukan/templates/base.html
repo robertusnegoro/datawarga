@@ -180,6 +180,31 @@
             </div>
         </div>
         
+        <style>
+            .enlargeable-image {
+                cursor: pointer;
+                transition: opacity 0.2s;
+            }
+            .enlargeable-image:hover {
+                opacity: 0.85;
+            }
+        </style>
+
+        <!-- Global Image Lightbox Modal -->
+        <div id="imageLightbox" class="modal fade" tabindex="-1" aria-hidden="true" style="background-color: rgba(0,0,0,0.9);">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content bg-transparent border-0">
+                    <div class="modal-body text-center p-0 position-relative">
+                        <!-- Highly visible close button -->
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2 m-md-3" style="background-color: rgba(0,0,0,0.5); padding: 12px; border-radius: 50%; z-index: 1055; box-shadow: 0 2px 5px rgba(0,0,0,0.5);" data-bs-dismiss="modal" aria-label="Close"></button>
+                        
+                        <!-- Image is clickable to close -->
+                        <img id="lightboxImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 90vh; object-fit: contain; cursor: zoom-out;" alt="Preview" data-bs-dismiss="modal">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src='{% static "dashboard/js/bootstrap.bundle.min.js" %}' crossorigin="anonymous"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>

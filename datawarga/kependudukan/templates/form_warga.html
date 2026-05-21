@@ -164,7 +164,7 @@
                                 <label class="form-label text-muted d-block mb-2">KTP Terunggah saat ini:</label>
                                 <div class="text-center p-3 bg-light rounded border">
                                     <a href="/media/{{ datawarga.ktp_image_path }}" target="_blank">
-                                        <img src="/media/{{ datawarga.ktp_image_path }}" class="img-fluid rounded border shadow-sm" style="max-height: 200px;" alt="KTP Warga">
+                                        <img src="/media/{{ datawarga.ktp_image_path }}" class="img-fluid rounded border shadow-sm enlargeable-image" style="max-height: 200px;" alt="KTP Warga">
                                     </a>
                                     <span class="d-block text-muted small mt-2"><i class="bi bi-info-circle"></i> Klik gambar untuk melihat ukuran penuh</span>
                                 </div>
@@ -323,7 +323,7 @@
                             /media/{{ datawarga.foto_path }}
                         {% else %}
                             {% static 'no-photo.png' %}
-                        {% endif %}" alt="avatar" class="profile-avatar">
+                        {% endif %}" alt="avatar" class="profile-avatar enlargeable-image">
                 </div>
                 <h4 class="h5 font-weight-bold mb-1" id="preview-name">{% if datawarga.nama_lengkap %}{{ datawarga.nama_lengkap|upper }}{% else %}Penduduk Baru{% endif %}</h4>
                 <p class="text-muted small mb-0" id="preview-kompleks">
