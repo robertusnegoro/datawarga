@@ -64,7 +64,7 @@
                 <tbody>
                     {% for w in page_obj %}
                     <tr>
-                        <td><span class="fw-bold text-dark">{{ w.nama_lengkap }}</span></td>
+                        <td><span class="fw-bold text-dark">{{ w.nama_lengkap|upper }}</span></td>
                         <td>
                             <div class="small">
                                 <div>NIK: <code class="text-dark">{{ w.nik }}</code></div>

@@ -325,7 +325,7 @@
                             {% static 'no-photo.png' %}
                         {% endif %}" alt="avatar" class="profile-avatar">
                 </div>
-                <h4 class="h5 font-weight-bold mb-1" id="preview-name">{% if datawarga.nama_lengkap %}{{ datawarga.nama_lengkap }}{% else %}Penduduk Baru{% endif %}</h4>
+                <h4 class="h5 font-weight-bold mb-1" id="preview-name">{% if datawarga.nama_lengkap %}{{ datawarga.nama_lengkap|upper }}{% else %}Penduduk Baru{% endif %}</h4>
                 <p class="text-muted small mb-0" id="preview-kompleks">
                     {% if datawarga.kompleks %}
                         Rumah: {{ datawarga.kompleks }}
@@ -370,7 +370,7 @@
         const previewName = document.getElementById('preview-name');
         if (nameInput && previewName) {
             nameInput.addEventListener('input', function(e) {
-                previewName.textContent = e.target.value.trim() || 'Penduduk Baru';
+                previewName.textContent = e.target.value.trim() ? e.target.value.trim().toUpperCase() : 'Penduduk Baru';
             });
         }
 

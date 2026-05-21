@@ -431,7 +431,7 @@ def pdfWargaReport(request):
             kompleks = record.kompleks
             data.append(
                 [
-                    record.nama_lengkap,
+                    record.nama_lengkap.upper(),
                     record.nik,
                     record.no_kk,
                     kompleks.blok if kompleks else "",

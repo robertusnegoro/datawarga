@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
-{% block title %}Profil {{ warga.nama_lengkap }}{% endblock %}
+{% block title %}Profil {{ warga.nama_lengkap|upper }}{% endblock %}
 {% block pagetitle %}
     <i class="bi bi-person-badge-fill text-primary"></i> Detail Profil Warga
 {% endblock %}
@@ -34,7 +34,7 @@
                      style="object-fit: cover;">
             </div>
             
-            <h4 class="fw-bold text-dark mb-1">{{ warga.nama_lengkap }}</h4>
+            <h4 class="fw-bold text-dark mb-1">{{ warga.nama_lengkap|upper }}</h4>
             <p class="text-muted small mb-3">NIK: <code class="text-secondary">{{ warga.nik }}</code></p>
             
             <!-- Badges -->
@@ -216,7 +216,7 @@
                                         <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid var(--gcp-border);">
                                             <img src="{% if warga.foto_path %}{{ MEDIA_URL }}{{ warga.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" class="w-100 h-100" style="object-fit: cover;">
                                         </div>
-                                        <span>{{ warga.nama_lengkap }} (Anda)</span>
+                                        <span>{{ warga.nama_lengkap|upper }} (Anda)</span>
                                     </div>
                                 </td>
                                 <td><code>{{ warga.nik }}</code></td>
@@ -236,7 +236,7 @@
                                         <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid var(--gcp-border);">
                                             <img src="{% if m.foto_path %}{{ MEDIA_URL }}{{ m.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" class="w-100 h-100" style="object-fit: cover;">
                                         </div>
-                                        <span>{{ m.nama_lengkap }}</span>
+                                        <span>{{ m.nama_lengkap|upper }}</span>
                                     </div>
                                 </td>
                                 <td><code>{{ m.nik }}</code></td>

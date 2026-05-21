@@ -132,7 +132,7 @@
                                 <span class="fs-3">🎂</span>
                             </div>
                             <div class="flex-grow-1">
-                                <h6 class="mb-0 font-weight-bold text-dark">{{ warga.nama_lengkap }}</h6>
+                                <h6 class="mb-0 font-weight-bold text-dark">{{ warga.nama_lengkap|upper }}</h6>
                                 <p class="mb-0 text-muted small"><i class="bi bi-geo-alt"></i> {{ warga.kompleks }}</p>
                             </div>
                             {% if warga.tanggal_lahir %}

@@ -5,7 +5,7 @@
 {% load crispy_forms_tags %}  
 <form method="post" enctype="multipart/form-data" id="delete-warga-form" action="{% url 'kependudukan:deleteformWarga' idwarga %}{% if next %}?next={{ next }}{% endif %}">
     {% csrf_token %}
-    <p>Nama : {{ warga.nama_lengkap }}</p>
+    <p>Nama : {{ warga.nama_lengkap|upper }}</p>
     <p>NIK : {{ warga.nik }}</p>
     <p>No KK : {{ warga.no_kk }}</p>
     <p>Rumah : {{ warga.kompleks }}</p>

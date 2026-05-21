@@ -103,7 +103,7 @@
             tabel_warga += "<tr><td colspan=\"3\" class=\"text-center text-muted py-4\">Tidak ada warga tanpa rumah ditemukan</td></tr>";
         } else {
             $.each(data, function(key, value){
-                tabel_warga += "<tr><td class=\"ps-3\"><input class=\"form-check-input\" name=\"warga_ids[]\" type=\"checkbox\" value=\"" + value.pk + "\"></td><td class=\"font-weight-bold text-dark\">" + value.fields.nama_lengkap + "</td><td class=\"text-muted small pe-3\">" + value.fields.nik + "</td></tr>";
+                tabel_warga += "<tr><td class=\"ps-3\"><input class=\"form-check-input\" name=\"warga_ids[]\" type=\"checkbox\" value=\"" + value.pk + "\"></td><td class=\"font-weight-bold text-dark\">" + value.fields.nama_lengkap.toUpperCase() + "</td><td class=\"text-muted small pe-3\">" + value.fields.nik + "</td></tr>";
             });
         }
         tabel_warga += "</tbody></table></div>";

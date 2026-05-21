@@ -61,12 +61,12 @@
                 {% for w in page_obj %}
                 <tr class="kk-row" style="cursor: pointer; transition: all 0.2s ease;" 
                     data-idkompleks="{% if w.kompleks %}{{ w.kompleks.id }}{% else %}0{% endif %}"
-                    data-nama="{{ w.nama_lengkap }}"
+                    data-nama="{{ w.nama_lengkap|upper }}"
                     data-kk="{{ w.no_kk }}">
                     <td class="ps-4 py-3 fw-bold text-dark">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-person-fill text-primary opacity-75 fs-5"></i>
-                            {{ w.nama_lengkap }}
+                            {{ w.nama_lengkap|upper }}
                         </div>
                     </td>
                     <td class="py-3 text-secondary">{{ w.nik }}</td>
@@ -86,7 +86,7 @@
                     <td class="pe-4 py-3 text-end">
                         <button type="button" class="btn btn-outline-primary btn-sm px-3 lihat-anggota-btn"
                             data-idkompleks="{% if w.kompleks %}{{ w.kompleks.id }}{% else %}0{% endif %}"
-                            data-nama="{{ w.nama_lengkap }}"
+                            data-nama="{{ w.nama_lengkap|upper }}"
                             data-kk="{{ w.no_kk }}">
                             <i class="bi bi-people-fill me-1"></i> Anggota
                         </button>

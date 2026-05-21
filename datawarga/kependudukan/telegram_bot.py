@@ -142,7 +142,7 @@ async def search_warga(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Format response
         response = "Hasil pencarian:\n\n"
         for warga in warga_list[:5]:  # Limit to 5 results
-            response += f"Nama: {warga['nama_lengkap']}\n"
+            response += f"Nama: {warga['nama_lengkap'].upper()}\n"
             response += f"NIK: {warga['nik']}\n"
             if warga["kompleks"]:
                 response += f"Alamat: Blok {warga['kompleks']['blok']}/{warga['kompleks']['nomor']}\n"
@@ -230,7 +230,7 @@ async def search_rumah(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Format response
         response = f"Daftar Penghuni {search_term}:\n\n"
         for warga in warga_list:
-            response += f"Nama: {warga['nama_lengkap']}\n"
+            response += f"Nama: {warga['nama_lengkap'].upper()}\n"
             if warga.get("status_keluarga"):
                 response += f"Status: {warga['status_keluarga']}\n"
             if warga.get("kepala_keluarga"):

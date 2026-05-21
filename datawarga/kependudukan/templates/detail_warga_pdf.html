@@ -4,7 +4,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Profil Warga - {{ warga.nama_lengkap }}</title>
+    <title>Profil Warga - {{ warga.nama_lengkap|upper }}</title>
     <style>
         @page {
             size: A4 portrait;
@@ -240,7 +240,7 @@
     <table class="profile-section">
         <tr>
             <td class="profile-meta">
-                <h1 class="profile-name">{{ warga.nama_lengkap }}</h1>
+                <h1 class="profile-name">{{ warga.nama_lengkap|upper }}</h1>
                 <div class="profile-nik">NIK: <strong>{{ warga.nik }}</strong></div>
                 <div>
                     {% if warga.kepala_keluarga %}
@@ -378,14 +378,14 @@
             </thead>
             <tbody>
                 <tr class="current-row">
-                    <td>{{ warga.nama_lengkap }} (Subjek)</td>
+                    <td>{{ warga.nama_lengkap|upper }} (Subjek)</td>
                     <td>{{ warga.nik }}</td>
                     <td>{{ warga.status_keluarga }}</td>
                     <td>{{ warga.status_tinggal }}</td>
                 </tr>
                 {% for m in anggota_keluarga %}
                 <tr>
-                    <td>{{ m.nama_lengkap }}</td>
+                    <td>{{ m.nama_lengkap|upper }}</td>
                     <td>{{ m.nik }}</td>
                     <td>{{ m.status_keluarga }}</td>
                     <td>{{ m.status_tinggal }}</td>

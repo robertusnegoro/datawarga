@@ -67,7 +67,7 @@
                 {% for warga in data %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td>{{ warga.nama_lengkap }}</td>
+                    <td>{{ warga.nama_lengkap|upper }}</td>
                     <td>{{ warga.nik }}</td>
                     <td>{{ warga.no_kk }}</td>
                     <td>{{ warga.kompleks }}</td>

@@ -39,13 +39,13 @@
             <div class="d-flex align-items-center gap-3">
                 <!-- Avatar -->
                 <div class="flex-shrink-0" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; border: 2px solid #e2e8f0; background-color: #f8fafc;">
-                    <img src="{% if w.foto_path %}{{ MEDIA_URL }}{{ w.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" alt="{{ w.nama_lengkap }}" class="w-100 h-100" style="object-fit: cover;">
+                    <img src="{% if w.foto_path %}{{ MEDIA_URL }}{{ w.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}" alt="{{ w.nama_lengkap|upper }}" class="w-100 h-100" style="object-fit: cover;">
                 </div>
                 
                 <!-- Information -->
                 <div class="flex-grow-1 min-w-0">
                     <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                        <h6 class="fw-bold text-dark mb-0 text-truncate" style="max-width: 220px;">{{ w.nama_lengkap }}</h6>
+                        <h6 class="fw-bold text-dark mb-0 text-truncate" style="max-width: 220px;">{{ w.nama_lengkap|upper }}</h6>
                         
                         <!-- Badge Mapping -->
                         {% if w.status_keluarga == "SUAMI" %}

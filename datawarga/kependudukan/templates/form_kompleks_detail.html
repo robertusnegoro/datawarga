@@ -196,7 +196,7 @@
                 } else {
                     kepala_keluarga = "<a class=\"btn btn-outline-primary btn-sm\" href=\"/warga/set-kk/" + value.pk + "\"> <i class=\"bi bi-person-check-fill\"></i> Set KK </a>";
                 }
-                table += "<tr><td><code class=\"text-dark\">" + value.fields.nik + "</code></td><td><a href=\"/warga/form-warga/" + value.pk + "\" class=\"font-weight-bold text-primary\" style=\"text-decoration: none;\">" + value.fields.nama_lengkap + "</a></td><td>" + (value.fields.no_hp || "-") + "</td><td><span class=\"badge bg-secondary px-2 py-1\">" + value.fields.status_tinggal + "</span></td><td class=\"text-center\">"+ kepala_keluarga +"</td></tr>";
+                table += "<tr><td><code class=\"text-dark\">" + value.fields.nik + "</code></td><td><a href=\"/warga/form-warga/" + value.pk + "\" class=\"font-weight-bold text-primary\" style=\"text-decoration: none;\">" + value.fields.nama_lengkap.toUpperCase() + "</a></td><td>" + (value.fields.no_hp || "-") + "</td><td><span class=\"badge bg-secondary px-2 py-1\">" + value.fields.status_tinggal + "</span></td><td class=\"text-center\">"+ kepala_keluarga +"</td></tr>";
             });
             table += "</tbody></table>";
             $("#tabelwarga").html(table);
