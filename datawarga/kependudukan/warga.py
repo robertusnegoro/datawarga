@@ -1,5 +1,5 @@
 from .forms import WargaForm
-from .models import Warga, Kompleks, UserPermission
+from .models import Warga, Kompleks, UserPermission, Kendaraan
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -560,11 +560,14 @@ def detailWarga(request, idwarga):
             - ((today.month, today.day) < (birth.month, birth.day))
         )
 
+    kendaraan_list = Kendaraan.objects.filter(pemilik=warga)
+
     context = {
         "warga": warga,
         "anggota_keluarga": anggota_keluarga,
         "transaksi": transaksi,
         "umur": umur,
+        "kendaraan_list": kendaraan_list,
         "MEDIA_URL": settings.MEDIA_URL,
     }
     return render(request, "detail_warga.html", context)
@@ -615,12 +618,15 @@ def pdfDetailWarga(request, idwarga):
             - ((today.month, today.day) < (birth.month, birth.day))
         )
 
+    kendaraan_list = Kendaraan.objects.filter(pemilik=warga)
+
     # For PDF generation, we should pass standard config variables too
     context = {
         "warga": warga,
         "anggota_keluarga": anggota_keluarga,
         "transaksi": transaksi,
         "umur": umur,
+        "kendaraan_list": kendaraan_list,
         "MEDIA_URL": settings.MEDIA_URL,
         "rw": settings.RUKUNWARGA,
         "rt": warga.kompleks.rt if warga.kompleks else "-",

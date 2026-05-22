@@ -1,4 +1,4 @@
-from .models import Warga, Kompleks, TransaksiIuranBulanan
+from .models import Warga, Kompleks, TransaksiIuranBulanan, Kendaraan
 from django import forms
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
@@ -82,3 +82,9 @@ class BatchIuranBulananForm(forms.Form):
     total_bayar = forms.IntegerField(initial=settings.IURAN_BULANAN)
     keterangan = forms.CharField(max_length=255, required=False)
     bukti_bayar = forms.FileField(required=False)
+
+
+class KendaraanForm(forms.ModelForm):
+    class Meta:
+        model = Kendaraan
+        fields = "__all__"

@@ -1,5 +1,14 @@
 from django.urls import path, re_path, include
-from . import utility, kompleks, warga, iuran, iuran_public, api_view, views_surat
+from . import (
+    utility,
+    kompleks,
+    warga,
+    iuran,
+    iuran_public,
+    api_view,
+    views_surat,
+    views_kendaraan,
+)
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from rest_framework.permissions import AllowAny
@@ -51,6 +60,26 @@ urlpatterns = [
     ),
     path("warga/form-warga-simpan", warga.formWargaSimpan, name="formWargaSimpan"),
     path("warga/detail/<int:idwarga>", warga.detailWarga, name="detailWarga"),
+    path(
+        "warga/detail/<int:idwarga>/kendaraan/tambah",
+        views_kendaraan.form_kendaraan,
+        name="formKendaraan",
+    ),
+    path(
+        "warga/detail/<int:idwarga>/kendaraan/<int:idkendaraan>",
+        views_kendaraan.form_kendaraan,
+        name="formKendaraanEdit",
+    ),
+    path(
+        "warga/kendaraan/simpan",
+        views_kendaraan.form_kendaraan_save,
+        name="formKendaraanSave",
+    ),
+    path(
+        "warga/kendaraan/<int:idkendaraan>/hapus",
+        views_kendaraan.delete_kendaraan,
+        name="deleteKendaraan",
+    ),
     path("warga/detail/<int:idwarga>/pdf", warga.pdfDetailWarga, name="pdfDetailWarga"),
     path("warga/list-warga-view", warga.WargaListView.as_view(), name="listWargaView"),
     path(

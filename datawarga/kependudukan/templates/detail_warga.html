@@ -241,6 +241,56 @@
             </div>
         </div>
 
+        <!-- Kendaraan Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i> Kendaraan</h5>
+                <a href="{% url 'kependudukan:formKendaraan' warga.id %}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                    <i class="bi bi-plus-circle"></i> Tambah Kendaraan
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="table-light">
+                                <th class="ps-4">Plat Nomor</th>
+                                <th>Jenis</th>
+                                <th>Merk / Tipe</th>
+                                <th>Keterangan</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for kendaraan in kendaraan_list %}
+                            <tr>
+                                <td class="ps-4"><span class="fw-bold">{{ kendaraan.plat_nomor }}</span></td>
+                                <td>{{ kendaraan.jenis_kendaraan }}</td>
+                                <td>{{ kendaraan.merk|default:"-" }} {{ kendaraan.tipe|default:"" }}</td>
+                                <td><span class="text-muted small">{{ kendaraan.keterangan|default:"-" }}</span></td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'kependudukan:formKendaraanEdit' warga.id kendaraan.id %}" class="btn btn-outline-primary btn-sm py-1 px-2" title="Edit Kendaraan">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'kependudukan:deleteKendaraan' kendaraan.id %}" class="btn btn-outline-danger btn-sm py-1 px-2" title="Hapus Kendaraan">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-car-front fs-3 d-block mb-2"></i>
+                                    Belum ada data kendaraan.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Household Members Section -->
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
             <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Hapus Data Kendaraan{% endblock %}
+{% block pagetitle %}<i class="bi bi-trash text-danger"></i> Hapus Data Kendaraan{% endblock %}
+{% block content %}
+
+<div class="row mt-3">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm border-danger" style="border-radius: 16px;">
+            <div class="card-header bg-danger text-white border-0 py-3 px-4" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Konfirmasi Hapus</h5>
+            </div>
+            <div class="card-body p-4">
+                <p>Apakah Anda yakin ingin menghapus kendaraan ini?</p>
+                <div class="bg-light p-3 rounded mb-4">
+                    <p class="mb-1"><strong>Plat Nomor:</strong> {{ kendaraan.plat_nomor }}</p>
+                    <p class="mb-1"><strong>Jenis:</strong> {{ kendaraan.jenis_kendaraan }}</p>
+                    <p class="mb-1"><strong>Merk/Tipe:</strong> {{ kendaraan.merk|default:"-" }} {{ kendaraan.tipe|default:"" }}</p>
+                    <p class="mb-0"><strong>Pemilik:</strong> {{ kendaraan.pemilik.nama_lengkap|upper }}</p>
+                </div>
+
+                <form method="post" action="{% url 'kependudukan:deleteKendaraan' idkendaraan %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4" style="border-radius: 8px;">
+                        <i class="bi bi-trash"></i> Ya, Hapus Kendaraan
+                    </button>
+                    <a href="{% url 'kependudukan:detailWarga' warga_id %}" class="btn btn-outline-secondary px-4 ms-2" style="border-radius: 8px;">
+                        Batal
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

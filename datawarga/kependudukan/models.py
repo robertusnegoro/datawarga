@@ -263,13 +263,42 @@ class Surat(models.Model):
 
     def __str__(self):
         return f"{self.jenis_surat} - {self.warga.nama_lengkap}"
-        
+
     @property
     def tanggal_surat_indo(self):
         if not self.tanggal_surat:
             return "-"
         indonesian_months = (
-            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
         )
         return f"{self.tanggal_surat.day} {indonesian_months[self.tanggal_surat.month - 1]} {self.tanggal_surat.year}"
+
+
+class Kendaraan(models.Model):
+    JENIS_KENDARAAN = (
+        ("MOBIL", "MOBIL"),
+        ("MOTOR", "MOTOR"),
+        ("LAINNYA", "LAINNYA"),
+    )
+    jenis_kendaraan = models.CharField(
+        max_length=50, choices=JENIS_KENDARAAN, default="MOBIL"
+    )
+    merk = models.CharField(max_length=100, blank=True, null=True)
+    tipe = models.CharField(max_length=100, blank=True, null=True)
+    plat_nomor = models.CharField(max_length=20, unique=True)
+    pemilik = models.ForeignKey("Warga", on_delete=models.CASCADE)
+    keterangan = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.plat_nomor} - {self.merk} {self.tipe}"

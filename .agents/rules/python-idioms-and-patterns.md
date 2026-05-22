@@ -414,13 +414,16 @@ Follow **PEP 8** rigorously. No exceptions.
 
 All of the following **must pass with zero warnings/errors** before any commit. See `code-completion-mandate.md` for the full checklist.
 
-| Tool         | Purpose                           | Command                            |
-| ------------ | --------------------------------- | ---------------------------------- |
-| `ruff format`| Canonical formatting (fast)       | `ruff format .`                    |
-| `ruff check` | Lint (replaces flake8, isort, ...) | `ruff check . --fix`              |
-| `mypy`       | Static type checking              | `mypy src/ --strict`               |
-| `bandit`     | Security scanning                 | `bandit -r src/ -c pyproject.toml` |
-| `pip-audit`  | Dependency CVE scanning           | `pip-audit`                        |
+> **Virtual environment:** Always use explicit `.venv/bin/` paths — never bare `ruff`, `mypy`, etc. See `command-execution-principles.md` § Python Virtual Environment.
+
+| Tool         | Purpose                            | Command                                        |
+| ------------ | ---------------------------------- | ---------------------------------------------- |
+| `ruff format`| Canonical formatting (fast)        | `.venv/bin/ruff format .`                      |
+| `ruff check` | Lint (replaces flake8, isort, ...) | `.venv/bin/ruff check . --fix`                 |
+| `mypy`       | Static type checking               | `.venv/bin/mypy src/ --strict`                 |
+| `bandit`     | Security scanning                  | `.venv/bin/bandit -r src/ -c pyproject.toml`   |
+| `pip-audit`  | Dependency CVE scanning            | `.venv/bin/pip-audit`                          |
+| `pytest`     | Run tests                          | `.venv/bin/pytest`                             |
 
 Configure all tools in `pyproject.toml` — never use per-file pragma comments to disable checks without a `# NOQA:` reason comment.
 

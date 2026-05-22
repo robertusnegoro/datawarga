@@ -44,8 +44,38 @@ description: When executing external commands, shell scripts, or system processe
 
 **Python Virtual Environment:**
 
-- Always use the virtual environment's Python executable (e.g., `.venv/bin/python` or `.venv/bin/pip`) instead of the global `python` or `pip` command when executing scripts, `manage.py`, or installing packages.
-- Do not assume the virtual environment is already activated in the terminal session. Use the explicit path to the `.venv/bin` executable to guarantee the correct environment is used.
+The project uses a `.venv` virtual environment at the repository root. **All Python commands MUST use the venv explicitly.** Do not rely on the system `python` or assume the venv is already activated.
+
+**Activation (when running an interactive shell session):**
+
+```bash
+source .venv/bin/activate
+```
+
+**Preferred: explicit executable paths (no activation needed):**
+
+Use explicit `.venv/bin/` paths in all commands to guarantee the correct environment regardless of shell state:
+
+| Task | Command |
+| ---- | ------- |
+| Run Python scripts | `.venv/bin/python script.py` |
+| Django management | `.venv/bin/python datawarga/manage.py <command>` |
+| Run dev server | `.venv/bin/python datawarga/manage.py runserver` |
+| Run migrations | `.venv/bin/python datawarga/manage.py migrate` |
+| Install packages | `.venv/bin/pip install <package>` |
+| Run tests | `.venv/bin/pytest` |
+| Lint (ruff) | `.venv/bin/ruff check . --fix` |
+| Format (ruff) | `.venv/bin/ruff format .` |
+| Type check (mypy) | `.venv/bin/mypy src/ --strict` |
+| Security scan | `.venv/bin/bandit -r src/ -c pyproject.toml` |
+| Dependency audit | `.venv/bin/pip-audit` |
+
+**Rules:**
+
+- ❌ Never use bare `python`, `pip`, `pytest`, `ruff`, `mypy` — these may resolve to the wrong system-level interpreter or tool.
+- ✅ Always prefix with `.venv/bin/` (e.g., `.venv/bin/python`, `.venv/bin/pip`, `.venv/bin/pytest`).
+- ✅ If activating the venv in a shell script, use `source .venv/bin/activate` at the top of the script.
+- ✅ When in doubt, verify the active interpreter: `.venv/bin/python -c "import sys; print(sys.executable)"`
 
 ### Command Execution Checklist
 

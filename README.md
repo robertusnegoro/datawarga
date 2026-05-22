@@ -66,6 +66,33 @@ python manage.py runserver 18000
 
 Buka browser dan akses http://localhost:18000
 
+### 4. Konfigurasi Sistem via Django Admin
+
+Beberapa pengaturan sistem hanya dapat dikonfigurasi melalui halaman **Django Admin** (`/admin`). Untuk mengaksesnya, pastikan Anda telah membuat akun *superuser*:
+
+```bash
+python manage.py createsuperuser
+```
+
+Masuk ke `http://localhost:18000/admin` menggunakan akun tersebut. Berikut adalah konfigurasi penting yang perlu disiapkan:
+
+#### A. Warga Permission Group (Hak Akses Data)
+Sistem mendukung pembatasan akses data warga. Fitur ini digunakan untuk mengatur agar pengguna (user) tertentu hanya dapat mengelola data warga di wilayah/kompleks tertentu.
+1. Buka menu **Warga permission groups** dan buat grup baru (misal: "Pengurus RT 01").
+2. Buka menu **Users**, pilih user yang ingin dibatasi, lalu pada bagian paling bawah (inline `Permission Group`), tetapkan grup yang baru dibuat.
+3. Buka menu **Kompleks**, dan pada rumah/blok yang sesuai, setel `Permission group` ke grup yang sama agar hak akses saling terhubung.
+
+#### B. Penandatangan Surat
+Untuk menggunakan fitur pembuatan surat (Surat Pengantar, Keterangan Domisili, dll), Anda wajib mendaftarkan pejabat/pengurus yang berwenang menandatangani surat.
+1. Buka menu **Penandatangans**.
+2. Tambahkan data **Nama** dan **Jabatan** (misal: Ketua RT).
+3. Pastikan opsi **Aktif** tercentang agar nama tersebut bisa digunakan saat mencetak surat.
+
+#### C. Data Master Kompleks
+Data alamat, kluster, dan blok tempat tinggal warga sebaiknya didefinisikan terlebih dahulu untuk memastikan keabsahan data saat pencatatan warga baru.
+1. Buka menu **Kompleks**.
+2. Tambahkan data alamat rumah, RT/RW, cluster, blok, dan nomor rumah yang valid di lingkungan Anda.
+
 ## Docker
 
 Untuk menjalankan dengan Docker, **Google Sheets export** membutuhkan file JSON service account yang di-**mount** ke dalam container. `GOOGLE_CRED_PATH` harus mengacu ke **path di dalam container**, bukan path di host.
