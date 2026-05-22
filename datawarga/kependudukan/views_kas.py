@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.http import HttpResponse, HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.db.models import Sum, Q
@@ -28,7 +29,7 @@ def kas_access_required(view_func):
         perms = kas_permissions(request)
         if perms.get("is_kas_user"):
             return view_func(request, *args, **kwargs)
-        return HttpResponseForbidden(
+        raise PermissionDenied(
             "Anda tidak memiliki akses ke fitur Keuangan & Kas RT/RW."
         )
 

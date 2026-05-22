@@ -3,6 +3,7 @@ from .models import Warga, Kompleks, UserPermission, Kendaraan
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.core import serializers
 from django.db.models import Q
@@ -76,13 +77,13 @@ def formWargaSimpan(request):
         if form.is_valid():
             logger.info("Form warga is valid")
             warga = form.save()
-            base_url = reverse(
-                "kependudukan:detailWarga",
-                kwargs={"idwarga": warga.id},
+            messages.success(
+                request,
+                f"Data warga <strong>{warga.nama_lengkap}</strong> berhasil disimpan.",
             )
-            payload = urlencode({"message": "data saved!"})
-            url_redir = "{}?{}".format(base_url, payload)
-            return redirect(url_redir)
+            return redirect(
+                reverse("kependudukan:detailWarga", kwargs={"idwarga": warga.id})
+            )
         else:
             logger.info(form.errors)
             return HttpResponse("form is not valid %s" % (form.errors))
@@ -259,11 +260,11 @@ def deleteFormWarga(request, idwarga=0):
         base_url = reverse("kependudukan:listWargaView")
         if next_url == "arsip":
             base_url = reverse("kependudukan:arsipWargaView")
-        payload = urlencode(
-            {"message": "data %s was deleted!" % (warga_record.nama_lengkap)}
+        messages.success(
+            request,
+            f"Data warga <strong>{warga_record.nama_lengkap}</strong> berhasil dihapus.",
         )
-        url_redir = "{}?{}".format(base_url, payload)
-        return redirect(url_redir)
+        return redirect(base_url)
     else:
         return render(
             request=request,

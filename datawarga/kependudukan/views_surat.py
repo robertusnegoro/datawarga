@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.template.loader import render_to_string
 from django.conf import settings
 from weasyprint import HTML
@@ -39,6 +40,10 @@ def form_surat(request, idwarga):
             surat = form.save(commit=False)
             surat.warga = warga
             surat.save()
+            messages.success(
+                request,
+                f"Surat <strong>{surat.get_jenis_surat_display()}</strong> untuk <strong>{warga.nama_lengkap}</strong> berhasil dibuat.",
+            )
             return redirect(
                 reverse("kependudukan:cetak_surat", kwargs={"idsurat": surat.id})
             )
@@ -119,3 +124,35 @@ def _prepare_surat_context(surat):
         "kota": settings.KOTA,
         "provinsi": settings.PROVINSI,
     }
+
+
+@login_required
+def delete_surat(request, idsurat):
+    surat = get_object_or_404(Surat, pk=idsurat)
+    warga_id = surat.warga.id
+    jenis_display = surat.get_jenis_surat_display()
+    warga_nama = surat.warga.nama_lengkap
+    next_url = request.GET.get("next")
+
+    if request.method == "POST":
+        surat.delete()
+        logger.info(
+            "Deleting data surat with id : %s , jenis : %s , warga : %s"
+            % (idsurat, jenis_display, warga_nama)
+        )
+        messages.success(
+            request,
+            f"Surat <strong>{jenis_display}</strong> untuk <strong>{warga_nama}</strong> berhasil dihapus.",
+        )
+        if next_url == "list_surat":
+            return redirect(reverse("kependudukan:list_surat"))
+        return redirect(
+            reverse("kependudukan:detailWarga", kwargs={"idwarga": warga_id})
+        )
+
+    context = {
+        "surat": surat,
+        "warga_id": warga_id,
+        "next": next_url,
+    }
+    return render(request, "surat/delete_surat.html", context)

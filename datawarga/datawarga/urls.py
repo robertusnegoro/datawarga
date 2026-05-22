@@ -18,9 +18,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from kependudukan.error_views import permission_denied_view, not_found_view
+from kependudukan import views_profile
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/login/", views_profile.custom_login, name="login"),
     path("", include("kependudukan.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Custom error handlers — active in production (DEBUG=False / WG_ENV != "dev")
+handler403 = permission_denied_view
+handler404 = not_found_view

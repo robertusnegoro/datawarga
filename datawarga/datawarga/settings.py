@@ -94,6 +94,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "kependudukan.context_processors.app_version",
                 "kependudukan.context_processors.kas_permissions",
+                "kependudukan.context_processors.user_profile",
             ],
         },
     },
@@ -265,3 +266,7 @@ OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", None)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", None)
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
 OPENROUTER_QUOTA_THRESHOLD = float(os.getenv("OPENROUTER_QUOTA_THRESHOLD", "1.0"))
+
+AUTHENTICATION_BACKENDS = [
+    "kependudukan.auth_backends.LockoutBackend",
+]

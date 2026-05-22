@@ -2,6 +2,7 @@ from .forms import GenerateKompleksForm
 from .models import Warga, Kompleks, WargaPermissionGroup, UserPermission
 from .utility import helper_finance_year_list
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core import serializers
 from django.db.models import Q, Count
@@ -10,7 +11,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
-from urllib.parse import urlencode
 import logging
 import json
 
@@ -86,15 +86,11 @@ def generate_kompleks(request):
                 )
                 logger.info("%s, %s, %s is saved to db" % (cluster, blok, counter))
                 counter += 1
-            base_url = reverse("kependudukan:listKompleksView")
-            payload = urlencode(
-                {
-                    "message": "data blok %s sebanyak %s nomor rumah telah disimpan!"
-                    % (blok, total_num)
-                }
+            messages.success(
+                request,
+                f"Data blok <strong>{blok}</strong> sebanyak <strong>{total_num}</strong> nomor rumah telah disimpan.",
             )
-            url_redir = "{}?{}".format(base_url, payload)
-            return redirect(url_redir)
+            return redirect(reverse("kependudukan:listKompleksView"))
         else:
             logger.info(form.errors)
             return HttpResponse("form is not valid %s" % (form.errors))
@@ -110,8 +106,6 @@ class KompleksListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if "message" in self.request.GET:
-            context["message"] = self.request.GET["message"]
         if "search" in self.request.GET:
             context["search"] = str(self.request.GET["search"])
         return context
@@ -153,16 +147,11 @@ def delete_blok_form(request):
         if jumlah_data == 0:
             return HttpResponse("Tidak ada yang dihapus, klik back")
         data_blok.delete()
-        logger.info("Deleting data kompleks blok %s " % (blok))
-        base_url = reverse("kependudukan:listKompleksView")
-        payload = urlencode(
-            {
-                "message": "data blok %s sebanyak %s nomor rumah telah dihapus!"
-                % (blok, jumlah_data)
-            }
+        messages.success(
+            request,
+            f"Data blok <strong>{blok}</strong> sebanyak <strong>{jumlah_data}</strong> nomor rumah telah dihapus.",
         )
-        url_redir = "{}?{}".format(base_url, payload)
-        return redirect(url_redir)
+        return redirect(reverse("kependudukan:listKompleksView"))
     else:
         return render(request=request, template_name="delete_blok_form.html")
 
@@ -199,8 +188,10 @@ def detail_kompleks(request, idkompleks):
         data_kompleks.kode_pos = kode_pos
         data_kompleks.save()
 
-        context["message"] = "Data %s/%s telah disimpan" % (blok, nomor)
-        logger.info(context["message"])
+        messages.success(
+            request,
+            f"Data <strong>{blok}/{nomor}</strong> berhasil disimpan.",
+        )
 
     context["data"] = data_kompleks
     context["load_url"] = reverse(
@@ -235,11 +226,13 @@ def delete_rumah_form(request, idkompleks):
         logger.info(
             "Deleting data rumah with id : %s , data : %s" % (idkompleks, data_kompleks)
         )
-        base_url = reverse("kependudukan:listKompleksView")
-        payload = urlencode({"message": "data %s was deleted!" % (data_kompleks)})
+        data_kompleks_str = str(data_kompleks)
         data_kompleks.delete()
-        url_redir = "{}?{}".format(base_url, payload)
-        return redirect(url_redir)
+        messages.success(
+            request,
+            f"Data rumah <strong>{data_kompleks_str}</strong> berhasil dihapus.",
+        )
+        return redirect(reverse("kependudukan:listKompleksView"))
     return render(
         request=request, template_name="delete_form_rumah.html", context=context
     )

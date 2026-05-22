@@ -9,6 +9,7 @@ from . import (
     views_surat,
     views_kendaraan,
     views_kas,
+    views_profile,
 )
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
@@ -232,6 +233,11 @@ urlpatterns = [
         name="cetak_surat_pdf",
     ),
     path("surat/list", views_surat.list_surat, name="list_surat"),
+    path(
+        "surat/delete/<int:idsurat>",
+        views_surat.delete_surat,
+        name="delete_surat",
+    ),
     # Kas & Keuangan RT/RW
     path("warga/kas/", views_kas.dashboard_kas, name="dashboard_kas"),
     path(
@@ -276,6 +282,10 @@ urlpatterns = [
     ),
     path("warga/kas/laporan/", views_kas.laporan_kas, name="laporan_kas"),
     path("warga/kas/laporan/pdf/", views_kas.pdf_report_kas, name="pdf_report_kas"),
+    path("profile/", views_profile.profile_edit, name="profile_edit"),
+    path("accounts/login/mfa/", views_profile.mfa_verify, name="mfa_verify"),
+    path("profile/mfa/setup/", views_profile.mfa_setup, name="mfa_setup"),
+    path("profile/mfa/disable/", views_profile.mfa_disable, name="mfa_disable"),
     path("api/", include(router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

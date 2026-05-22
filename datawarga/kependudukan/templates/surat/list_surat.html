@@ -37,6 +37,9 @@
                                 <a href="{% url 'kependudukan:cetak_surat_pdf' surat.id %}" class="btn btn-sm btn-success">
                                     <i class="bi bi-file-earmark-pdf"></i> PDF
                                 </a>
+                                <a href="{% url 'kependudukan:delete_surat' surat.id %}?next=list_surat" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i> Hapus
+                                </a>
                             </td>
                         </tr>
                         {% empty %}

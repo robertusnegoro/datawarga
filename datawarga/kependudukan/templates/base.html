@@ -28,17 +28,36 @@
             </button>
 
             <div class="navbar-nav ms-auto px-3 d-none d-md-flex align-items-center gap-3">
-                <div class="user-pill d-flex align-items-center gap-2">
-                    <span class="user-name-badge">
-                        <i class="bi bi-person-circle text-primary"></i> Hello, <strong>{{request.user.username}}</strong>
-                    </span>
-                    <form method="post" action="{% url 'logout' %}" class="m-0">
-                        {% csrf_token %}
-                        <button type="submit" class="logout-btn">
-                            <i class="bi bi-box-arrow-right"></i> Log out
-                        </button>
-                    </form>
+                {% if request.user.is_authenticated %}
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle gap-2 text-dark" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user_profile.foto %}
+                            <img src="{{ user_profile.foto.url }}" alt="{{ request.user.username }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 1.5px solid #0d6efd;">
+                        {% else %}
+                            <i class="bi bi-person-circle text-primary" style="font-size: 1.5rem;"></i>
+                        {% endif %}
+                        <span class="user-name-text">
+                            Hello, <strong>{{ request.user.first_name|default:request.user.username }}</strong>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="border-radius: 12px;" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'kependudukan:profile_edit' %}">
+                                <i class="bi bi-person-gear text-primary"></i> Edit Profil
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" style="border: none; background: none; width: 100%; text-align: left;">
+                                    <i class="bi bi-box-arrow-right"></i> Log out
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
                 </div>
+                {% endif %}
             </div>
         </header>
 
@@ -219,13 +238,23 @@
 
                         <!-- Mobile-only User section -->
                         <ul class="nav flex-column d-md-none mt-3 border-top pt-3">
-                            <li class="nav-item px-3 mb-2 small text-muted">
-                                <i class="bi bi-person-circle"></i> {{request.user.username}}
+                            <li class="nav-item px-3 mb-2 d-flex align-items-center gap-2">
+                                {% if user_profile.foto %}
+                                    <img src="{{ user_profile.foto.url }}" alt="{{ request.user.username }}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover; border: 1px solid #0d6efd;">
+                                {% else %}
+                                    <i class="bi bi-person-circle text-primary" style="font-size: 1.25rem;"></i>
+                                {% endif %}
+                                <span class="text-muted small"><strong>{{ request.user.username }}</strong></span>
+                            </li>
+                            <li class="nav-item px-3 mb-2">
+                                <a href="{% url 'kependudukan:profile_edit' %}" class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-person-gear"></i> Edit Profil
+                                </a>
                             </li>
                             <li class="nav-item px-3">
                                 <form method="post" action="{% url 'logout' %}" class="m-0">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
                                         <i class="bi bi-box-arrow-right"></i> Log out
                                     </button>
                                 </form>
@@ -239,6 +268,39 @@
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                         <h1 class="h2 text-primary fw-bold">{% block pagetitle %}{% endblock %}</h1>    
                     </div>
+                    {% if messages %}
+                    <div id="dw-flash-messages" class="mb-3">
+                        {% for message in messages %}
+                        <div class="alert alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm py-2 px-3
+                            {% if message.tags == 'success' %}alert-success
+                            {% elif message.tags == 'error' %}alert-danger
+                            {% elif message.tags == 'warning' %}alert-warning
+                            {% else %}alert-info{% endif %}"
+                            role="alert" style="border-radius: 10px; font-size: 0.92rem;">
+                            {% if message.tags == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                            {% endif %}
+                            <span>{{ message|safe }}</span>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <script>
+                        // Auto-dismiss flash messages after 5 seconds
+                        setTimeout(function () {
+                            document.querySelectorAll('#dw-flash-messages .alert').forEach(function (el) {
+                                var bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+                                bsAlert.close();
+                            });
+                        }, 5000);
+                    </script>
+                    {% endif %}
                     {% block content %}{% endblock %}
                     
                     <footer class="footer mt-auto py-3">

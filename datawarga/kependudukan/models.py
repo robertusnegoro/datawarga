@@ -408,3 +408,16 @@ class KasTransaksi(models.Model):
 
     def __str__(self):
         return f"[{self.jenis}] {self.tanggal} - {format_rupiah(self.jumlah)} ({self.kategori})"
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    foto = models.ImageField(upload_to="profile_pics/", blank=True, null=True)
+    failed_login_attempts = models.IntegerField(default=0)
+    shadow_ban_expires_at = models.DateTimeField(null=True, blank=True)
+    is_permanently_locked = models.BooleanField(default=False)
+    mfa_enabled = models.BooleanField(default=False)
+    totp_secret = models.CharField(max_length=32, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"Profile for {self.user.username}"

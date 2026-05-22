@@ -3,6 +3,7 @@ from .models import Kompleks, TransaksiIuranBulanan, SummaryTransaksiBulanan
 from .utility import helper_finance_year_list
 from datetime import datetime
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.db.models import Count, Sum
@@ -11,7 +12,6 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
-from urllib.parse import urlencode
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import json
@@ -42,9 +42,6 @@ def form_iuran_bulanan(
     context["data_iuran"] = TransaksiIuranBulanan.objects.order_by(
         "periode_bulan"
     ).filter(periode_tahun=year, kompleks__id=idkompleks)
-
-    if "message" in request.GET:
-        context["message"] = str(request.GET["message"])
 
     return render(
         request=request, template_name="form_iuran_bulanan.html", context=context
@@ -84,12 +81,28 @@ def form_iuran_bulanan_save(request):
                         request.POST["kompleks"],
                     )
                     if not test_check:
-                        error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
-                            int(request.POST["periode_bulan"]),
-                            str(request.POST["periode_tahun"]),
+                        bulan_num = int(request.POST["periode_bulan"])
+                        tahun_str = str(request.POST["periode_tahun"])
+                        bulan_name = dict(TransaksiIuranBulanan.LIST_BULAN).get(
+                            bulan_num, bulan_num
                         )
-                        logger.error(error_message)
-                        return HttpResponse(error_message)
+                        error_message = f"Iuran pada bulan <strong>{bulan_name} {tahun_str}</strong> sudah tercatat."
+                        logger.error(
+                            "Duplicate iuran attempt: bulan %s tahun %s"
+                            % (bulan_num, tahun_str)
+                        )
+                        messages.error(request, error_message)
+                        kompleks_id = int(request.POST["kompleks"])
+                        return redirect(
+                            reverse(
+                                "kependudukan:formIuranBulananYearTrx",
+                                kwargs={
+                                    "idkompleks": kompleks_id,
+                                    "year": int(tahun_str),
+                                    "idtransaksi": idtransaksi,
+                                },
+                            )
+                        )
 
                 form = IuranBulananForm(
                     request.POST, request.FILES, instance=data_transaksi
@@ -101,22 +114,35 @@ def form_iuran_bulanan_save(request):
                     request.POST["kompleks"],
                 )
                 if not test_check:
-                    error_message = "Iuran pada Bulan %s Tahun %s sudah dibayar" % (
-                        int(request.POST["periode_bulan"]),
-                        str(request.POST["periode_tahun"]),
+                    bulan_num = int(request.POST["periode_bulan"])
+                    tahun_str = str(request.POST["periode_tahun"])
+                    bulan_name = dict(TransaksiIuranBulanan.LIST_BULAN).get(
+                        bulan_num, bulan_num
                     )
-                    logger.error(error_message)
-                    return HttpResponse(error_message)
+                    error_message = f"Iuran pada bulan <strong>{bulan_name} {tahun_str}</strong> sudah tercatat."
+                    logger.error(
+                        "Duplicate iuran attempt: bulan %s tahun %s"
+                        % (bulan_num, tahun_str)
+                    )
+                    messages.error(request, error_message)
+                    kompleks_id = int(request.POST["kompleks"])
+                    return redirect(
+                        reverse(
+                            "kependudukan:formIuranBulananYear",
+                            kwargs={"idkompleks": kompleks_id, "year": int(tahun_str)},
+                        )
+                    )
 
             form.save()
 
-            base_url = reverse(
-                "kependudukan:detailKompleks",
-                kwargs={"idkompleks": int(request.POST["kompleks"])},
+            kompleks_id = int(request.POST["kompleks"])
+            messages.success(request, "Iuran bulanan berhasil disimpan.")
+            return redirect(
+                reverse(
+                    "kependudukan:detailKompleks",
+                    kwargs={"idkompleks": kompleks_id},
+                )
             )
-            payload = urlencode({"message": "iuran bulanan is saved!"})
-            url_redir = "{}?{}".format(base_url, payload)
-            return redirect(url_redir)
         else:
             logger.info(form.errors)
             return HttpResponse("form is not valid %s" % (form.errors))
@@ -142,15 +168,22 @@ def delete_iuran_bulanan(request, idtransaksi):
     data_transaksi = get_object_or_404(TransaksiIuranBulanan, pk=idtransaksi)
     kompleks_id = data_transaksi.kompleks.id
     if request.POST:
+        bulan_display = dict(TransaksiIuranBulanan.LIST_BULAN).get(
+            data_transaksi.periode_bulan, data_transaksi.periode_bulan
+        )
+        tahun_display = data_transaksi.periode_tahun
         data_transaksi.delete()
         logger.info("Deleting data transaksi with id : %s" % (idtransaksi))
-        base_url = reverse(
-            "kependudukan:detailKompleks",
-            kwargs={"idkompleks": kompleks_id},
+        messages.success(
+            request,
+            f"Iuran bulanan untuk bulan <strong>{bulan_display} {tahun_display}</strong> berhasil dihapus.",
         )
-        payload = urlencode({"message": "data %s was deleted!" % (idtransaksi)})
-        url_redir = "{}?{}".format(base_url, payload)
-        return redirect(url_redir)
+        return redirect(
+            reverse(
+                "kependudukan:detailKompleks",
+                kwargs={"idkompleks": kompleks_id},
+            )
+        )
 
     context = {"data": data_transaksi}
 
@@ -278,33 +311,49 @@ def form_batch_iuran_bulanan(request, idkompleks, year=datetime.now().strftime("
             for bulan in selected_months:
                 if not check_existing_trx_bulan(bulan, tahun, idkompleks):
                     existing_months.append(
-                        dict(TransaksiIuranBulanan.LIST_BULAN)[bulan]
+                        dict(TransaksiIuranBulanan.LIST_BULAN).get(int(bulan), bulan)
                     )
 
             if existing_months:
-                error_message = f"Iuran untuk bulan {', '.join(existing_months)} tahun {tahun} sudah dibayar"
-                return HttpResponse(error_message)
-
-            # Save transactions for each selected month
-            for bulan in selected_months:
-                TransaksiIuranBulanan.objects.create(
-                    kompleks=data_kompleks,
-                    periode_bulan=bulan,
-                    periode_tahun=tahun,
-                    total_bayar=total_bayar,
-                    keterangan=keterangan,
-                    bukti_bayar=bukti_bayar,
+                month_list = ", ".join(f"<strong>{m}</strong>" for m in existing_months)
+                error_message = f"Iuran untuk bulan {month_list} tahun {tahun} sudah tercatat. Silakan hapus centang bulan tersebut dan coba lagi."
+                logger.error(
+                    "Duplicate batch iuran attempt: %s tahun %s"
+                    % (", ".join(existing_months), tahun)
                 )
+                messages.error(request, error_message)
+                # Re-render with the same bound form so all field values are retained
+                year = tahun
+            else:
+                # Save transactions for each selected month
+                for bulan in selected_months:
+                    TransaksiIuranBulanan.objects.create(
+                        kompleks=data_kompleks,
+                        periode_bulan=bulan,
+                        periode_tahun=tahun,
+                        total_bayar=total_bayar,
+                        keterangan=keterangan,
+                        bukti_bayar=bukti_bayar,
+                    )
 
-            base_url = reverse(
-                "kependudukan:detailKompleks", kwargs={"idkompleks": idkompleks}
+                messages.success(
+                    request,
+                    f"Iuran bulanan untuk <strong>{len(selected_months)}</strong> bulan berhasil disimpan.",
+                )
+                return redirect(
+                    reverse(
+                        "kependudukan:detailKompleks",
+                        kwargs={"idkompleks": idkompleks},
+                    )
+                )
+        else:
+            # Form validation failed (e.g. no months selected, missing total_bayar)
+            logger.warning("Batch iuran form invalid: %s" % form.errors)
+            messages.warning(
+                request,
+                "Form tidak valid. Pastikan memilih setidaknya satu bulan dan mengisi jumlah iuran.",
             )
-            payload = urlencode(
-                {
-                    "message": f"Iuran bulanan untuk {len(selected_months)} bulan berhasil disimpan!"
-                }
-            )
-            return redirect(f"{base_url}?{payload}")
+            # year from URL param keeps the history table in sync
     else:
         form = BatchIuranBulananForm(initial={"periode_tahun": year})
 

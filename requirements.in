@@ -32,3 +32,8 @@ gunicorn
 
 # Utility / Compatibility
 setuptools
+
+# MFA / TOTP Authentication
+pyotp
+qrcode
+
