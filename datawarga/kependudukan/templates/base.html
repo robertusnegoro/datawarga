@@ -125,6 +125,34 @@
                             </li>
                         </ul>
                         
+                        {% if is_kas_user %}
+                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                            <span>Keuangan & Kas</span>
+                        </h6>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_kas' %}active{% endif %}" href="{% url 'kependudukan:dashboard_kas' %}">
+                                    <i class="bi bi-wallet2"></i> Dashboard Kas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'list_kas_transaksi' or request.resolver_match.url_name == 'form_kas_transaksi' or request.resolver_match.url_name == 'edit_kas_transaksi' %}active{% endif %}" href="{% url 'kependudukan:list_kas_transaksi' %}">
+                                    <i class="bi bi-cash-coin"></i> Transaksi Kas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'list_kas_tagihan' or request.resolver_match.url_name == 'form_kas_tagihan' or request.resolver_match.url_name == 'edit_kas_tagihan' %}active{% endif %}" href="{% url 'kependudukan:list_kas_tagihan' %}">
+                                    <i class="bi bi-receipt"></i> Tagihan Keuangan
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'laporan_kas' %}active{% endif %}" href="{% url 'kependudukan:laporan_kas' %}">
+                                    <i class="bi bi-file-earmark-bar-graph"></i> Laporan Keuangan
+                                </a>
+                            </li>
+                        </ul>
+                        {% endif %}
+                        
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
                             <span>Utility</span>
                         </h6>

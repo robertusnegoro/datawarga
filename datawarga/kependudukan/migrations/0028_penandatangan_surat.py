@@ -5,31 +5,72 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('kependudukan', '0027_alter_warga_status_tinggal'),
+        ("kependudukan", "0027_alter_warga_status_tinggal"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Penandatangan',
+            name="Penandatangan",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nama', models.CharField(max_length=150)),
-                ('jabatan', models.CharField(max_length=100)),
-                ('aktif', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("nama", models.CharField(max_length=150)),
+                ("jabatan", models.CharField(max_length=100)),
+                ("aktif", models.BooleanField(default=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Surat',
+            name="Surat",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('jenis_surat', models.CharField(choices=[('PENGANTAR_RT', 'Surat Pengantar RT'), ('KETERANGAN_DOMISILI', 'Surat Keterangan Domisili'), ('KETERANGAN_TIDAK_MAMPU', 'Surat Keterangan Tidak Mampu')], max_length=50)),
-                ('nomor_surat', models.CharField(blank=True, max_length=100, null=True)),
-                ('keperluan', models.TextField()),
-                ('tanggal_surat', models.DateField(auto_now_add=True)),
-                ('penandatangan', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='kependudukan.penandatangan')),
-                ('warga', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='kependudukan.warga')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "jenis_surat",
+                    models.CharField(
+                        choices=[
+                            ("PENGANTAR_RT", "Surat Pengantar RT"),
+                            ("KETERANGAN_DOMISILI", "Surat Keterangan Domisili"),
+                            ("KETERANGAN_TIDAK_MAMPU", "Surat Keterangan Tidak Mampu"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "nomor_surat",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
+                ("keperluan", models.TextField()),
+                ("tanggal_surat", models.DateField(auto_now_add=True)),
+                (
+                    "penandatangan",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="kependudukan.penandatangan",
+                    ),
+                ),
+                (
+                    "warga",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="kependudukan.warga",
+                    ),
+                ),
             ],
         ),
     ]

@@ -8,6 +8,7 @@ from . import (
     api_view,
     views_surat,
     views_kendaraan,
+    views_kas,
 )
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
@@ -231,6 +232,50 @@ urlpatterns = [
         name="cetak_surat_pdf",
     ),
     path("surat/list", views_surat.list_surat, name="list_surat"),
+    # Kas & Keuangan RT/RW
+    path("warga/kas/", views_kas.dashboard_kas, name="dashboard_kas"),
+    path(
+        "warga/kas/transaksi/", views_kas.list_kas_transaksi, name="list_kas_transaksi"
+    ),
+    path(
+        "warga/kas/transaksi/tambah/",
+        views_kas.form_kas_transaksi,
+        name="form_kas_transaksi",
+    ),
+    path(
+        "warga/kas/transaksi/edit/<int:idtransaksi>",
+        views_kas.form_kas_transaksi,
+        name="edit_kas_transaksi",
+    ),
+    path(
+        "warga/kas/transaksi/hapus/<int:idtransaksi>",
+        views_kas.delete_kas_transaksi,
+        name="delete_kas_transaksi",
+    ),
+    path("warga/kas/tagihan/", views_kas.list_kas_tagihan, name="list_kas_tagihan"),
+    path(
+        "warga/kas/tagihan/tambah/", views_kas.form_kas_tagihan, name="form_kas_tagihan"
+    ),
+    path(
+        "warga/kas/tagihan/edit/<int:idtagihan>",
+        views_kas.form_kas_tagihan,
+        name="edit_kas_tagihan",
+    ),
+    path(
+        "warga/kas/tagihan/hapus/<int:idtagihan>",
+        views_kas.delete_kas_tagihan,
+        name="delete_kas_tagihan",
+    ),
+    path(
+        "warga/kas/tagihan/bayar/<int:idtagihan>",
+        views_kas.bayar_tagihan,
+        name="bayar_tagihan",
+    ),
+    path(
+        "warga/kas/sync-iuran/", views_kas.sync_iuran_to_kas, name="sync_iuran_to_kas"
+    ),
+    path("warga/kas/laporan/", views_kas.laporan_kas, name="laporan_kas"),
+    path("warga/kas/laporan/pdf/", views_kas.pdf_report_kas, name="pdf_report_kas"),
     path("api/", include(router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

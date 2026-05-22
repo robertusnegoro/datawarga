@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{% if instance %}Ubah{% else %}Tambah{% endif %} Transaksi Kas{% endblock %}
+{% block pagetitle %}<i class="bi bi-pencil-square text-primary"></i> {% if instance %}Ubah{% else %}Tambah{% endif %} Transaksi Kas{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" enctype="multipart/form-data" id="transaksi-form">
+            {% csrf_token %}
+            
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="bi bi-cash-coin"></i>
+                    <h5>{% if instance %}Ubah Catatan Mutasi{% else %}Form Pemasukan / Pengeluaran{% endif %}</h5>
+                </div>
+                <div class="form-card-body">
+                    <div class="row">
+                        <!-- Tanggal -->
+                        <div class="col-md-6">
+                            {{ form.tanggal|as_crispy_field }}
+                        </div>
+
+                        <!-- Jumlah -->
+                        <div class="col-md-6">
+                            {{ form.jumlah|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Jenis -->
+                        <div class="col-md-6">
+                            {{ form.jenis|as_crispy_field }}
+                        </div>
+
+                        <!-- Kategori -->
+                        <div class="col-md-6">
+                            {{ form.kategori|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Keterangan -->
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.keterangan|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Bukti Transaksi -->
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.bukti_transaksi|as_crispy_field }}
+
+                            {% if instance and instance.bukti_transaksi %}
+                                <div class="mt-3 p-3 bg-light rounded border d-flex align-items-center gap-3">
+                                    <img src="{{ instance.bukti_transaksi.url }}" class="img-thumbnail enlargeable-image" style="max-height: 80px; max-width: 80px; object-fit: cover;" data-bs-toggle="modal" data-bs-target="#imageLightbox" onclick="document.getElementById('lightboxImage').src='{{ instance.bukti_transaksi.url }}'" alt="Bukti Sekarang">
+                                    <div>
+                                        <div class="fw-semibold text-secondary small">Bukti Transaksi Saat Ini:</div>
+                                        <a href="{{ instance.bukti_transaksi.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none small"><i class="bi bi-box-arrow-up-right"></i> Lihat Fullscreen</a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Controls -->
+            <div class="my-4">
+                <button type="submit" class="submit-btn">
+                    <i class="bi bi-save-fill"></i> Simpan Transaksi
+                </button>
+                <a href="{% url 'kependudukan:list_kas_transaksi' %}" class="btn btn-outline-secondary ms-2">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block jscript %}
+<script>
+    $(document).ready(function() {
+        // Initialize bootstrap datepicker on form.tanggal if fallback is needed, otherwise use native
+        $('#id_tanggal').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+    });
+</script>
+{% endblock %}

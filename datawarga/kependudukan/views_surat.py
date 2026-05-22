@@ -87,8 +87,18 @@ def format_tanggal_indo(date_obj):
     if not date_obj:
         return "-"
     indonesian_months = (
-        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember",
     )
     return f"{date_obj.day} {indonesian_months[date_obj.month - 1]} {date_obj.year}"
 

@@ -134,7 +134,10 @@ class WargaTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         resp_url = response.url.split("?")[0]
         new_warga = Warga.objects.get(nik=form_data["nik"])
-        self.assertEqual(resp_url, reverse("kependudukan:detailWarga", kwargs={"idwarga": new_warga.id}))
+        self.assertEqual(
+            resp_url,
+            reverse("kependudukan:detailWarga", kwargs={"idwarga": new_warga.id}),
+        )
 
     def test_form_update(self):
         client = Client()
@@ -161,7 +164,12 @@ class WargaTestCase(TestCase):
         response = client.post(reverse("kependudukan:formWargaSimpan"), data=form_data)
         self.assertEqual(response.status_code, 302)
         resp_url = response.url.split("?")[0]
-        self.assertEqual(resp_url, reverse("kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id}))
+        self.assertEqual(
+            resp_url,
+            reverse(
+                "kependudukan:detailWarga", kwargs={"idwarga": self.existing_warga.id}
+            ),
+        )
 
     def test_delete_warga_notfound(self):
         client = Client()
@@ -354,7 +362,7 @@ class WargaTestCase(TestCase):
         # Test Daftar Kepala Keluarga page
         response = client.get(reverse("kependudukan:daftarKepalaKeluarga"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Kepala Keluarga Test")
+        self.assertContains(response, "KEPALA KELUARGA TEST")
         self.assertNotContains(response, "Anggota Test")
 
         # Test AJAX endpoint
@@ -364,8 +372,8 @@ class WargaTestCase(TestCase):
         )
         response_ajax = client.get(ajax_url)
         self.assertEqual(response_ajax.status_code, 200)
-        self.assertContains(response_ajax, "Kepala Keluarga Test")
-        self.assertContains(response_ajax, "Anggota Test")
+        self.assertContains(response_ajax, "KEPALA KELUARGA TEST")
+        self.assertContains(response_ajax, "ANGGOTA TEST")
         self.assertContains(response_ajax, "Istri")
 
     def test_csv_import_status_keluarga(self):
@@ -431,7 +439,7 @@ class WargaTestCase(TestCase):
             reverse("kependudukan:listWargaView"), {"search": "76543210"}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Special KK Member")
+        self.assertContains(response, "SPECIAL KK MEMBER")
 
         # 2. Search by partial KK (wildcard) on API search view
         import json
@@ -625,7 +633,7 @@ class WargaTestCase(TestCase):
         # 2. Verify listWargaView filters out PINDAH and MENINGGAL
         response = client.get(reverse("kependudukan:listWargaView"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Warga Tetap")
+        self.assertContains(response, "WARGA TETAP")
         self.assertNotContains(response, "Warga Pindah")
         self.assertNotContains(response, "Warga Meninggal")
 
@@ -633,16 +641,16 @@ class WargaTestCase(TestCase):
         response_arsip = client.get(reverse("kependudukan:arsipWargaView"))
         self.assertEqual(response_arsip.status_code, 200)
         self.assertNotContains(response_arsip, "Warga Tetap")
-        self.assertContains(response_arsip, "Warga Pindah")
-        self.assertContains(response_arsip, "Warga Meninggal")
+        self.assertContains(response_arsip, "WARGA PINDAH")
+        self.assertContains(response_arsip, "WARGA MENINGGAL")
 
         # 4. Verify search on arsipWargaView
         response_search = client.get(
             reverse("kependudukan:arsipWargaView"), {"search": "Meninggal"}
         )
         self.assertEqual(response_search.status_code, 200)
-        self.assertContains(response_search, "Warga Meninggal")
-        self.assertNotContains(response_search, "Warga Pindah")
+        self.assertContains(response_search, "WARGA MENINGGAL")
+        self.assertNotContains(response_search, "WARGA PINDAH")
 
         # 5. Verify delete redirects back to archive when next=arsip
         delete_url = (

@@ -1,6 +1,8 @@
 from .forms import WargaCSVForm
 from .models import Warga, Kompleks, TransaksiIuranBulanan
+from .formatters import format_rupiah
 from django.conf import settings
+
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Count, Sum
 from django.http import HttpResponse, Http404, JsonResponse
@@ -80,7 +82,7 @@ def dashboard_warga(request):
         )["total"]
         or 0
     )
-    total_iuran_year_formatted = f"Rp {int(total_iuran_year):,}".replace(",", ".")
+    total_iuran_year_formatted = format_rupiah(total_iuran_year)
 
     monthly_income = [0] * 12
     monthly_income_qs = (

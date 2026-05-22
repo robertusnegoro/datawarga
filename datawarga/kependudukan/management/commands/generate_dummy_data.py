@@ -14,6 +14,8 @@ from kependudukan.models import (
     TransaksiIuranBulanan,
     SummaryTransaksiBulanan,
     WargaPermissionGroup,
+    KasTransaksi,
+    KasTagihan,
 )
 from kependudukan.management.commands.summarize_iuran_bulanan import summarize
 
@@ -211,6 +213,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Deletes existing Kompleks, Warga, and TransaksiIuranBulanan data first.",
         )
+        parser.add_argument(
+            "--only-kas",
+            action="store_true",
+            help="Generate only KasTransaksi and KasTagihan data without generating Warga/Kompleks.",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         total_kompleks: int = options["total_kompleks"]
@@ -218,9 +225,21 @@ class Command(BaseCommand):
         years: int = options["years"]
         seed: int | None = options["seed"]
         clear: bool = options["clear"]
+        only_kas: bool = options.get("only_kas", False)
 
         if seed is not None:
             random.seed(seed)
+
+        if only_kas:
+            self.stdout.write(
+                f"Generating ONLY Kas & Tagihan dummy data: years={years}, clear={clear}"
+            )
+            with transaction.atomic():
+                self.generate_kas_data(clear=clear, years=years)
+            self.stdout.write(
+                self.style.SUCCESS("Successfully generated Kas & Tagihan dummy data!")
+            )
+            return
 
         if total_kompleks <= 0:
             self.stderr.write(
@@ -609,4 +628,160 @@ class Command(BaseCommand):
                 for blok in generated_bloks:
                     summarize(year, blok)
 
+            # Generate Kas & Tagihan data
+            self.generate_kas_data(clear=clear, years=years)
+
             self.stdout.write(self.style.SUCCESS("Successfully generated dummy data!"))
+
+    def generate_kas_data(self, clear: bool = False, years: int = 2) -> None:
+        if clear:
+            self.stdout.write("Clearing existing KasTransaksi & KasTagihan data...")
+            KasTransaksi.objects.all().delete()
+            KasTagihan.objects.all().delete()
+
+        self.stdout.write("Generating KasTransaksi and KasTagihan...")
+        current_date = date.today()
+        start_date = current_date - timedelta(days=365 * years)
+
+        categories_pengeluaran = [
+            ("KEBERSIHAN", "Pembayaran Gaji Petugas Kebersihan", 1500000),
+            ("KEAMANAN", "Gaji Petugas Keamanan Kompleks", 2000000),
+            ("OPERASIONAL", "Pembelian ATK dan Konsumsi Rapat", 250000),
+            ("OPERASIONAL", "Biaya Listrik Pos Satpam dan Penerangan Jalan", 450000),
+            ("PEMBANGUNAN", "Perbaikan Gerbang Kompleks", 3500000),
+            ("SOSIAL", "Sumbangan Warga Sakit/Duka", 500000),
+        ]
+
+        categories_pemasukan = [
+            ("SOSIAL", "Sumbangan Sukarela Warga", 1000000),
+            ("LAINNYA", "Penyewaan Lapangan RT", 300000),
+        ]
+
+        def safe_date_replace(d: date, new_day: int) -> date:
+            import calendar
+
+            _, max_day = calendar.monthrange(d.year, d.month)
+            return date(d.year, d.month, min(new_day, max_day))
+
+        delta_months = years * 12
+        tx_count = 0
+        tagihan_count = 0
+
+        for m in range(delta_months):
+            loop_date = start_date + timedelta(days=m * 30)
+            if loop_date > current_date:
+                break
+
+            # Regular monthly expenses (Kebersihan, Keamanan, Listrik)
+            KasTransaksi.objects.create(
+                tanggal=safe_date_replace(loop_date, 5),
+                jenis="PENGELUARAN",
+                kategori="KEBERSIHAN",
+                jumlah=1500000,
+                keterangan="Gaji petugas kebersihan bulanan",
+            )
+            tx_count += 1
+
+            KasTransaksi.objects.create(
+                tanggal=safe_date_replace(loop_date, 5),
+                jenis="PENGELUARAN",
+                kategori="KEAMANAN",
+                jumlah=2000000,
+                keterangan="Gaji petugas keamanan bulanan",
+            )
+            tx_count += 1
+
+            KasTransaksi.objects.create(
+                tanggal=safe_date_replace(loop_date, 10),
+                jenis="PENGELUARAN",
+                kategori="OPERASIONAL",
+                jumlah=random.randint(400000, 600000),
+                keterangan="Bayar listrik pos security & lampu jalan",
+            )
+            tx_count += 1
+
+            # Random extra expenses/income
+            if random.random() > 0.5:
+                cat_choice = random.choice(categories_pengeluaran[2:])
+                KasTransaksi.objects.create(
+                    tanggal=safe_date_replace(loop_date, random.randint(12, 28)),
+                    jenis="PENGELUARAN",
+                    kategori=cat_choice[0],
+                    jumlah=random.randint(
+                        int(cat_choice[2] * 0.5), int(cat_choice[2] * 1.5)
+                    ),
+                    keterangan=cat_choice[1],
+                )
+                tx_count += 1
+
+            if random.random() > 0.6:
+                cat_choice = random.choice(categories_pemasukan)
+                KasTransaksi.objects.create(
+                    tanggal=safe_date_replace(loop_date, random.randint(12, 28)),
+                    jenis="PEMASUKAN",
+                    kategori=cat_choice[0],
+                    jumlah=random.randint(
+                        int(cat_choice[2] * 0.5), int(cat_choice[2] * 1.5)
+                    ),
+                    keterangan=cat_choice[1],
+                )
+                tx_count += 1
+
+            # Generate some bills (KasTagihan)
+            # We owe someone (HUTANG)
+            if random.random() > 0.7:
+                status_choice = random.choice(["LUNAS", "BELUM"])
+                due_date = safe_date_replace(loop_date, 25)
+                bill = KasTagihan.objects.create(
+                    judul="Tagihan perbaikan got / saluran air",
+                    jenis="HUTANG",
+                    kategori="PEMBANGUNAN",
+                    jumlah=random.randint(500000, 1500000),
+                    tanggal_jatuh_tempo=due_date,
+                    status=status_choice,
+                    keterangan="Tagihan dari kontraktor lokal",
+                )
+                tagihan_count += 1
+
+                if status_choice == "LUNAS":
+                    # Create corresponding transaction
+                    KasTransaksi.objects.create(
+                        tanggal=due_date - timedelta(days=random.randint(0, 3)),
+                        jenis="PENGELUARAN",
+                        kategori="PEMBANGUNAN",
+                        jumlah=bill.jumlah,
+                        keterangan=f"Pelunasan: {bill.judul}",
+                        tagihan_asal=bill,
+                    )
+                    tx_count += 1
+
+            # Someone owes us (PIUTANG)
+            if random.random() > 0.7:
+                status_choice = random.choice(["LUNAS", "BELUM"])
+                due_date = safe_date_replace(loop_date, 20)
+                bill = KasTagihan.objects.create(
+                    judul="Sewa aula / lapangan oleh pihak luar",
+                    jenis="PIUTANG",
+                    kategori="LAINNYA",
+                    jumlah=random.choice([300000, 500000, 750000]),
+                    tanggal_jatuh_tempo=due_date,
+                    status=status_choice,
+                    keterangan="Sewa untuk kegiatan komersial",
+                )
+                tagihan_count += 1
+
+                if status_choice == "LUNAS":
+                    # Create corresponding transaction
+                    KasTransaksi.objects.create(
+                        tanggal=due_date - timedelta(days=random.randint(0, 3)),
+                        jenis="PEMASUKAN",
+                        kategori="LAINNYA",
+                        jumlah=bill.jumlah,
+                        keterangan=f"Penerimaan Pelunasan: {bill.judul}",
+                        tagihan_asal=bill,
+                    )
+                    tx_count += 1
+
+        self.stdout.write(
+            f"Generated {tx_count} KasTransaksi and {tagihan_count} KasTagihan records."
+        )

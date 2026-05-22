@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Daftar Tagihan Keuangan{% endblock %}
+{% block pagetitle %}Daftar Tagihan & Invoice{% endblock %}
+{% block content %}
+
+<!-- Alert Messages -->
+{% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+<!-- Filters & Search Card -->
+<div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
+    <div class="card-body p-3">
+        <form method="get" action="{% url 'kependudukan:list_kas_tagihan' %}">
+            <div class="row g-2">
+                <!-- Status -->
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary">Status Pembayaran</label>
+                    <select name="status" class="form-select">
+                        <option value="">-- Semua Status --</option>
+                        {% for key, val in status_choices %}
+                            <option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Jenis Tagihan -->
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary">Jenis Tagihan</label>
+                    <select name="jenis" class="form-select">
+                        <option value="">-- Semua Jenis --</option>
+                        {% for key, val in jenis_choices %}
+                            <option value="{{ key }}" {% if selected_jenis == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Kategori -->
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary">Kategori</label>
+                    <select name="kategori" class="form-select">
+                        <option value="">-- Semua Kategori --</option>
+                        {% for key, val in kategori_choices %}
+                            <option value="{{ key }}" {% if selected_kategori == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Rentang Jatuh Tempo -->
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary">Rentang Jatuh Tempo</label>
+                    <div class="input-group">
+                        <input type="text" name="start_date" class="form-control datepicker" placeholder="Mulai" value="{{ selected_start_date|default:'' }}" autocomplete="off">
+                        <span class="input-group-text">s/d</span>
+                        <input type="text" name="end_date" class="form-control datepicker" placeholder="Akhir" value="{{ selected_end_date|default:'' }}" autocomplete="off">
+                    </div>
+                </div>
+                <!-- Actions -->
+                <div class="col-md-2 d-flex align-items-end gap-1">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter"></i> Filter</button>
+                    <a href="{% url 'kependudukan:list_kas_tagihan' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bills/Invoices Table Card -->
+<div class="card shadow-sm border-0 mb-4" style="border-radius: 14px;">
+    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="mb-0 fw-bold text-secondary"><i class="bi bi-receipt"></i> Piutang & Hutang RT/RW</h5>
+            <small class="text-muted">Total data tagihan ditemukan: {{ page_obj.paginator.count|default:0 }}</small>
+        </div>
+        <a href="{% url 'kependudukan:form_kas_tagihan' %}" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-plus-circle-fill"></i> Tambah Tagihan Baru
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Judul Tagihan</th>
+                        <th style="width: 130px;">Jenis</th>
+                        <th style="width: 150px;">Kategori</th>
+                        <th class="text-end" style="width: 150px;">Jumlah</th>
+                        <th style="width: 150px;">Jatuh Tempo</th>
+                        <th style="width: 120px; text-align: center;">Status</th>
+                        <th style="width: 160px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if tagihan_list %}
+                        {% for bill in tagihan_list %}
+                            <tr class="{% if bill.status == 'BELUM' and bill.tanggal_jatuh_tempo < today %}table-danger-subtle{% endif %}">
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ bill.judul }}</div>
+                                    {% if bill.keterangan %}
+                                        <small class="text-muted">{{ bill.keterangan|truncatechars:60 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if bill.jenis == 'PIUTANG' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %} text-uppercase d-block text-center">
+                                        {{ bill.get_jenis_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary text-uppercase d-block text-center">
+                                        {{ bill.get_kategori_display }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-dark">Rp {{ bill.jumlah|intcomma }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ bill.tanggal_jatuh_tempo|date:"d M Y" }}</div>
+                                    {% if bill.status == 'BELUM' and bill.tanggal_jatuh_tempo < today %}
+                                        <small class="text-danger fw-bold d-block mt-0.5"><i class="bi bi-clock-history"></i> Terlewat {{ bill.tanggal_jatuh_tempo|timesince }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if bill.status == 'LUNAS' %}
+                                        <span class="badge bg-success-subtle text-success text-uppercase py-1.5 px-3">LUNAS</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger text-uppercase py-1.5 px-3">BELUM</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        {% if bill.status == 'BELUM' %}
+                                            <a href="{% url 'kependudukan:bayar_tagihan' bill.id %}" class="btn btn-sm btn-success d-flex align-items-center gap-1" title="Selesaikan Tagihan / Bayar" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan tagihan ini? Mutasi kas otomatis akan dibuat.')">
+                                                <i class="bi bi-check-circle"></i> Bayar
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'kependudukan:edit_kas_tagihan' bill.id %}" class="btn btn-sm btn-outline-secondary" title="Edit Tagihan">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'kependudukan:delete_kas_tagihan' bill.id %}" class="btn btn-sm btn-outline-danger" title="Hapus Tagihan">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-receipt fs-2 opacity-50 d-block mb-2"></i>
+                                Tidak ditemukan data tagihan.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination Navigation -->
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mb-4 d-flex justify-content-center">
+    <ul class="pagination shadow-sm">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1&status={{ selected_status|default:'' }}&jenis={{ selected_jenis|default:'' }}&kategori={{ selected_kategori|default:'' }}&start_date={{ selected_start_date|default:'' }}&end_date={{ selected_end_date|default:'' }}">&laquo; Pertama</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ selected_status|default:'' }}&jenis={{ selected_jenis|default:'' }}&kategori={{ selected_kategori|default:'' }}&start_date={{ selected_start_date|default:'' }}&end_date={{ selected_end_date|default:'' }}">Sebelumnya</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link text-dark fw-bold">Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ selected_status|default:'' }}&jenis={{ selected_jenis|default:'' }}&kategori={{ selected_kategori|default:'' }}&start_date={{ selected_start_date|default:'' }}&end_date={{ selected_end_date|default:'' }}">Selanjutnya</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&status={{ selected_status|default:'' }}&jenis={{ selected_jenis|default:'' }}&kategori={{ selected_kategori|default:'' }}&start_date={{ selected_start_date|default:'' }}&end_date={{ selected_end_date|default:'' }}">Terakhir &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}
+
+{% block jscript %}
+<script>
+    $(document).ready(function() {
+        $('.datepicker').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+    });
+</script>
+{% endblock %}

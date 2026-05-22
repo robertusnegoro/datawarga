@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Dashboard Kas Keuangan{% endblock %}
+{% block pagetitle %}Keuangan & Kas RT/RW{% endblock %}
+{% block content %}
+
+<!-- Custom Premium CSS for Cash Dashboard -->
+<style>
+    .stat-card-gradient {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+        border-radius: 14px;
+        position: relative;
+        overflow: hidden;
+        color: #ffffff;
+    }
+    .stat-card-gradient:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+    }
+    .bg-grad-pemasukan {
+        background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    }
+    .bg-grad-pengeluaran {
+        background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);
+    }
+    .bg-grad-saldo {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+    .bg-grad-piutang {
+        background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    }
+    .bg-grad-hutang {
+        background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+        color: #333333;
+    }
+    .bg-grad-hutang .text-white-50 {
+        color: rgba(0, 0, 0, 0.6) !important;
+    }
+    .bg-grad-hutang .card-icon {
+        color: rgba(0, 0, 0, 0.2) !important;
+    }
+    .card-icon {
+        font-size: 3rem;
+        opacity: 0.25;
+        position: absolute;
+        right: 15px;
+        bottom: 10px;
+    }
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    .chart-container-kas {
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        background: #ffffff;
+        border: 1px solid #eef2f6;
+        margin-bottom: 24px;
+        padding: 20px;
+    }
+    .quick-action-btn {
+        transition: all 0.2s ease;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+    }
+    .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+</style>
+
+<!-- Alert messages -->
+{% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                    {% else %}
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+<!-- Quick Actions Panel -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card p-3 shadow-sm border-0 bg-light d-flex flex-row flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fs-4">📊</span>
+                <div>
+                    <h6 class="mb-0 fw-bold">Navigasi Cepat Keuangan</h6>
+                    <small class="text-muted">Akses kilat untuk penginputan pembukuan kas RT/RW</small>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'kependudukan:form_kas_transaksi' %}" class="btn btn-primary quick-action-btn d-flex align-items-center gap-2 shadow-sm">
+                    <i class="bi bi-plus-circle-fill"></i> Tambah Transaksi Kas
+                </a>
+                <a href="{% url 'kependudukan:form_kas_tagihan' %}" class="btn btn-outline-dark quick-action-btn d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-plus"></i> Tambah Tagihan
+                </a>
+                <button type="button" class="btn btn-outline-info quick-action-btn d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#syncIuranModal">
+                    <i class="bi bi-arrow-repeat"></i> Sinkronisasi Iuran Bulanan
+                </button>
+                <a href="{% url 'kependudukan:laporan_kas' %}" class="btn btn-danger quick-action-btn d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i> Laporan Keuangan
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="row mb-4">
+    <!-- Saldo Kas -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stat-card-gradient bg-grad-saldo h-100 shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Saldo Kas RT/RW</div>
+                <div class="stat-value">Rp {{ saldo|default:"0"|intcomma }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-wallet2"></i> Total Selisih Buku Kas</div>
+                <i class="bi bi-wallet2 card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Pemasukan -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stat-card-gradient bg-grad-pemasukan h-100 shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Total Pemasukan (All Time)</div>
+                <div class="stat-value">Rp {{ total_pemasukan|default:"0"|intcomma }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-graph-up-arrow"></i> Kas Masuk Terakumulasi</div>
+                <i class="bi bi-graph-up card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Pengeluaran -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stat-card-gradient bg-grad-pengeluaran h-100 shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Total Pengeluaran (All Time)</div>
+                <div class="stat-value">Rp {{ total_pengeluaran|default:"0"|intcomma }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-graph-down-arrow"></i> Kas Keluar Terakumulasi</div>
+                <i class="bi bi-graph-down card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Piutang (Belum Lunas) -->
+    <div class="col-md-6 mb-4">
+        <div class="card stat-card-gradient bg-grad-piutang h-100 shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Piutang / Tagihan Warga (Belum Lunas)</div>
+                <div class="stat-value">Rp {{ piutang_belum|default:"0"|intcomma }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-hourglass-split"></i> Dana yang akan masuk ke kas</div>
+                <i class="bi bi-arrow-down-left-square card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hutang (Belum Lunas) -->
+    <div class="col-md-6 mb-4">
+        <div class="card stat-card-gradient bg-grad-hutang h-100 shadow-sm">
+            <div class="card-body">
+                <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Hutang / Kewajiban Pengurus (Belum Lunas)</div>
+                <div class="stat-value">Rp {{ hutang_belum|default:"0"|intcomma }}</div>
+                <div class="trend-text mt-2"><i class="bi bi-hourglass-split"></i> Tagihan keluar yang belum dibayar</div>
+                <i class="bi bi-arrow-up-right-square card-icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row">
+    <!-- Trend Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card chart-container-kas h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold text-secondary mb-0">Tren Arus Kas ({{ current_year }})</h5>
+                    <small class="text-muted">Perbandingan Pemasukan & Pengeluaran per Bulan</small>
+                </div>
+                <span class="badge bg-primary px-2.5 py-1.5 fs-7">Tahun Berjalan</span>
+            </div>
+            <div class="card-body p-0">
+                <div style="height: 320px; position: relative;">
+                    <canvas id="kas-trend-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="card chart-container-kas h-100">
+            <div class="mb-3">
+                <h5 class="fw-bold text-secondary mb-0">Proporsi Pengeluaran</h5>
+                <small class="text-muted">Breakdown pengeluaran berdasarkan kategori</small>
+            </div>
+            <div class="card-body p-0 d-flex flex-column align-items-center justify-content-center">
+                <div style="height: 240px; width: 100%; position: relative;">
+                    <canvas id="kas-category-chart"></canvas>
+                </div>
+                <div id="chart-no-data" class="text-center py-5 text-muted d-none">
+                    <i class="bi bi-pie-chart fs-1 opacity-50"></i>
+                    <p class="mt-2 mb-0">Belum ada data pengeluaran berkategori.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lists Row -->
+<div class="row">
+    <!-- Recent Transactions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100" style="border-radius: 14px;">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0 fw-bold text-secondary">Transaksi Kas Terakhir</h5>
+                    <small class="text-muted">5 pencatatan kas terbaru</small>
+                </div>
+                <a href="{% url 'kependudukan:list_kas_transaksi' %}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+            </div>
+            <div class="card-body px-3 pb-3 pt-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Kategori</th>
+                                <th class="text-end">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_transactions %}
+                                {% for tx in recent_transactions %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">{{ tx.tanggal|date:"d M Y" }}</div>
+                                            <small class="text-muted">{{ tx.keterangan|truncatechars:35 }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if tx.jenis == 'PEMASUKAN' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} text-uppercase">
+                                                {{ tx.get_kategori_display }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold {% if tx.jenis == 'PEMASUKAN' %}text-success{% else %}text-danger{% endif %}">
+                                                {% if tx.jenis == 'PEMASUKAN' %}+{% else %}-{% endif %} Rp {{ tx.jumlah|intcomma }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">Belum ada transaksi kas tercatat.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending/Overdue Bills -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100" style="border-radius: 14px;">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0 fw-bold text-secondary">Tagihan Jatuh Tempo</h5>
+                    <small class="text-muted">5 tagihan belum lunas terdekat</small>
+                </div>
+                <a href="{% url 'kependudukan:list_kas_tagihan' %}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+            </div>
+            <div class="card-body px-3 pb-3 pt-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tagihan / Tempo</th>
+                                <th>Jenis</th>
+                                <th class="text-end">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_bills %}
+                                {% for bill in recent_bills %}
+                                    <tr class="{% if bill.tanggal_jatuh_tempo < today and bill.status == 'BELUM' %}table-danger-subtle{% endif %}">
+                                        <td>
+                                            <div class="fw-semibold text-truncate" style="max-width: 180px;">{{ bill.judul }}</div>
+                                            <small class="text-muted">
+                                                Jatuh Tempo: {{ bill.tanggal_jatuh_tempo|date:"d M Y" }}
+                                                {% if bill.tanggal_jatuh_tempo < today and bill.status == 'BELUM' %}
+                                                    <span class="text-danger fw-bold ms-1">(Terlewat!)</span>
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if bill.jenis == 'PIUTANG' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %} text-uppercase">
+                                                {{ bill.get_jenis_display }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="fw-bold">Rp {{ bill.jumlah|intcomma }}</div>
+                                            {% if bill.status == 'BELUM' %}
+                                                <a href="{% url 'kependudukan:bayar_tagihan' bill.id %}" class="btn btn-sm btn-success py-0 px-2 mt-1" onclick="return confirm('Apakah Anda yakin ingin menyelesaikan tagihan ini dan membuat mutasi kas?')">Selesaikan</a>
+                                            {% else %}
+                                                <span class="badge bg-success-subtle text-success mt-1">LUNAS</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">Tidak ada tagihan tertunggak.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dialog for Sync Monthly Fees -->
+<div class="modal fade" id="syncIuranModal" tabindex="-1" aria-labelledby="syncIuranModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="syncIuranModalLabel">Sinkronisasi Historis Iuran Bulanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Fitur ini akan mensinkronisasikan seluruh pembayaran dari modul <strong>Iuran Bulanan</strong> yang sudah tercatat dalam sistem ke dalam ledger <strong>Pemasukan Kas</strong> secara otomatis.</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Catatan: Pembayaran iuran yang sudah pernah disinkronisasikan sebelumnya tidak akan digandakan (aman dijalankan berulang kali).</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <a href="{% url 'kependudukan:sync_iuran_to_kas' %}" class="btn btn-info">Mulai Sinkronisasi</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block jscript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1/dist/chart.umd.js"></script>
+<script>
+    // Config global font for ChartJS
+    Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.responsive = true;
+    Chart.defaults.maintainAspectRatio = false;
+
+    // 1. Kas Trend Chart (Bar + Line)
+    const ctxTrend = document.getElementById('kas-trend-chart').getContext('2d');
+    new Chart(ctxTrend, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+            datasets: [
+                {
+                    label: 'Pemasukan (Rp)',
+                    data: {{ monthly_pemasukan|safe }},
+                    backgroundColor: 'rgba(28, 200, 138, 0.85)',
+                    borderColor: 'rgba(28, 200, 138, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                },
+                {
+                    label: 'Pengeluaran (Rp)',
+                    data: {{ monthly_pengeluaran|safe }},
+                    backgroundColor: 'rgba(231, 74, 59, 0.85)',
+                    borderColor: 'rgba(231, 74, 59, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f1f1' },
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + value.toLocaleString('id-ID');
+                        }
+                    }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 2. Kategori Breakdown Chart (Doughnut)
+    const ctxCategory = document.getElementById('kas-category-chart');
+    const catLabels = {{ cat_pengeluaran_labels|safe }};
+    const catData = {{ cat_pengeluaran_data|safe }};
+
+    if (catData.length === 0) {
+        ctxCategory.classList.add('d-none');
+        document.getElementById('chart-no-data').classList.remove('d-none');
+    } else {
+        new Chart(ctxCategory.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    data: catData,
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                        '#858796', '#5a5c69', '#f8f9fc', '#2e59d9', '#17a673'
+                    ],
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        $('.datepicker-kas').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+    });
+</script>
+{% endblock %}

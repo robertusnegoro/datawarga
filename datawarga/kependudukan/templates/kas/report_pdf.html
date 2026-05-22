@@ -1,0 +1,224 @@
+{% load humanize %}
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            @page {
+                size: A4 portrait;
+                margin: 1.5cm;
+                @bottom-right {
+                    content: "Halaman " counter(page) " dari " counter(pages);
+                    font-size: 8pt;
+                    color: #555555;
+                    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                }
+                @bottom-left {
+                    content: "Laporan Kas RT/RW - Diunduh pada {{ print_date|date:'d M Y H:i' }}";
+                    font-size: 8pt;
+                    color: #555555;
+                    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                }
+            }
+            body {
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9pt;
+                color: #333333;
+                line-height: 1.4;
+            }
+            .header-container {
+                border-bottom: 2px solid #333333;
+                padding-bottom: 12px;
+                margin-bottom: 20px;
+            }
+            .title {
+                font-size: 16pt;
+                font-weight: bold;
+                text-align: center;
+                text-transform: uppercase;
+                margin: 0;
+            }
+            .subtitle {
+                font-size: 10pt;
+                text-align: center;
+                margin: 4px 0 0 0;
+                color: #555555;
+            }
+            .summary-box {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                padding: 12px;
+                margin-bottom: 20px;
+            }
+            .summary-title {
+                font-size: 10pt;
+                font-weight: bold;
+                margin-bottom: 8px;
+                color: #495057;
+                text-transform: uppercase;
+                border-bottom: 1px solid #dee2e6;
+                padding-bottom: 4px;
+            }
+            .summary-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .summary-table td {
+                padding: 4px 0;
+                font-size: 10pt;
+            }
+            .summary-label {
+                color: #6c757d;
+                width: 40%;
+            }
+            .summary-value {
+                font-weight: bold;
+                text-align: right;
+            }
+            .text-success {
+                color: #198754;
+            }
+            .text-danger {
+                color: #dc3545;
+            }
+            .text-primary {
+                color: #0d6efd;
+            }
+            .ledger-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+            .ledger-table th {
+                background-color: #343a40;
+                color: #ffffff;
+                font-weight: bold;
+                text-align: left;
+                padding: 8px;
+                font-size: 8.5pt;
+                text-transform: uppercase;
+            }
+            .ledger-table td {
+                padding: 8px;
+                border-bottom: 1px solid #dee2e6;
+                font-size: 8.5pt;
+            }
+            .ledger-table tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            .text-right {
+                text-align: right;
+            }
+            .text-center {
+                text-align: center;
+            }
+            .badge {
+                display: inline-block;
+                padding: 2px 5px;
+                font-size: 7.5pt;
+                font-weight: bold;
+                border-radius: 3px;
+                text-transform: uppercase;
+            }
+            .badge-pemasukan {
+                background-color: #d1e7dd;
+                color: #0f5132;
+            }
+            .badge-pengeluaran {
+                background-color: #f8d7da;
+                color: #842029;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Header -->
+        <div class="header-container">
+            <h1 class="title">Laporan Pertanggungjawaban Kas RT/RW</h1>
+            <p class="subtitle">
+                Rukun Tetangga {{ rt|default:"—" }} / Rukun Warga {{ rw|default:"—" }}<br>
+                Kel. {{ kelurahan|default:"—" }}, Kec. {{ kecamatan|default:"—" }}, {{ kota|default:"—" }}
+            </p>
+            <p class="subtitle" style="font-weight: bold; margin-top: 8px;">
+                {% if start_date or end_date %}
+                    Periode Laporan: 
+                    {% if start_date %}{{ start_date }}{% else %}Awal{% endif %} 
+                    s/d 
+                    {% if end_date %}{{ end_date }}{% else %}Sekarang{% endif %}
+                {% else %}
+                    Periode Laporan: Semua Transaksi (All Time)
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="summary-box">
+            <div class="summary-title">Ringkasan Keuangan Periode Ini</div>
+            <table class="summary-table">
+                <tbody>
+                    <tr>
+                        <td class="summary-label">Saldo Awal (Sebelum Cutoff)</td>
+                        <td class="summary-value" style="color: #6f42c1;">Rp {{ saldo_awal|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td class="summary-label">Total Pemasukan Kas (Debit)</td>
+                        <td class="summary-value text-success">Rp {{ total_pemasukan|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td class="summary-label">Total Pengeluaran Kas (Kredit)</td>
+                        <td class="summary-value text-danger">Rp {{ total_pengeluaran|intcomma }}</td>
+                    </tr>
+                    <tr style="border-top: 1px double #dee2e6;">
+                        <td class="summary-label" style="padding-top: 8px; font-weight: bold; color: #333333;">Saldo Akhir (Cutoff)</td>
+                        <td class="summary-value text-primary" style="padding-top: 8px; font-size: 11pt;">Rp {{ saldo_akhir|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Ledger Table -->
+        <h4 style="margin-bottom: 8px; text-transform: uppercase; color: #495057; border-bottom: 1px solid #6c757d; padding-bottom: 4px;">Detail Mutasi Buku Kas</h4>
+        <table class="ledger-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;" class="text-center">No</th>
+                    <th style="width: 80px;">Tanggal</th>
+                    <th style="width: 100px;">Jenis</th>
+                    <th style="width: 100px;">Kategori</th>
+                    <th>Keterangan / Deskripsi</th>
+                    <th style="width: 120px;" class="text-right">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if transaksi_list %}
+                    {% for tx in transaksi_list %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td>{{ tx.tanggal|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if tx.jenis == 'PEMASUKAN' %}
+                                    <span class="badge badge-pemasukan">Masuk</span>
+                                {% else %}
+                                    <span class="badge badge-pengeluaran">Keluar</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ tx.get_kategori_display }}</td>
+                            <td>
+                                {{ tx.keterangan }}
+                                {% if tx.iuran_asal %}
+                                    <br><span style="font-size: 7.5pt; color: #6c757d;">(Iuran Bulanan - Kompleks {{ tx.iuran_asal.kompleks }})</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right" style="font-weight: bold;">
+                                {% if tx.jenis == 'PEMASUKAN' %}+{% else %}-{% endif %} Rp {{ tx.jumlah|intcomma }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 20px; color: #6c757d;">Tidak ada data mutasi kas untuk periode ini.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </body>
+</html>

@@ -18,6 +18,8 @@ import os
 
 from kependudukan.agent import AgentService, DjangoSystemAdapter, AgentConversation
 from kependudukan.ai_service import get_ai_provider
+from kependudukan.formatters import format_rupiah
+
 
 logger = logging.getLogger(__name__)
 
@@ -340,7 +342,7 @@ async def check_iuran(update: Update, context: ContextTypes.DEFAULT_TYPE):
             response += f"{status} {month_name}\n"
             if month_num in months_paid:
                 iuran = months_paid[month_num]
-                response += f"   💰 Rp {iuran['total_bayar']:,}\n"
+                response += f"   💰 {format_rupiah(iuran['total_bayar'])}\n"
                 if iuran.get("keterangan"):
                     response += f"   📝 {iuran['keterangan']}\n"
 
@@ -450,7 +452,7 @@ async def bukti_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Konfirmasi pembayaran:\n\n"
         f"Alamat: {data['alamat']}\n"
         f"Periode: {data['bulan']}/{data['tahun']}\n"
-        f"Jumlah: Rp {data['jumlah']:,}\n\n"
+        f"Jumlah: {format_rupiah(data['jumlah'])}\n\n"
         f'Ketik "ya" untuk konfirmasi atau "tidak" untuk membatalkan:'
     )
     return KONFIRMASI

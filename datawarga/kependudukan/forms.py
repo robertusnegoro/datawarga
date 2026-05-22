@@ -1,4 +1,11 @@
-from .models import Warga, Kompleks, TransaksiIuranBulanan, Kendaraan
+from .models import (
+    Warga,
+    Kompleks,
+    TransaksiIuranBulanan,
+    Kendaraan,
+    KasTransaksi,
+    KasTagihan,
+)
 from django import forms
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
@@ -88,3 +95,38 @@ class KendaraanForm(forms.ModelForm):
     class Meta:
         model = Kendaraan
         fields = "__all__"
+
+
+class KasTransaksiForm(forms.ModelForm):
+    class Meta:
+        model = KasTransaksi
+        fields = [
+            "tanggal",
+            "jenis",
+            "kategori",
+            "jumlah",
+            "keterangan",
+            "bukti_transaksi",
+        ]
+        widgets = {
+            "tanggal": forms.DateInput(attrs={"type": "date"}),
+            "keterangan": forms.Textarea(attrs={"rows": 3}),
+        }
+
+
+class KasTagihanForm(forms.ModelForm):
+    class Meta:
+        model = KasTagihan
+        fields = [
+            "judul",
+            "jenis",
+            "kategori",
+            "jumlah",
+            "tanggal_jatuh_tempo",
+            "status",
+            "keterangan",
+        ]
+        widgets = {
+            "tanggal_jatuh_tempo": forms.DateInput(attrs={"type": "date"}),
+            "keterangan": forms.Textarea(attrs={"rows": 3}),
+        }

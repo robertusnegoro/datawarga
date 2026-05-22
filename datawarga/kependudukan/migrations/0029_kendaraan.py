@@ -5,22 +5,46 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('kependudukan', '0028_penandatangan_surat'),
+        ("kependudukan", "0028_penandatangan_surat"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Kendaraan',
+            name="Kendaraan",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('jenis_kendaraan', models.CharField(choices=[('MOBIL', 'MOBIL'), ('MOTOR', 'MOTOR'), ('LAINNYA', 'LAINNYA')], default='MOBIL', max_length=50)),
-                ('merk', models.CharField(blank=True, max_length=100, null=True)),
-                ('tipe', models.CharField(blank=True, max_length=100, null=True)),
-                ('plat_nomor', models.CharField(max_length=20, unique=True)),
-                ('keterangan', models.TextField(blank=True, null=True)),
-                ('pemilik', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='kependudukan.warga')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "jenis_kendaraan",
+                    models.CharField(
+                        choices=[
+                            ("MOBIL", "MOBIL"),
+                            ("MOTOR", "MOTOR"),
+                            ("LAINNYA", "LAINNYA"),
+                        ],
+                        default="MOBIL",
+                        max_length=50,
+                    ),
+                ),
+                ("merk", models.CharField(blank=True, max_length=100, null=True)),
+                ("tipe", models.CharField(blank=True, max_length=100, null=True)),
+                ("plat_nomor", models.CharField(max_length=20, unique=True)),
+                ("keterangan", models.TextField(blank=True, null=True)),
+                (
+                    "pemilik",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="kependudukan.warga",
+                    ),
+                ),
             ],
         ),
     ]

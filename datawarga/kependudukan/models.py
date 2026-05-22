@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 import os
+from .formatters import format_rupiah
 
 
 # Create your models here.
@@ -302,3 +303,108 @@ class Kendaraan(models.Model):
 
     def __str__(self):
         return f"{self.plat_nomor} - {self.merk} {self.tipe}"
+
+
+def upload_kas_to(instance, filename):
+    """
+    Renames the uploaded file to year-month-date.ext for KasTransaksi
+    """
+    ext = os.path.splitext(filename)[1]
+    today = date.today()
+    return "bukti_kas/{}/{}{}".format(
+        today.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d"), ext
+    )
+
+
+class KasTagihan(models.Model):
+    JENIS_CHOICES = (
+        ("PIUTANG", "Piutang (Receivable)"),
+        ("HUTANG", "Hutang (Payable)"),
+    )
+
+    KATEGORI_CHOICES = (
+        ("IURAN", "Iuran Bulanan"),
+        ("SOSIAL", "Sosial/Sumbangan"),
+        ("KEBERSIHAN", "Kebersihan"),
+        ("KEAMANAN", "Keamanan"),
+        ("OPERASIONAL", "Operasional"),
+        ("PEMBANGUNAN", "Pembangunan/Infrastruktur"),
+        ("LAINNYA", "Lain-lain"),
+    )
+
+    STATUS_CHOICES = (
+        ("BELUM", "Belum Bayar"),
+        ("LUNAS", "Lunas"),
+    )
+
+    judul = models.CharField(max_length=200)
+    jenis = models.CharField(max_length=20, choices=JENIS_CHOICES)
+    kategori = models.CharField(
+        max_length=30, choices=KATEGORI_CHOICES, default="LAINNYA"
+    )
+    jumlah = models.IntegerField()
+    tanggal_jatuh_tempo = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="BELUM")
+    keterangan = models.TextField(blank=True, null=True)
+    tanggal_dibuat = models.DateField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["tanggal_jatuh_tempo"]),
+            models.Index(fields=["jenis"]),
+            models.Index(fields=["kategori"]),
+            models.Index(fields=["status"]),
+        ]
+
+    def __str__(self):
+        return f"[{self.jenis} - {self.status}] {self.judul} - {format_rupiah(self.jumlah)}"
+
+
+class KasTransaksi(models.Model):
+    JENIS_CHOICES = (
+        ("PEMASUKAN", "Pemasukan"),
+        ("PENGELUARAN", "Pengeluaran"),
+    )
+
+    KATEGORI_CHOICES = (
+        ("IURAN", "Iuran Bulanan"),
+        ("SOSIAL", "Sosial/Sumbangan"),
+        ("KEBERSIHAN", "Kebersihan"),
+        ("KEAMANAN", "Keamanan"),
+        ("OPERASIONAL", "Operasional"),
+        ("PEMBANGUNAN", "Pembangunan/Infrastruktur"),
+        ("LAINNYA", "Lain-lain"),
+    )
+
+    tanggal = models.DateField(default=date.today)
+    jenis = models.CharField(max_length=20, choices=JENIS_CHOICES)
+    kategori = models.CharField(
+        max_length=30, choices=KATEGORI_CHOICES, default="LAINNYA"
+    )
+    jumlah = models.IntegerField()
+    keterangan = models.TextField(blank=True, null=True)
+    bukti_transaksi = models.FileField(upload_to=upload_kas_to, blank=True, null=True)
+    iuran_asal = models.ForeignKey(
+        "TransaksiIuranBulanan",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="kas_transaksi",
+    )
+    tagihan_asal = models.ForeignKey(
+        "KasTagihan",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pembayaran",
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["tanggal"]),
+            models.Index(fields=["jenis"]),
+            models.Index(fields=["kategori"]),
+        ]
+
+    def __str__(self):
+        return f"[{self.jenis}] {self.tanggal} - {format_rupiah(self.jumlah)} ({self.kategori})"

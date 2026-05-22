@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Batch Iuran Bulanan{% endblock %}
 {% block pagetitle %}Iuran Bulanan Batch - Blok {{ data_kompleks.blok }} / Nomor {{ data_kompleks.nomor }}{% endblock %}
+
 
 {% block content %}
 <div class="container">
@@ -82,7 +84,7 @@
                                 {% for iuran in data_iuran %}
                                 <tr>
                                     <td class="px-3">{{ iuran.get_periode_bulan_display }}</td>
-                                    <td class="px-3">{{ iuran.total_bayar|floatformat:0 }}</td>
+                                    <td class="px-3">Rp {{ iuran.total_bayar|intcomma }}</td>
                                     <td class="px-3">
                                         {% if iuran.bukti_bayar %}
                                             <a href="{{ iuran.bukti_bayar.url }}" class="btn btn-sm btn-outline-primary" target="_blank">

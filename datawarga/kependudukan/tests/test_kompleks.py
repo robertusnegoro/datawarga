@@ -1,5 +1,5 @@
 from django.test import TestCase
-from ..models import Kompleks, WargaPermissionGroup
+from ..models import Kompleks, WargaPermissionGroup, TransaksiIuranBulanan
 from ..forms import GenerateKompleksForm
 from django.contrib.auth.models import User
 from django.test import Client
@@ -176,3 +176,27 @@ class KompleksTestCase(TestCase):
         # Verify deletion
         with self.assertRaises(Kompleks.DoesNotExist):
             Kompleks.objects.get(id=kompleks.id)
+
+    def test_form_iuran_bulanan_formatting(self):
+        """Test that formIuranBulanan view displays money values with thousand separator"""
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # Create a TransaksiIuranBulanan with total_bayar = 150000
+        TransaksiIuranBulanan.objects.create(
+            kompleks=self.existing_kompleks,
+            periode_bulan=5,
+            periode_tahun=2026,
+            total_bayar=150000,
+            keterangan="Iuran bulanan May 2026",
+        )
+
+        response = client.get(
+            reverse(
+                "kependudukan:formIuranBulananYear",
+                kwargs={"idkompleks": self.existing_kompleks.id, "year": 2026},
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        # Verify that total_bayar is formatted as Rp 150.000 in the HTML template output
+        self.assertContains(response, "Rp 150.000")

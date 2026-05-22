@@ -3,6 +3,7 @@
 {% block pagetitle %}Iuran Bulanan Rumah Blok {{ data_kompleks.blok }} / Nomor {{ data_kompleks.nomor }} {% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
+{% load humanize %}
 <div class="row">
     <div class="col-lg-6">
         <h5>Form Iuran Bulanan</h5>
@@ -40,25 +41,46 @@
         </div> 
         <div class="py-2">
             <table class="table table-hover">
-                <tr>
-                    <th width="10px">#</th>
-                    <th>Bulan</th>
-                    <th>Bukti Bayar</th>
-                    <th>Tanggal Entry</th>
-                    <th>Keterangan</th>
-                    <th>Opsi</th>
-                </tr>
-                {% for y in data_iuran %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ y.get_periode_bulan_display }}</td>
-                    <td>{{ y.bukti_bayar }}</td>
-                    <td>{{ y.tanggal_bayar }}</td>
-                    <td>{{ y.keterangan }}</td>
-                    <td>{{ y.total_bayar }}</td>
-                    <td></td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th width="10px">#</th>
+                        <th>Bulan</th>
+                        <th>Total Bayar</th>
+                        <th>Bukti Bayar</th>
+                        <th>Tanggal Entry</th>
+                        <th>Keterangan</th>
+                        <th class="text-end">Opsi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for y in data_iuran %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'kependudukan:formIuranBulananYearTrx' data_kompleks.id y.periode_tahun y.id %}" class="fw-bold text-primary" style="text-decoration: none;">
+                                {{ y.get_periode_bulan_display }}
+                            </a>
+                        </td>
+                        <td>Rp {{ y.total_bayar|intcomma }}</td>
+                        <td>
+                            {% if y.bukti_bayar %}
+                                <a href="{{ y.bukti_bayar.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-image-fill"></i> Lihat Bukti
+                                </a>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ y.tanggal_bayar }}</td>
+                        <td>{{ y.keterangan|default:"-" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'kependudukan:deleteIuranBulanan' y.id %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>

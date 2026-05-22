@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{% if instance %}Ubah{% else %}Tambah{% endif %} Tagihan Keuangan{% endblock %}
+{% block pagetitle %}<i class="bi bi-pencil-square text-primary"></i> {% if instance %}Ubah{% else %}Tambah{% endif %} Tagihan Keuangan{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" id="tagihan-form">
+            {% csrf_token %}
+            
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="bi bi-receipt"></i>
+                    <h5>{% if instance %}Ubah Rincian Tagihan{% else %}Form Hutang / Piutang Keuangan{% endif %}</h5>
+                </div>
+                <div class="form-card-body">
+                    <!-- Judul Tagihan -->
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.judul|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Jenis Tagihan -->
+                        <div class="col-md-6">
+                            {{ form.jenis|as_crispy_field }}
+                        </div>
+
+                        <!-- Kategori -->
+                        <div class="col-md-6">
+                            {{ form.kategori|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Jumlah -->
+                        <div class="col-md-6">
+                            {{ form.jumlah|as_crispy_field }}
+                        </div>
+
+                        <!-- Tanggal Jatuh Tempo -->
+                        <div class="col-md-6">
+                            {{ form.tanggal_jatuh_tempo|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Status Pembayaran -->
+                        <div class="col-md-6">
+                            {{ form.status|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Keterangan -->
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.keterangan|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Controls -->
+            <div class="my-4">
+                <button type="submit" class="submit-btn">
+                    <i class="bi bi-save-fill"></i> Simpan Tagihan
+                </button>
+                <a href="{% url 'kependudukan:list_kas_tagihan' %}" class="btn btn-outline-secondary ms-2">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block jscript %}
+<script>
+    $(document).ready(function() {
+        // Initialize bootstrap datepicker on form.tanggal_jatuh_tempo
+        $('#id_tanggal_jatuh_tempo').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+    });
+</script>
+{% endblock %}
