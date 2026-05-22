@@ -123,6 +123,109 @@ code, pre {
   color: var(--gcp-blue) !important;
 }
 
+/* Collapsible sidebar group styles */
+.sidebar-group {
+  margin-bottom: 4px;
+}
+
+.sidebar-group-toggle {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gcp-gray-medium) !important;
+  padding: 10px 16px !important;
+  border-radius: 0 20px 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease-in-out;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sidebar-group-toggle i {
+  font-size: 1.1rem;
+  color: var(--gcp-gray-medium);
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sidebar-group-toggle:hover {
+  background-color: var(--gcp-gray-light);
+  color: var(--gcp-gray-dark) !important;
+}
+
+.sidebar-group-toggle:hover i {
+  color: var(--gcp-gray-dark);
+}
+
+.sidebar-group-toggle.active {
+  color: var(--gcp-blue) !important;
+  font-weight: 600;
+  border-left: 3px solid var(--gcp-blue);
+  background-color: rgba(26, 115, 232, 0.03) !important;
+}
+
+.sidebar-group-toggle.active i {
+  color: var(--gcp-blue) !important;
+}
+
+.sidebar-group-toggle .chevron-icon {
+  font-size: 0.75rem !important;
+  margin-left: auto;
+  transition: transform 0.2s ease-in-out;
+}
+
+.sidebar-group-toggle[aria-expanded="true"] .chevron-icon {
+  transform: rotate(180deg);
+}
+
+/* Submenu container */
+.sidebar .submenu-nav {
+  padding-left: 12px;
+  margin-top: 2px;
+  margin-bottom: 6px;
+  border-left: 1px solid var(--gcp-border);
+  margin-left: 24px;
+}
+
+/* Submenu item links */
+.sidebar .submenu-nav .nav-link {
+  font-size: 0.825rem;
+  padding: 8px 12px !important;
+  font-weight: 500;
+  border-radius: 6px;
+  border-left: none !important;
+  gap: 8px;
+  color: var(--gcp-gray-medium) !important;
+  background-color: transparent !important;
+}
+
+.sidebar .submenu-nav .nav-link i {
+  font-size: 0.95rem;
+  color: var(--gcp-gray-medium);
+}
+
+.sidebar .submenu-nav .nav-link:hover {
+  background-color: var(--gcp-gray-light) !important;
+  color: var(--gcp-gray-dark) !important;
+}
+
+.sidebar .submenu-nav .nav-link:hover i {
+  color: var(--gcp-gray-dark) !important;
+}
+
+.sidebar .submenu-nav .nav-link.active {
+  background-color: var(--gcp-blue-light) !important;
+  color: var(--gcp-blue) !important;
+  font-weight: 600;
+}
+
+.sidebar .submenu-nav .nav-link.active i {
+  color: var(--gcp-blue) !important;
+}
+
 .sidebar-heading {
   font-size: 0.7rem !important;
   font-weight: 700 !important;

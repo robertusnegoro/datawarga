@@ -46,139 +46,184 @@
             <div class="row">
                 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse border-end">
                     <div class="position-sticky pt-3 sidebar-sticky">
-                        <ul class="nav flex-column">
+                        {% with url_name=request.resolver_match.url_name %}
+                        <ul class="nav flex-column mb-3">
                             <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboardWarga' %}active{% endif %}" href="{% url 'kependudukan:dashboardWarga' %}">
+                                <a class="nav-link {% if url_name == 'dashboardWarga' %}active{% endif %}" href="{% url 'kependudukan:dashboardWarga' %}">
                                     <i class="bi bi-house-door"></i> Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'statisticWarga' %}active{% endif %}" href="{% url 'kependudukan:statisticWarga' %}">
+                                <a class="nav-link {% if url_name == 'statisticWarga' %}active{% endif %}" href="{% url 'kependudukan:statisticWarga' %}">
                                     <i class="bi bi-bar-chart-line"></i> Statistic
                                 </a>
                             </li>
                         </ul>
 
-                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-                            <span>Kompleks Rumah</span>
-                        </h6>
-                        <ul class="nav flex-column">
-                            {% if request.user.is_superuser %}
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'kompleksForm' %}active{% endif %}" href="{% url 'kependudukan:kompleksForm' %}">
-                                    <i class="bi bi-geo"></i> Form Kompleks Rumah
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'listKompleksView' or request.resolver_match.url_name == 'detailKompleks' %}active{% endif %}" href="{% url 'kependudukan:listKompleksView' %}">
-                                    <i class="bi bi-map"></i> Data Kompleks Rumah
-                                </a>
-                            </li>
-                        </ul>
+                        <!-- Group 1: Kependudukan & Rumah -->
+                        <div class="sidebar-group">
+                            <a class="sidebar-group-toggle {% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'kompleksForm' or url_name == 'arsipWargaView' %}active{% endif %}" 
+                               data-bs-toggle="collapse" 
+                               href="#collapseKependudukan" 
+                               role="button" 
+                               aria-expanded="{% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'kompleksForm' or url_name == 'arsipWargaView' %}true{% else %}false{% endif %}" 
+                               aria-controls="collapseKependudukan">
+                                <i class="bi bi-people"></i>
+                                <span>Kependudukan</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <div class="collapse {% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'kompleksForm' or url_name == 'arsipWargaView' %}show{% endif %}" id="collapseKependudukan">
+                                <ul class="nav flex-column submenu-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'listWargaView' %}active{% endif %}" href="{% url 'kependudukan:listWargaView' %}">
+                                            <i class="bi bi-person-lines-fill"></i> Daftar Warga
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'daftarKepalaKeluarga' %}active{% endif %}" href="{% url 'kependudukan:daftarKepalaKeluarga' %}">
+                                            <i class="bi bi-people"></i> Kepala Keluarga
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'listKompleksView' or url_name == 'detailKompleks' %}active{% endif %}" href="{% url 'kependudukan:listKompleksView' %}">
+                                            <i class="bi bi-map"></i> Data Kompleks
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'formWarga' or url_name == 'formWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:formWarga' 0 %}">
+                                            <i class="bi bi-input-cursor-text"></i> Form Warga
+                                        </a>
+                                    </li>
+                                    {% if request.user.is_superuser %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'kompleksForm' %}active{% endif %}" href="{% url 'kependudukan:kompleksForm' %}">
+                                            <i class="bi bi-geo"></i> Form Kompleks
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'arsipWargaView' %}active{% endif %}" href="{% url 'kependudukan:arsipWargaView' %}">
+                                            <i class="bi bi-archive-fill"></i> Arsip Data Warga
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
 
-                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-                            <span>Laporan Iuran</span>
-                        </h6>
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                {% now "Y" as current_year %}
-                                <a class="nav-link {% if request.resolver_match.url_name == 'pdfReportIuranBulanan' or request.resolver_match.url_name == 'pdfReportIuranBulananForm' %}active{% endif %}" href="{% url 'kependudukan:pdfReportIuranBulanan' year=current_year %}">
-                                    <i class="bi bi-file-earmark-pdf"></i> Summary Iuran Bulanan
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'iuranIncomeStatementReportForm' %}active{% endif %}" href="{% url 'kependudukan:iuranIncomeStatementReportForm' %}">
-                                    <i class="bi bi-file-earmark-pdf"></i> Pemasukan Per Bulan
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'iuranYearly' %}active{% endif %}" href="{% url 'kependudukan:iuranYearly' %}">
-                                    <i class="bi bi-file-earmark-pdf"></i> Rekap Tahunan
-                                </a>
-                            </li>
-                        </ul>
-
-                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-                            <span>Warga</span>
-                        </h6>
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'formWarga' or request.resolver_match.url_name == 'formWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:formWarga' 0 %}">
-                                    <i class="bi bi-input-cursor-text"></i> Form Warga
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'listWargaView' %}active{% endif %}" href="{% url 'kependudukan:listWargaView' %}">
-                                    <i class="bi bi-person-lines-fill"></i> Daftar Warga
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'daftarKepalaKeluarga' %}active{% endif %}" href="{% url 'kependudukan:daftarKepalaKeluarga' %}">
-                                    <i class="bi bi-people"></i> Daftar Kepala Keluarga
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'arsipWargaView' %}active{% endif %}" href="{% url 'kependudukan:arsipWargaView' %}">
-                                    <i class="bi bi-archive-fill"></i> Arsip Data Warga
-                                </a>
-                            </li>
-                        </ul>
-                        
+                        <!-- Group 2: Keuangan & Kas -->
                         {% if is_kas_user %}
-                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-                            <span>Keuangan & Kas</span>
-                        </h6>
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_kas' %}active{% endif %}" href="{% url 'kependudukan:dashboard_kas' %}">
-                                    <i class="bi bi-wallet2"></i> Dashboard Kas
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'list_kas_transaksi' or request.resolver_match.url_name == 'form_kas_transaksi' or request.resolver_match.url_name == 'edit_kas_transaksi' %}active{% endif %}" href="{% url 'kependudukan:list_kas_transaksi' %}">
-                                    <i class="bi bi-cash-coin"></i> Transaksi Kas
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'list_kas_tagihan' or request.resolver_match.url_name == 'form_kas_tagihan' or request.resolver_match.url_name == 'edit_kas_tagihan' %}active{% endif %}" href="{% url 'kependudukan:list_kas_tagihan' %}">
-                                    <i class="bi bi-receipt"></i> Tagihan Keuangan
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'laporan_kas' %}active{% endif %}" href="{% url 'kependudukan:laporan_kas' %}">
-                                    <i class="bi bi-file-earmark-bar-graph"></i> Laporan Keuangan
-                                </a>
-                            </li>
-                        </ul>
+                        <div class="sidebar-group">
+                            <a class="sidebar-group-toggle {% if url_name == 'dashboard_kas' or url_name == 'list_kas_transaksi' or url_name == 'form_kas_transaksi' or url_name == 'edit_kas_transaksi' or url_name == 'list_kas_tagihan' or url_name == 'form_kas_tagihan' or url_name == 'edit_kas_tagihan' or url_name == 'laporan_kas' %}active{% endif %}" 
+                               data-bs-toggle="collapse" 
+                               href="#collapseKeuanganKas" 
+                               role="button" 
+                               aria-expanded="{% if url_name == 'dashboard_kas' or url_name == 'list_kas_transaksi' or url_name == 'form_kas_transaksi' or url_name == 'edit_kas_transaksi' or url_name == 'list_kas_tagihan' or url_name == 'form_kas_tagihan' or url_name == 'edit_kas_tagihan' or url_name == 'laporan_kas' %}true{% else %}false{% endif %}" 
+                               aria-controls="collapseKeuanganKas">
+                                <i class="bi bi-wallet2"></i>
+                                <span>Keuangan & Kas</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <div class="collapse {% if url_name == 'dashboard_kas' or url_name == 'list_kas_transaksi' or url_name == 'form_kas_transaksi' or url_name == 'edit_kas_transaksi' or url_name == 'list_kas_tagihan' or url_name == 'form_kas_tagihan' or url_name == 'edit_kas_tagihan' or url_name == 'laporan_kas' %}show{% endif %}" id="collapseKeuanganKas">
+                                <ul class="nav flex-column submenu-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'dashboard_kas' %}active{% endif %}" href="{% url 'kependudukan:dashboard_kas' %}">
+                                            <i class="bi bi-speedometer2"></i> Dashboard Kas
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'list_kas_transaksi' or url_name == 'form_kas_transaksi' or url_name == 'edit_kas_transaksi' %}active{% endif %}" href="{% url 'kependudukan:list_kas_transaksi' %}">
+                                            <i class="bi bi-cash-coin"></i> Transaksi Kas
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'list_kas_tagihan' or url_name == 'form_kas_tagihan' or url_name == 'edit_kas_tagihan' %}active{% endif %}" href="{% url 'kependudukan:list_kas_tagihan' %}">
+                                            <i class="bi bi-receipt"></i> Tagihan Iuran
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'laporan_kas' %}active{% endif %}" href="{% url 'kependudukan:laporan_kas' %}">
+                                            <i class="bi bi-file-earmark-bar-graph"></i> Laporan Keuangan
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                         {% endif %}
-                        
-                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-                            <span>Utility</span>
-                        </h6>
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'formWargaReport' %}active{% endif %}" href="{% url 'kependudukan:formWargaReport' %}">
-                                    <i class="bi bi-file-earmark-pdf"></i> Print PDF Warga
-                                </a>
+
+                        <!-- Group 3: Laporan Iuran -->
+                        <div class="sidebar-group">
+                            <a class="sidebar-group-toggle {% if url_name == 'pdfReportIuranBulanan' or url_name == 'pdfReportIuranBulananForm' or url_name == 'iuranIncomeStatementReportForm' or url_name == 'iuranYearly' %}active{% endif %}" 
+                               data-bs-toggle="collapse" 
+                               href="#collapseLaporanIuran" 
+                               role="button" 
+                               aria-expanded="{% if url_name == 'pdfReportIuranBulanan' or url_name == 'pdfReportIuranBulananForm' or url_name == 'iuranIncomeStatementReportForm' or url_name == 'iuranYearly' %}true{% else %}false{% endif %}" 
+                               aria-controls="collapseLaporanIuran">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                <span>Laporan Iuran</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <div class="collapse {% if url_name == 'pdfReportIuranBulanan' or url_name == 'pdfReportIuranBulananForm' or url_name == 'iuranIncomeStatementReportForm' or url_name == 'iuranYearly' %}show{% endif %}" id="collapseLaporanIuran">
+                                <ul class="nav flex-column submenu-nav">
+                                    <li class="nav-item">
+                                        {% now "Y" as current_year %}
+                                        <a class="nav-link {% if url_name == 'pdfReportIuranBulanan' or url_name == 'pdfReportIuranBulananForm' %}active{% endif %}" href="{% url 'kependudukan:pdfReportIuranBulanan' year=current_year %}">
+                                            <i class="bi bi-calendar3"></i> Summary Bulanan
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'iuranIncomeStatementReportForm' %}active{% endif %}" href="{% url 'kependudukan:iuranIncomeStatementReportForm' %}">
+                                            <i class="bi bi-wallet-fill"></i> Pemasukan Bulanan
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'iuranYearly' %}active{% endif %}" href="{% url 'kependudukan:iuranYearly' %}">
+                                            <i class="bi bi-calendar-check"></i> Rekap Tahunan
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Group 4: Utility / Tools -->
+                        <div class="sidebar-group">
+                            <a class="sidebar-group-toggle {% if url_name == 'formWargaReport' or url_name == 'utilImportWarga' or url_name == 'utilAssignWargaRumah' %}active{% endif %}" 
+                               data-bs-toggle="collapse" 
+                               href="#collapseUtility" 
+                               role="button" 
+                               aria-expanded="{% if url_name == 'formWargaReport' or url_name == 'utilImportWarga' or url_name == 'utilAssignWargaRumah' %}true{% else %}false{% endif %}" 
+                               aria-controls="collapseUtility">
+                                <i class="bi bi-wrench-adjustable"></i>
+                                <span>Utility / Tools</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <div class="collapse {% if url_name == 'formWargaReport' or url_name == 'utilImportWarga' or url_name == 'utilAssignWargaRumah' %}show{% endif %}" id="collapseUtility">
+                                <ul class="nav flex-column submenu-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'formWargaReport' %}active{% endif %}" href="{% url 'kependudukan:formWargaReport' %}">
+                                            <i class="bi bi-printer"></i> Print PDF Warga
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'utilImportWarga' %}active{% endif %}" href="{% url 'kependudukan:utilImportWarga' %}">
+                                            <i class="bi bi-filetype-csv"></i> Import Data Warga
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'utilAssignWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:utilAssignWargaRumah' %}">
+                                            <i class="bi bi-arrow-left-right"></i> Pindahkan Warga
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Mobile-only User section -->
+                        <ul class="nav flex-column d-md-none mt-3 border-top pt-3">
+                            <li class="nav-item px-3 mb-2 small text-muted">
+                                <i class="bi bi-person-circle"></i> {{request.user.username}}
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'utilImportWarga' %}active{% endif %}" href="{% url 'kependudukan:utilImportWarga' %}">
-                                    <i class="bi bi-filetype-csv"></i> Import Data Warga
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'utilAssignWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:utilAssignWargaRumah' %}">
-                                    <i class="bi bi-arrow-left-right"></i> Pindahkan Warga
-                                </a>
-                            </li>
-                            
-                            <!-- Mobile-only logout button -->
-                            <li class="nav-item d-md-none mt-3 border-top pt-3">
-                                <div class="px-3 mb-2 small text-muted">
-                                    <i class="bi bi-person-circle"></i> {{request.user.username}}
-                                </div>
-                                <form method="post" action="{% url 'logout' %}" class="px-3">
+                            <li class="nav-item px-3">
+                                <form method="post" action="{% url 'logout' %}" class="m-0">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
                                         <i class="bi bi-box-arrow-right"></i> Log out
@@ -186,6 +231,7 @@
                                 </form>
                             </li>
                         </ul>
+                        {% endwith %}
                     </div>
                 </nav>
                 
