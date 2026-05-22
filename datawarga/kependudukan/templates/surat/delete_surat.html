@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Hapus Data Surat{% endblock %}
+{% block pagetitle %}<i class="bi bi-trash text-danger"></i> Hapus Data Surat{% endblock %}
+{% block content %}
+
+<div class="row mt-3">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm border-danger" style="border-radius: 16px;">
+            <div class="card-header bg-danger text-white border-0 py-3 px-4" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Konfirmasi Hapus Surat</h5>
+            </div>
+            <div class="card-body p-4">
+                <p>Apakah Anda yakin ingin menghapus surat ini?</p>
+                <div class="bg-light p-3 rounded mb-4">
+                    <p class="mb-1"><strong>Jenis Surat:</strong> {{ surat.get_jenis_surat_display }}</p>
+                    <p class="mb-1"><strong>Nomor Surat:</strong> {{ surat.nomor_surat|default:"-" }}</p>
+                    <p class="mb-1"><strong>Tanggal Dibuat:</strong> {{ surat.tanggal_surat_indo }}</p>
+                    <p class="mb-1"><strong>Keperluan:</strong> {{ surat.keperluan }}</p>
+                    <p class="mb-0"><strong>Warga Penerima:</strong> {{ surat.warga.nama_lengkap|upper }}</p>
+                </div>
+
+                <form method="post" action="{% url 'kependudukan:delete_surat' surat.id %}{% if next %}?next={{ next }}{% endif %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4" style="border-radius: 8px;">
+                        <i class="bi bi-trash"></i> Ya, Hapus Surat
+                    </button>
+                    {% if next == 'list_surat' %}
+                    <a href="{% url 'kependudukan:list_surat' %}" class="btn btn-outline-secondary px-4 ms-2" style="border-radius: 8px;">
+                        Batal
+                    </a>
+                    {% else %}
+                    <a href="{% url 'kependudukan:detailWarga' warga_id %}" class="btn btn-outline-secondary px-4 ms-2" style="border-radius: 8px;">
+                        Batal
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

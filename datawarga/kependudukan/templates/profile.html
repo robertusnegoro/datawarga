@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Pengaturan Profil{% endblock %}
+{% block pagetitle %}<i class="bi bi-person-gear text-primary"></i> Pengaturan Profil{% endblock %}
+{% block content %}
+
+<div class="row mt-3">
+    <!-- Left Column: Profile Details & Avatar -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+            <div class="card-header bg-white border-bottom py-3 px-4" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-person-circle text-primary me-2"></i>Informasi Profil</h5>
+            </div>
+            <div class="card-body p-4 d-flex flex-column">
+                <!-- Avatar Preview -->
+                <div class="text-center mb-4">
+                    {% if user_profile.foto %}
+                        <img src="{{ user_profile.foto.url }}" alt="{{ request.user.username }}" class="rounded-circle shadow-sm img-thumbnail" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #0d6efd;">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center border" style="width: 150px; height: 150px;">
+                            <i class="bi bi-person text-secondary" style="font-size: 5rem;"></i>
+                        </div>
+                    {% endif %}
+                    <div class="mt-2">
+                        <span class="badge badge-pill badge-primary px-3 py-2 mt-1">Username: {{ request.user.username }}</span>
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="flex-grow-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_profile">
+                    
+                    {{ user_form|crispy }}
+                    
+                    <div class="form-group">
+                        <label for="id_foto" class="font-weight-bold">Foto Profil (Avatar)</label>
+                        <div class="custom-file">
+                            {{ profile_form.foto }}
+                        </div>
+                        <small class="form-text text-muted">Unggah file foto untuk memperbarui foto profil Anda.</small>
+                    </div>
+
+                    <div class="mt-auto pt-3">
+                        <button type="submit" class="btn btn-primary px-4 w-100" style="border-radius: 8px;">
+                            <i class="bi bi-save me-1"></i> Simpan Perubahan Profil
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Password Change / Reset & MFA -->
+    <div class="col-lg-6 mb-4">
+        <!-- Card: Ubah Kata Sandi -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+            <div class="card-header bg-white border-bottom py-3 px-4" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-shield-lock text-primary me-2"></i>Ubah Kata Sandi</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    {{ password_form|crispy }}
+
+                    <div class="pt-3">
+                        <button type="submit" class="btn btn-outline-primary px-4 w-100" style="border-radius: 8px;">
+                            <i class="bi bi-key me-1"></i> Perbarui Kata Sandi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card: Multi-Factor Authentication -->
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-bottom py-3 px-4" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-shield-shaded text-primary me-2"></i>Multi-Factor Authentication (MFA)</h5>
+            </div>
+            <div class="card-body p-4">
+                {% if request.user.profile.mfa_enabled %}
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-success text-white px-3 py-2" style="border-radius: 8px; font-size: 0.9rem;">
+                            <i class="bi bi-shield-check me-1"></i> Status: Aktif
+                        </span>
+                    </div>
+                    <p class="text-muted small">
+                        Multi-Factor Authentication (MFA) saat ini aktif. Akun Anda dilindungi dengan verification tambahan menggunakan aplikasi authenticator.
+                    </p>
+                    <div class="pt-2">
+                        <a href="{% url 'kependudukan:mfa_disable' %}" class="btn btn-outline-danger w-100" style="border-radius: 8px;">
+                            <i class="bi bi-shield-slash me-1"></i> Nonaktifkan MFA
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-secondary text-white px-3 py-2" style="border-radius: 8px; font-size: 0.9rem;">
+                            <i class="bi bi-shield-exclamation me-1"></i> Status: Nonaktif
+                        </span>
+                    </div>
+                    <p class="text-muted small">
+                        Tingkatkan keamanan akun Anda dengan mengaktifkan Multi-Factor Authentication (MFA). Anda akan memerlukan kode verification dari aplikasi authenticator (Google Authenticator, Authy, dll.) setiap kali masuk.
+                    </p>
+                    <div class="pt-2">
+                        <a href="{% url 'kependudukan:mfa_setup' %}" class="btn btn-primary w-100" style="border-radius: 8px;">
+                            <i class="bi bi-shield-plus me-1"></i> Aktifkan MFA
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

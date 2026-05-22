@@ -121,6 +121,8 @@ pydyf==0.12.1
     # via weasyprint
 pyjwt==2.12.1
     # via djangorestframework-simplejwt
+pyotp==2.9.0
+    # via -r requirements.in
 pyparsing==3.3.2
     # via httplib2
 pyphen==0.17.2
@@ -131,6 +133,8 @@ pytz==2026.2
     # via drf-yasg
 pyyaml==6.0.3
     # via drf-yasg
+qrcode==8.2
+    # via -r requirements.in
 requests==2.34.2
     # via
     #   google-api-core

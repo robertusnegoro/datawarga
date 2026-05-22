@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from .models import (
     Warga,
     Kompleks,
@@ -5,6 +6,7 @@ from .models import (
     Kendaraan,
     KasTransaksi,
     KasTagihan,
+    UserProfile,
 )
 from django import forms
 from django.conf import settings
@@ -130,3 +132,42 @@ class KasTagihanForm(forms.ModelForm):
             "tanggal_jatuh_tempo": forms.DateInput(attrs={"type": "date"}),
             "keterangan": forms.Textarea(attrs={"rows": 3}),
         }
+
+
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email"]
+        widgets = {
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+        }
+
+
+class UserProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ["foto"]
+        widgets = {
+            "foto": forms.FileInput(attrs={"class": "form-control-file"}),
+        }
+
+
+class MfaVerifyForm(forms.Form):
+    token = forms.CharField(
+        max_length=6,
+        min_length=6,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control text-center font-weight-bold",
+                "placeholder": "123456",
+                "pattern": "[0-9]{6}",
+                "inputmode": "numeric",
+                "autocomplete": "one-time-code",
+                "style": "font-size: 1.5rem; letter-spacing: 0.5rem;",
+            }
+        ),
+        label="Kode Verification (6 Digit)",
+    )

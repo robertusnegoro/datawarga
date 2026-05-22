@@ -1,0 +1,50 @@
+{% extends "base_plain.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Security Verification{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrapper">
+    <div class="auth-card">
+        <div class="auth-logo-container">
+            <img class="auth-logo" src='{% static "logo-data-warga.png" %}' alt="DataWarga Logo">
+        </div>
+        
+        <h1 class="auth-title">Verification 2-Langkah</h1>
+        <p class="auth-subtitle">Masukkan kode dari aplikasi authenticator Anda</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                <div class="auth-error-alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <div>{{ message }}</div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <form action="{% url 'kependudukan:mfa_verify' %}" method="post">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                {{ form|crispy }}
+            </div>
+            
+            <button class="auth-btn-primary" type="submit">
+                <span>Verifikasi</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a href="{% url 'login' %}" class="text-muted small">Kembali ke Sign in</a>
+        </div>
+
+        <div class="auth-card-footer">
+            <span>Powered by <a href="https://github.com/robertusnegoro" target="_blank" rel="noopener noreferrer">DataWarga</a></span>
+        </div>
+    </div>
+</div>
+{% endblock %}

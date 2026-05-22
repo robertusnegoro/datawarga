@@ -1,7 +1,7 @@
 import logging
-from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -59,9 +59,11 @@ def form_kendaraan_save(request):
                 "kependudukan:detailWarga",
                 kwargs={"idwarga": idwarga},
             )
-            payload = urlencode({"message": "Data kendaraan berhasil disimpan!"})
-            url_redir = "{}?{}".format(base_url, payload)
-            return redirect(url_redir)
+            messages.success(
+                request,
+                f"Data kendaraan dengan plat nomor <strong>{kendaraan.plat_nomor}</strong> berhasil disimpan.",
+            )
+            return redirect(base_url)
         else:
             logger.info(form.errors)
             return HttpResponse("form is not valid %s" % (form.errors))
@@ -74,21 +76,19 @@ def delete_kendaraan(request, idkendaraan=0):
     kendaraan_record = get_object_or_404(Kendaraan, pk=idkendaraan)
     warga_id = kendaraan_record.pemilik.id
 
-    if request.POST:
+    if request.method == "POST":
+        plat_nomor = kendaraan_record.plat_nomor
         kendaraan_record.delete()
         logger.info(
             "Deleting data kendaraan with id : %s , plat_nomor : %s"
-            % (idkendaraan, kendaraan_record.plat_nomor)
+            % (idkendaraan, plat_nomor)
         )
         base_url = reverse("kependudukan:detailWarga", kwargs={"idwarga": warga_id})
-        payload = urlencode(
-            {
-                "message": "Data kendaraan %s berhasil dihapus!"
-                % (kendaraan_record.plat_nomor)
-            }
+        messages.success(
+            request,
+            f"Data kendaraan dengan plat nomor <strong>{plat_nomor}</strong> berhasil dihapus.",
         )
-        url_redir = "{}?{}".format(base_url, payload)
-        return redirect(url_redir)
+        return redirect(base_url)
     else:
         return render(
             request=request,

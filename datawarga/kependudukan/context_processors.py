@@ -24,3 +24,13 @@ def kas_permissions(request):
         pass
 
     return {"is_kas_user": False}
+
+
+def user_profile(request):
+    if not request.user.is_authenticated:
+        return {}
+
+    from kependudukan.models import UserProfile
+
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    return {"user_profile": profile}

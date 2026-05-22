@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Setup MFA{% endblock %}
+{% block pagetitle %}<i class="bi bi-shield-plus text-primary"></i> Setup Multi-Factor Authentication (MFA){% endblock %}
+{% block content %}
+<div class="row mt-3 justify-content-center">
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-bottom py-3 px-4" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-qr-code-scan text-primary me-2"></i>Konfigurasi Authenticator</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted">
+                    Ikuti langkah-langkah berikut untuk mengaktifkan Multi-Factor Authentication pada akun Anda.
+                </p>
+                <div class="row align-items-center">
+                    <div class="col-md-5 text-center mb-4 mb-md-0">
+                        <div class="p-3 bg-light rounded" style="display: inline-block;">
+                            <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" class="img-fluid border" style="max-width: 200px;">
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            Scan QR Code dengan Google Authenticator atau Authy
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <h6 class="fw-bold text-dark"><i class="bi bi-1-circle text-primary me-1"></i>Langkah 1: Scan QR Code</h6>
+                        <p class="small text-muted mb-3">
+                            Buka aplikasi authenticator Anda (seperti Google Authenticator, Authy, Microsoft Authenticator) dan pilih opsi untuk menambahkan akun baru dengan men-scan QR code di samping.
+                        </p>
+                        
+                        <h6 class="fw-bold text-dark"><i class="bi bi-2-circle text-primary me-1"></i>Langkah 2: Setup Manual (Alternatif)</h6>
+                        <p class="small text-muted mb-2">
+                            Jika Anda tidak bisa men-scan QR Code, masukkan kode rahasia berikut secara manual ke aplikasi authenticator Anda:
+                        </p>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control font-monospace bg-light" value="{{ secret_key }}" readonly id="secretKey">
+                            <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText('{{ secret_key }}'); alert('Kode rahasia disalin!');">
+                                <i class="bi bi-clipboard"></i> Salin
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <form method="post" class="mx-auto" style="max-width: 400px;">
+                    {% csrf_token %}
+                    <h6 class="fw-bold text-dark text-center mb-3"><i class="bi bi-3-circle text-primary me-1"></i>Langkah 3: Masukkan Kode Verification</h6>
+                    <p class="small text-muted text-center mb-3">
+                        Masukkan kode 6 digit dari aplikasi authenticator Anda untuk memverifikasi dan mengaktifkan MFA.
+                    </p>
+                    
+                    {{ form|crispy }}
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-3" style="border-radius: 8px;">
+                        <i class="bi bi-check-circle me-1"></i> Aktifkan dan Simpan
+                    </button>
+                    <a href="{% url 'kependudukan:profile_edit' %}" class="btn btn-outline-secondary w-100 py-2 mt-2" style="border-radius: 8px;">
+                        Batal
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -225,6 +225,9 @@
                                     <a href="{% url 'kependudukan:cetak_surat_pdf' surat.id %}" class="btn btn-outline-danger btn-sm py-1 px-2" title="Cetak PDF">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
+                                    <a href="{% url 'kependudukan:delete_surat' surat.id %}" class="btn btn-outline-danger btn-sm py-1 px-2" title="Hapus Surat">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
                                 </td>
                             </tr>
                             {% empty %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Nonaktifkan MFA{% endblock %}
+{% block pagetitle %}<i class="bi bi-shield-slash text-danger"></i> Nonaktifkan Multi-Factor Authentication (MFA){% endblock %}
+{% block content %}
+<div class="row mt-3 justify-content-center">
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white border-bottom py-3 px-4" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Konfirmasi Menonaktifkan MFA</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-warning border-0" style="border-radius: 8px;">
+                    <i class="bi bi-exclamation-triangle me-2"></i> <strong>Peringatan:</strong> Menonaktifkan MFA akan menurunkan tingkat keamanan akun Anda.
+                </div>
+                <p class="text-muted small">
+                    Untuk melanjutkan menonaktifkan Multi-Factor Authentication, masukkan kode verification 6 digit terbaru dari aplikasi authenticator Anda.
+                </p>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    
+                    {{ form|crispy }}
+                    
+                    <button type="submit" class="btn btn-danger w-100 py-2 mt-3" style="border-radius: 8px;">
+                        <i class="bi bi-shield-slash me-1"></i> Ya, Nonaktifkan MFA
+                    </button>
+                    <a href="{% url 'kependudukan:profile_edit' %}" class="btn btn-outline-secondary w-100 py-2 mt-2" style="border-radius: 8px;">
+                        Batal
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
