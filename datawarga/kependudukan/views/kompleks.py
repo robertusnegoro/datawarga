@@ -240,13 +240,71 @@ def delete_rumah_form(request, idkompleks):
 
 @login_required
 def list_kompleks_json(request):
-    data_kompleks = Kompleks.objects.order_by("id")
-    if request.POST:
-        search_keyword = str(request.POST["kompleks_search_keyword"])
+    from django.db.models import Prefetch
+    from kependudukan.selectors.kompleks_selector import search_kompleks_queryset
 
-        data_kompleks = data_kompleks.filter(
-            Q(cluster__icontains=search_keyword) | Q(nomor=search_keyword)
+    # Active residents query
+    active_warga = Warga.objects.exclude(
+        status_tinggal__in=["PINDAH", "MENINGGAL"]
+    ).only("id", "nama_lengkap", "status_keluarga", "kepala_keluarga")
+
+    # Prefetch active residents and order complexes
+    data_kompleks = Kompleks.objects.prefetch_related(
+        Prefetch("warga_set", queryset=active_warga, to_attr="active_residents")
+    ).order_by("blok", "nomor")
+
+    # Filter complexes by user permission group
+    try:
+        current_permission_group = UserPermission.objects.get(user=request.user)
+        if str(current_permission_group.permission_group).lower() != "all":
+            data_kompleks = data_kompleks.filter(
+                permission_group=current_permission_group.permission_group.id
+            )
+    except UserPermission.DoesNotExist:
+        pass
+
+    # Handle keyword search from POST or GET
+    search_keyword = None
+    if request.method == "POST":
+        search_keyword = request.POST.get("kompleks_search_keyword")
+    else:
+        search_keyword = request.GET.get("kompleks_search_keyword")
+
+    if search_keyword:
+        data_kompleks = search_kompleks_queryset(data_kompleks, search_keyword)
+
+    # Format output (maintaining backward compatibility)
+    results = []
+    for k in data_kompleks:
+        residents = []
+        for r in k.active_residents:
+            residents.append(
+                {
+                    "id": r.id,
+                    "nama_lengkap": r.nama_lengkap,
+                    "status_keluarga": r.status_keluarga,
+                    "kepala_keluarga": r.kepala_keluarga,
+                }
+            )
+        results.append(
+            {
+                "pk": k.pk,
+                "fields": {
+                    "cluster": k.cluster or "",
+                    "blok": k.blok or "",
+                    "nomor": k.nomor or "",
+                    "rt": k.rt or "",
+                    "rw": k.rw or "",
+                    "alamat": k.alamat or "",
+                    "description": k.description or "",
+                    "kecamatan": k.kecamatan or "",
+                    "kelurahan": k.kelurahan or "",
+                    "kode_pos": k.kode_pos or "",
+                    "kota": k.kota or "",
+                    "provinsi": k.provinsi or "",
+                    "residents": residents,
+                },
+            }
         )
 
-    data = serializers.serialize("json", data_kompleks)
-    return JsonResponse({"data": json.loads(data)})
+    return JsonResponse({"data": results})

@@ -120,6 +120,67 @@
         background: #e2e8f0;
         border-color: #94a3b8;
     }
+
+    /* Custom style for Rumah Picker card and modal cards */
+    #rumah-picker-container {
+        border-color: #cbd5e1 !important;
+    }
+    #rumah-picker-container:hover {
+        border-color: #1a73e8 !important;
+        background-color: #f8fafc !important;
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.08);
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    .house-selection-card {
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .house-selection-card:hover {
+        border-color: #1a73e8 !important;
+        background-color: #f8fafc !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.06);
+    }
+    .filter-pill {
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        color: #64748b !important;
+    }
+    .filter-pill.active {
+        background: #1a73e8 !important;
+        border-color: #1a73e8 !important;
+        color: #ffffff !important;
+    }
+    .filter-pill:hover:not(.active) {
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+    }
+    .bg-primary-subtle {
+        background-color: #e8f0fe !important;
+    }
+    .text-primary {
+        color: #1a73e8 !important;
+    }
+    .bg-success-subtle {
+        background-color: #e6f4ea !important;
+    }
+    .text-success {
+        color: #137333 !important;
+    }
+    .font-weight-600 {
+        font-weight: 600;
+    }
+    .font-weight-500 {
+        font-weight: 500;
+    }
+    .text-muted-opacity {
+        color: #94a3b8;
+    }
 </style>
 
 <div class="warga-form-container mt-2">
@@ -268,9 +329,46 @@
                         {% if idkompleks == 0 %}
                         <div class="row">
                             <div class="col-12">
-                                {{ form.kompleks | as_crispy_field }}
+                                <!-- Hidden Native Dropdown (used for form submission) -->
+                                <div style="display: none;">
+                                    {{ form.kompleks | as_crispy_field }}
+                                </div>
+                                
+                                <!-- Custom Rumah Picker UI Widget -->
+                                <div class="form-group mb-3">
+                                    <label class="form-label font-weight-bold text-dark d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="bi bi-house-door text-primary"></i> Rumah / Kompleks <span class="text-danger">*</span></span>
+                                        <span id="selected-cluster-badge" class="badge bg-light text-dark border d-none"></span>
+                                    </label>
+                                    
+                                    <div id="rumah-picker-container" class="border rounded-3 p-3 bg-light d-flex flex-column align-items-start justify-content-center cursor-pointer transition-all hover-shadow" style="border-style: dashed !important; border-width: 2px !important; min-height: 90px; cursor: pointer; transition: all 0.25s ease;">
+                                        <div id="rumah-picker-empty" class="w-100 text-center py-2 text-muted">
+                                            <i class="bi bi-plus-circle-dotted text-primary fs-3 mb-2 d-block"></i>
+                                            <span class="font-weight-500">Klik untuk Pilih Rumah / Kompleks</span>
+                                            <span class="d-block small text-muted-opacity">Cari berdasarkan Cluster, Blok, atau Nomor</span>
+                                        </div>
+                                        <div id="rumah-picker-selected" class="w-100 d-none">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div class="p-3 bg-primary-subtle text-primary rounded-3">
+                                                        <i class="bi bi-house-check-fill fs-3"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="mb-1 font-weight-bold text-dark" id="picker-display-blok-nomor"></h5>
+                                                        <p class="mb-0 text-muted small" id="picker-display-cluster-rt-rw"></p>
+                                                        <div class="mt-2 text-dark small" id="picker-display-residents"></div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-primary btn-sm px-3 rounded-2 shadow-sm font-weight-500 hover-scale" id="btn-change-rumah">
+                                                    <i class="bi bi-pencil-square"></i> Ganti
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                         {% endif %}
                         <div class="row">
                             <div class="col-12">
@@ -341,6 +439,56 @@
         </div>
     </div>
 </div>
+
+{% if idkompleks == 0 %}
+<!-- Rumah Picker Modal -->
+<div class="modal fade" id="rumahPickerModal" tabindex="-1" aria-labelledby="rumahPickerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden; background: #ffffff;">
+            <div class="modal-header border-0 bg-light p-4 d-flex flex-column align-items-start position-relative">
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <h5 class="modal-title font-weight-bold text-dark d-flex align-items-center gap-2" id="rumahPickerModalLabel" style="font-size: 1.25rem;">
+                        <i class="bi bi-house-door-fill text-primary"></i> Pilih Rumah / Kompleks
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.85rem; padding: 10px; background-color: #f1f5f9; border-radius: 50%; opacity: 0.8;"></button>
+                </div>
+                <p class="text-muted small mb-0 mt-1">Cari dan pilih rumah tinggal warga. Informasi penghuni saat ini ditampilkan secara real-time.</p>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <div class="input-group mb-3 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                    <span class="input-group-text bg-white border-end-0 text-muted ps-3">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="picker-search-input" class="form-control border-start-0 py-2.5 ps-2" placeholder="Cari berdasarkan Blok, No, atau Cluster..." style="font-size: 0.95rem; border-color: #dee2e6;">
+                </div>
+                <div class="mb-3 d-flex flex-wrap gap-2 align-items-center" id="cluster-filter-pills">
+                    <span class="text-muted small font-weight-500 me-1">Cluster:</span>
+                    <button type="button" class="btn btn-primary btn-sm px-3 rounded-pill filter-pill active" data-cluster="all" style="font-size: 0.82rem; transition: all 0.2s ease;">Semua</button>
+                </div>
+                <div id="picker-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+                        <span class="visually-hidden">Memuat data...</span>
+                    </div>
+                    <p class="text-muted mb-0 font-weight-500">Mengambil daftar rumah...</p>
+                </div>
+                <div id="picker-empty-results" class="text-center py-5 d-none">
+                    <i class="bi bi-house-x text-muted fs-1 mb-3 d-block"></i>
+                    <h5 class="text-dark font-weight-bold mb-1">Rumah Tidak Ditemukan</h5>
+                    <p class="text-muted small">Coba cari dengan kata kunci lain atau pilih cluster berbeda.</p>
+                </div>
+                <div id="picker-houses-list" class="pe-1 d-none" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light px-4 py-3 justify-content-between">
+                <span class="text-muted small" id="picker-houses-count">Menampilkan 0 rumah</span>
+                <button type="button" class="btn btn-outline-secondary px-4 rounded-2 font-weight-500" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block jscript %}
@@ -552,6 +700,323 @@
             `;
             feedbackContainer.classList.remove('d-none');
         }
+
+        // RUMAH / KOMPLEKS PICKER WIDGET
+        const pickerContainer = document.getElementById('rumah-picker-container');
+        const pickerModal = document.getElementById('rumahPickerModal') ? new bootstrap.Modal(document.getElementById('rumahPickerModal')) : null;
+        const pickerSelect = document.getElementById('id_kompleks');
+        const pickerEmpty = document.getElementById('rumah-picker-empty');
+        const pickerSelected = document.getElementById('rumah-picker-selected');
+        const displayBlokNomor = document.getElementById('picker-display-blok-nomor');
+        const displayClusterRtRw = document.getElementById('picker-display-cluster-rt-rw');
+        const displayResidents = document.getElementById('picker-display-residents');
+        const btnChangeRumah = document.getElementById('btn-change-rumah');
+        const selectedClusterBadge = document.getElementById('selected-cluster-badge');
+
+        const searchInput = document.getElementById('picker-search-input');
+        const housesList = document.getElementById('picker-houses-list');
+        const housesCount = document.getElementById('picker-houses-count');
+        const loadingState = document.getElementById('picker-loading');
+        const emptyResultsState = document.getElementById('picker-empty-results');
+        const filterPillsContainer = document.getElementById('cluster-filter-pills');
+
+        let complexesData = [];
+        let activeClusterFilter = 'all';
+
+        // Remove native required attribute to prevent "invalid form control not focusable" error
+        if (pickerSelect && pickerSelect.tagName === 'SELECT') {
+            pickerSelect.removeAttribute('required');
+            
+            // Custom form validation
+            const formWarga = document.getElementById('warga-form');
+            if (formWarga) {
+                formWarga.addEventListener('submit', function(e) {
+                    if (!pickerSelect.value) {
+                        e.preventDefault();
+                        if (pickerContainer) {
+                            pickerContainer.classList.add('border-danger');
+                            pickerContainer.style.backgroundColor = '#fff8f8';
+                            let errorMsg = document.getElementById('picker-error-msg');
+                            if (!errorMsg) {
+                                errorMsg = document.createElement('div');
+                                errorMsg.id = 'picker-error-msg';
+                                errorMsg.className = 'text-danger small mt-1 font-weight-500';
+                                errorMsg.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Silakan pilih Rumah / Kompleks terlebih dahulu.';
+                                pickerContainer.parentNode.appendChild(errorMsg);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Open Modal
+        if (pickerContainer && pickerModal) {
+            pickerContainer.addEventListener('click', function(e) {
+                pickerModal.show();
+                loadComplexesForPicker();
+            });
+        }
+
+        if (btnChangeRumah && pickerModal) {
+            btnChangeRumah.addEventListener('click', function(e) {
+                e.stopPropagation();
+                pickerModal.show();
+                loadComplexesForPicker();
+            });
+        }
+
+        // Fetch Complexes Data
+        function loadComplexesForPicker() {
+            if (complexesData.length > 0) {
+                renderHousesList();
+                return;
+            }
+
+            if (loadingState) loadingState.classList.remove('d-none');
+            if (housesList) housesList.classList.add('d-none');
+            if (emptyResultsState) emptyResultsState.classList.add('d-none');
+
+            // Retrieve with AJAX
+            $.getJSON("{% url 'kependudukan:listKompleksJson' %}", function(response) {
+                complexesData = response.data;
+                if (loadingState) loadingState.classList.add('d-none');
+                if (housesList) housesList.classList.remove('d-none');
+                
+                // Build unique clusters for pills filter
+                buildClusterFilters();
+                initializeHousesDOM();
+                renderHousesList();
+            }).fail(function() {
+                if (loadingState) loadingState.classList.add('d-none');
+                if (emptyResultsState) {
+                    emptyResultsState.classList.remove('d-none');
+                    const heading = emptyResultsState.querySelector('h5');
+                    if (heading) heading.textContent = 'Gagal Memuat Data';
+                }
+            });
+        }
+
+        // Build Cluster Filter Pills
+        function buildClusterFilters() {
+            if (!filterPillsContainer) return;
+            const clusters = new Set();
+            complexesData.forEach(item => {
+                if (item.fields.cluster) {
+                    clusters.add(item.fields.cluster.trim());
+                }
+            });
+
+            // Clear extra pills (keep "Semua")
+            const pills = filterPillsContainer.querySelectorAll('.filter-pill');
+            pills.forEach(p => {
+                if (p.getAttribute('data-cluster') !== 'all') {
+                    p.remove();
+                }
+            });
+
+            // Append unique clusters
+            clusters.forEach(c => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'btn btn-primary btn-sm px-3 rounded-pill filter-pill';
+                button.setAttribute('data-cluster', c.toLowerCase());
+                button.style.fontSize = '0.82rem';
+                button.style.transition = 'all 0.2s ease';
+                button.textContent = c;
+                filterPillsContainer.appendChild(button);
+            });
+
+            // Attach click event to pills
+            filterPillsContainer.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', function() {
+                    filterPillsContainer.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    activeClusterFilter = this.getAttribute('data-cluster');
+                    renderHousesList();
+                });
+            });
+        }
+
+        // Initialize DOM Elements Once
+        function initializeHousesDOM() {
+            if (!housesList) return;
+            housesList.innerHTML = '';
+            
+            complexesData.forEach(house => {
+                const item = document.createElement('div');
+                item.className = 'house-selection-card border p-3 rounded-3 cursor-pointer d-flex flex-column transition-all';
+                item.setAttribute('data-id', house.pk);
+                item.style.cursor = 'pointer';
+                item.style.borderRadius = '12px';
+                item.style.background = '#ffffff';
+                item.style.marginBottom = '10px';
+                
+                // Store data attributes for fast filtering
+                item.dataset.search = `${house.fields.blok.toLowerCase()} ${house.fields.nomor.toLowerCase()} ${house.fields.cluster ? house.fields.cluster.toLowerCase() : ''}`;
+                item.dataset.cluster = house.fields.cluster ? house.fields.cluster.toLowerCase() : '';
+                
+                // Format residents
+                let residentsHtml = '';
+                if (house.fields.residents && house.fields.residents.length > 0) {
+                    const names = house.fields.residents.map(r => {
+                        const isKK = r.kepala_keluarga ? ' <span class="badge bg-info text-dark font-weight-bold" style="font-size: 0.65rem;">KK</span>' : '';
+                        return `<strong>${r.nama_lengkap}</strong> (${r.status_keluarga}${isKK})`;
+                    }).join(', ');
+                    residentsHtml = `<div class="mt-2 text-muted small" style="font-size: 0.82rem;"><i class="bi bi-people-fill text-primary opacity-75"></i> Penghuni: ${names}</div>`;
+                } else {
+                    residentsHtml = `<div class="mt-2 text-success small" style="font-size: 0.82rem;"><i class="bi bi-check-circle-fill opacity-75"></i> <span class="badge bg-success-subtle text-success border border-success-subtle font-weight-500">Kosong / Belum Ada Penghuni</span></div>`;
+                }
+                
+                const clusterBadge = house.fields.cluster ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase font-weight-600 px-2 py-1" style="font-size: 0.72rem;">${house.fields.cluster}</span>` : '';
+                const rtrwBadge = `<span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.72rem;">RT ${house.fields.rt} / RW ${house.fields.rw}</span>`;
+                
+                item.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-5 font-weight-bold text-dark">Blok ${house.fields.blok} / No. ${house.fields.nomor}</span>
+                            <div class="d-flex gap-1.5 align-items-center">
+                                ${clusterBadge}
+                                ${rtrwBadge}
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm px-3 rounded-2 font-weight-500 py-1" style="font-size: 0.82rem;">Pilih</button>
+                    </div>
+                    ${residentsHtml}
+                `;
+                
+                // Click handler
+                item.addEventListener('click', function() {
+                    selectHouse(house);
+                    if (pickerModal) pickerModal.hide();
+                });
+                
+                housesList.appendChild(item);
+            });
+        }
+
+        // Toggle matching houses in list
+        function renderHousesList() {
+            if (!housesList) return;
+            const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            
+            let count = 0;
+            const items = housesList.querySelectorAll('.house-selection-card');
+            
+            items.forEach(item => {
+                const searchStr = item.dataset.search;
+                const matchesQuery = query === '' || searchStr.includes(query);
+                
+                const matchesCluster = activeClusterFilter === 'all' || 
+                                      (item.dataset.cluster && item.dataset.cluster === activeClusterFilter);
+                
+                if (matchesQuery && matchesCluster) {
+                    item.classList.remove('d-none');
+                    count++;
+                } else {
+                    item.classList.add('d-none');
+                }
+            });
+
+            if (housesCount) housesCount.textContent = `Menampilkan ${count} rumah`;
+            if (count === 0) {
+                housesList.classList.add('d-none');
+                if (emptyResultsState) emptyResultsState.classList.remove('d-none');
+            } else {
+                housesList.classList.remove('d-none');
+                if (emptyResultsState) emptyResultsState.classList.add('d-none');
+            }
+        }
+
+        // Live Search Input Listener with Debounce
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    renderHousesList();
+                }, 150);
+            });
+        }
+
+        // Select House action
+        function selectHouse(house) {
+            if (!pickerSelect) return;
+
+            if (!house) {
+                // Clear selection
+                if (pickerSelect.tagName === 'SELECT') {
+                    pickerSelect.value = '';
+                }
+                if (pickerEmpty) pickerEmpty.classList.remove('d-none');
+                if (pickerSelected) pickerSelected.classList.add('d-none');
+                if (selectedClusterBadge) selectedClusterBadge.classList.add('d-none');
+                
+                // Dispatch change event to trigger other previews
+                pickerSelect.dispatchEvent(new Event('change'));
+                return;
+            }
+
+            // Set native select field value
+            pickerSelect.value = house.pk;
+
+            // Clear error state if any
+            if (pickerContainer) {
+                pickerContainer.classList.remove('border-danger');
+                pickerContainer.style.backgroundColor = '';
+                const errorMsg = document.getElementById('picker-error-msg');
+                if (errorMsg) errorMsg.remove();
+            }
+            
+            // Set labels in our picker widget
+            if (displayBlokNomor) displayBlokNomor.textContent = `Blok ${house.fields.blok} / No. ${house.fields.nomor}`;
+            if (displayClusterRtRw) displayClusterRtRw.textContent = `${house.fields.cluster ? 'Cluster ' + house.fields.cluster + ' | ' : ''}RT ${house.fields.rt} / RW ${house.fields.rw}`;
+            
+            // Set residents preview
+            if (displayResidents) {
+                if (house.fields.residents && house.fields.residents.length > 0) {
+                    const names = house.fields.residents.map(r => r.nama_lengkap).join(', ');
+                    displayResidents.innerHTML = `<i class="bi bi-people-fill text-muted me-1"></i> <span class="text-muted">Penghuni saat ini:</span> <strong>${names}</strong>`;
+                } else {
+                    displayResidents.innerHTML = `<i class="bi bi-info-circle text-success me-1"></i> <span class="text-success font-weight-500">Rumah Kosong</span>`;
+                }
+            }
+
+            if (selectedClusterBadge) {
+                if (house.fields.cluster) {
+                    selectedClusterBadge.textContent = house.fields.cluster;
+                    selectedClusterBadge.classList.remove('d-none');
+                } else {
+                    selectedClusterBadge.classList.add('d-none');
+                }
+            }
+
+            if (pickerEmpty) pickerEmpty.classList.add('d-none');
+            if (pickerSelected) pickerSelected.classList.remove('d-none');
+
+            // Dispatch change event to update the right side visual preview
+            pickerSelect.dispatchEvent(new Event('change'));
+        }
+
+        // Initialize Selected House (on page load / Edit Warga mode)
+        function initSelectedHouse() {
+            if (!pickerSelect || !pickerContainer) return;
+            
+            const selectedVal = pickerSelect.value;
+            if (selectedVal && selectedVal !== '') {
+                // Fetch the selected house info using Ajax
+                $.getJSON("{% url 'kependudukan:listKompleksJson' %}", function(response) {
+                    const data = response.data;
+                    const matched = data.find(item => item.pk == selectedVal);
+                    if (matched) {
+                        selectHouse(matched);
+                    }
+                });
+            }
+        }
+
+        // Call init
+        initSelectedHouse();
 
         // Auto-close datepicker on select and set beautiful focus triggers
         $('#id_tanggal_lahir').datepicker({

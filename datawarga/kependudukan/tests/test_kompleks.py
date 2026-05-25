@@ -200,3 +200,50 @@ class KompleksTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         # Verify that total_bayar is formatted as Rp 150.000 in the HTML template output
         self.assertContains(response, "Rp 150.000")
+
+    def test_list_kompleks_json_endpoint(self):
+        """Test list_kompleks_json returns complexes with their active residents"""
+        from ..models import Warga, UserPermission, WargaPermissionGroup
+
+        client = Client()
+        client.login(username=self.test_user, password=self.test_pass)
+
+        # Ensure user permission group allows viewing
+        group_all = WargaPermissionGroup.objects.create(group_name="All")
+        UserPermission.objects.create(user=self.user, permission_group=group_all)
+
+        # Create a citizen in our existing kompleks
+        Warga.objects.create(
+            nama_lengkap="Test Resident",
+            nik="1234567890123456",
+            kompleks=self.existing_kompleks,
+            status_tinggal="TETAP",
+            status_keluarga="SUAMI",
+            kepala_keluarga=True,
+            tanggal_lahir="1990-01-01",
+        )
+
+        response = client.get(reverse("kependudukan:listKompleksJson"))
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertIn("data", data)
+        self.assertTrue(len(data["data"]) > 0)
+
+        # Find self.existing_kompleks in the list
+        matched_item = None
+        for item in data["data"]:
+            if item["pk"] == self.existing_kompleks.id:
+                matched_item = item
+                break
+
+        self.assertIsNotNone(matched_item)
+        self.assertEqual(matched_item["fields"]["blok"], "J2")
+        self.assertEqual(matched_item["fields"]["nomor"], "5")
+
+        # Check residents list
+        residents = matched_item["fields"]["residents"]
+        self.assertEqual(len(residents), 1)
+        self.assertEqual(residents[0]["nama_lengkap"], "Test Resident")
+        self.assertEqual(residents[0]["status_keluarga"], "SUAMI")
+        self.assertTrue(residents[0]["kepala_keluarga"])
