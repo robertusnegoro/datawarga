@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from kependudukan.telegram_bot import run_telegram_bot
+from kependudukan.bot.telegram_bot import run_telegram_bot
 
 
 class Command(BaseCommand):

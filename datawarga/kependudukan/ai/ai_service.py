@@ -5,7 +5,7 @@ import time
 import uuid
 import requests
 from django.conf import settings
-from .ai_utils import parse_extracted_json, map_extracted_data
+from kependudukan.ai.ai_utils import parse_extracted_json, map_extracted_data
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,16 @@
 from django.urls import path, re_path, include
-from . import (
+from .views import (
     utility,
     kompleks,
     warga,
     iuran,
     iuran_public,
-    api_view,
-    views_surat,
-    views_kendaraan,
-    views_kas,
-    views_profile,
+    api as api_view,
+    surat as views_surat,
+    kendaraan as views_kendaraan,
+    kas as views_kas,
+    profile as views_profile,
+    admin as views_admin,
 )
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
@@ -286,6 +287,46 @@ urlpatterns = [
     path("accounts/login/mfa/", views_profile.mfa_verify, name="mfa_verify"),
     path("profile/mfa/setup/", views_profile.mfa_setup, name="mfa_setup"),
     path("profile/mfa/disable/", views_profile.mfa_disable, name="mfa_disable"),
+    # Admin Panel User Management
+    path("warga/admin/users/", views_admin.user_management, name="user_management"),
+    path("warga/admin/users/add/", views_admin.user_add, name="user_add"),
+    path(
+        "warga/admin/users/edit/<int:user_id>/", views_admin.user_edit, name="user_edit"
+    ),
+    path(
+        "warga/admin/users/block/<int:user_id>/",
+        views_admin.user_block,
+        name="user_block",
+    ),
+    path(
+        "warga/admin/users/unblock/<int:user_id>/",
+        views_admin.user_unblock,
+        name="user_unblock",
+    ),
+    path(
+        "warga/admin/users/reset-mfa/<int:user_id>/",
+        views_admin.user_reset_mfa,
+        name="user_reset_mfa",
+    ),
+    path(
+        "warga/admin/users/reset-password/<int:user_id>/",
+        views_admin.user_reset_password,
+        name="user_reset_password",
+    ),
+    path(
+        "warga/admin/users/expire-invitation/<int:user_id>/",
+        views_admin.invitation_expire,
+        name="invitation_expire",
+    ),
+    path(
+        "warga/admin/users/recreate-invitation/<int:user_id>/",
+        views_admin.invitation_recreate,
+        name="invitation_recreate",
+    ),
+    # Public invitation activation route
+    path(
+        "accounts/invite/<str:token>/", views_admin.user_activate, name="user_activate"
+    ),
     path("api/", include(router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

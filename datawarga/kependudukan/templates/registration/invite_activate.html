@@ -1,0 +1,70 @@
+{% extends "base_plain.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Aktivasi Akun Baru{% endblock %}
+
+{% block customstyle %}
+body {
+    background-color: #f3f6f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Roboto', sans-serif;
+}
+.activate-card {
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    max-width: 450px;
+    width: 100%;
+}
+.logo-text {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 d-flex justify-content-center">
+            <div class="card border-0 activate-card p-4">
+                <div class="text-center mb-4">
+                    <span class="d-block logo-text text-dark mb-1">DATA<span class="text-primary">WARGA</span></span>
+                    <h5 class="fw-bold text-secondary">Aktivasi Akun Baru</h5>
+                </div>
+
+                {% if error %}
+                    <div class="alert alert-danger d-flex align-items-center gap-2 border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                        <div>{{ error }}</div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-muted small">Silakan hubungi administrator Anda untuk mendapatkan tautan undangan baru yang aktif.</p>
+                        <a href="{% url 'login' %}" class="btn btn-outline-primary w-100 py-2 mt-2" style="border-radius: 10px;">Kembali ke Login</a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info border-0 bg-primary-subtle text-primary-emphasis d-flex gap-2 mb-4" style="border-radius: 12px; font-size: 0.9rem;">
+                        <i class="bi bi-info-circle-fill fs-5"></i>
+                        <div>
+                            Halo <strong>{{ target_user.first_name|default:target_user.username }}</strong>, silakan buat kata sandi baru untuk mengaktifkan akun Anda.
+                        </div>
+                    </div>
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {{ form|crispy }}
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mt-3" style="border-radius: 10px;">
+                            Aktifkan Akun & Simpan
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

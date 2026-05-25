@@ -18,8 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
-from kependudukan.error_views import permission_denied_view, not_found_view
-from kependudukan import views_profile
+from kependudukan.views.errors import permission_denied_view, not_found_view
+from kependudukan.views import profile as views_profile
 
 urlpatterns = [
     path("admin/", admin.site.urls),

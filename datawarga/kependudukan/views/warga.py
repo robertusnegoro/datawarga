@@ -1,5 +1,5 @@
-from .forms import WargaForm
-from .models import Warga, Kompleks, UserPermission, Kendaraan
+from kependudukan.forms import WargaForm
+from kependudukan.models import Warga, Kompleks, UserPermission, Kendaraan
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -22,6 +22,15 @@ from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import logging
 import json
+import uuid
+from kependudukan.services.warga_service import assign_kepala_keluarga, process_ktp_scan
+from kependudukan.selectors.warga_selector import (
+    check_user_permission_for_kompleks,
+    check_user_permission_for_warga,
+    search_warga_queryset,
+    get_anggota_keluarga,
+    get_no_kk_for_kompleks,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -121,20 +130,7 @@ class WargaListView(ListView):
             )
 
         if "search" in self.request.GET:
-            search_keyword = str(self.request.GET["search"])
-
-            if "/" in search_keyword:
-                split_keyword = search_keyword.split("/")
-                queryset = queryset.filter(
-                    kompleks__blok__icontains=split_keyword[0].strip(),
-                    kompleks__nomor=split_keyword[1].strip(),
-                )
-            else:
-                queryset = queryset.filter(
-                    Q(nama_lengkap__icontains=search_keyword)
-                    | Q(nik__icontains=search_keyword)
-                    | Q(no_kk__icontains=search_keyword)
-                )
+            queryset = search_warga_queryset(queryset, self.request.GET["search"])
         if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
             cluster = str(self.request.GET["cluster"])
             queryset = queryset.filter(kompleks__cluster__icontains=cluster)
@@ -177,20 +173,7 @@ class KepalaKeluargaListView(ListView):
             pass
 
         if "search" in self.request.GET:
-            search_keyword = str(self.request.GET["search"])
-
-            if "/" in search_keyword:
-                split_keyword = search_keyword.split("/")
-                queryset = queryset.filter(
-                    kompleks__blok__icontains=split_keyword[0].strip(),
-                    kompleks__nomor=split_keyword[1].strip(),
-                )
-            else:
-                queryset = queryset.filter(
-                    Q(nama_lengkap__icontains=search_keyword)
-                    | Q(nik__icontains=search_keyword)
-                    | Q(no_kk__icontains=search_keyword)
-                )
+            queryset = search_warga_queryset(queryset, self.request.GET["search"])
         if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
             cluster = str(self.request.GET["cluster"])
             queryset = queryset.filter(kompleks__cluster__icontains=cluster)
@@ -201,42 +184,12 @@ class KepalaKeluargaListView(ListView):
 @login_required
 def detail_anggota_keluarga_snippet(request, idkompleks):
     kompleks = get_object_or_404(Kompleks, pk=idkompleks)
-    try:
-        current_permission_group = UserPermission.objects.get(user=request.user)
-        if str(current_permission_group.permission_group).lower() != "all":
-            if kompleks.permission_group != current_permission_group.permission_group:
-                return HttpResponse("Forbidden", status=403)
-    except UserPermission.DoesNotExist:
-        pass
 
-    data_warga = list(
-        Warga.objects.filter(kompleks=kompleks).exclude(
-            status_tinggal__in=["PINDAH", "MENINGGAL"]
-        )
-    )
-    role_order = {
-        "SUAMI": 1,
-        "ISTRI": 2,
-        "ANAK": 3,
-        "ORANG TUA": 4,
-        "SAUDARA": 5,
-        "LAINNYA": 6,
-        "N/A": 7,
-    }
-    data_warga.sort(
-        key=lambda w: (role_order.get(w.status_keluarga, 8), w.nama_lengkap)
-    )
+    if not check_user_permission_for_kompleks(request.user, kompleks):
+        return HttpResponse("Forbidden", status=403)
 
-    no_kk = "-"
-    for w in data_warga:
-        if w.kepala_keluarga and w.no_kk:
-            no_kk = w.no_kk
-            break
-    if no_kk == "-" and data_warga:
-        for w in data_warga:
-            if w.no_kk:
-                no_kk = w.no_kk
-                break
+    data_warga = get_anggota_keluarga(kompleks.id)
+    no_kk = get_no_kk_for_kompleks(kompleks.id)
 
     context = {
         "kompleks": kompleks,
@@ -306,20 +259,7 @@ class ArsipWargaListView(ListView):
             pass
 
         if "search" in self.request.GET:
-            search_keyword = str(self.request.GET["search"])
-
-            if "/" in search_keyword:
-                split_keyword = search_keyword.split("/")
-                queryset = queryset.filter(
-                    kompleks__blok__icontains=split_keyword[0].strip(),
-                    kompleks__nomor=split_keyword[1].strip(),
-                )
-            else:
-                queryset = queryset.filter(
-                    Q(nama_lengkap__icontains=search_keyword)
-                    | Q(nik__icontains=search_keyword)
-                    | Q(no_kk__icontains=search_keyword)
-                )
+            queryset = search_warga_queryset(queryset, self.request.GET["search"])
         if "cluster" in self.request.GET and str(self.request.GET["cluster"]) != "all":
             cluster = str(self.request.GET["cluster"])
             queryset = queryset.filter(kompleks__cluster__icontains=cluster)
@@ -499,14 +439,7 @@ def list_warga_no_kompleks_json(request):
 
 @login_required
 def set_kepala_keluarga(request, idwarga):
-    warga_record = get_object_or_404(Warga, pk=idwarga)
-    warga_serumah = Warga.objects.filter(kompleks=warga_record.kompleks)
-    for warga in warga_serumah:
-        warga.kepala_keluarga = False
-        warga.save()
-
-    warga_record.kepala_keluarga = True
-    warga_record.save()
+    warga_record = assign_kepala_keluarga(idwarga)
 
     base_url = reverse(
         "kependudukan:detailKompleks", kwargs={"idkompleks": warga_record.kompleks.id}
@@ -520,32 +453,20 @@ def set_kepala_keluarga(request, idwarga):
 def detailWarga(request, idwarga):
     warga = get_object_or_404(Warga, pk=idwarga)
 
-    # Check permission group if the resident is assigned to a complex
-    if warga.kompleks:
-        try:
-            current_permission_group = UserPermission.objects.get(user=request.user)
-            if str(current_permission_group.permission_group).lower() != "all":
-                if (
-                    warga.kompleks.permission_group
-                    != current_permission_group.permission_group
-                ):
-                    return HttpResponse("Forbidden", status=403)
-        except UserPermission.DoesNotExist:
-            pass
+    if not check_user_permission_for_warga(request.user, warga):
+        return HttpResponse("Forbidden", status=403)
 
     # Fetch other household members (serumah)
     anggota_keluarga = []
     if warga.kompleks:
-        anggota_keluarga = (
-            Warga.objects.filter(kompleks=warga.kompleks)
-            .exclude(pk=warga.pk)
-            .exclude(status_tinggal__in=["PINDAH", "MENINGGAL"])
+        anggota_keluarga = get_anggota_keluarga(
+            warga.kompleks.id, exclude_warga_id=warga.id
         )
 
     # Fetch recent transactions for this complex
     transaksi = []
     if warga.kompleks:
-        from .models import TransaksiIuranBulanan
+        from kependudukan.models import TransaksiIuranBulanan
 
         transaksi = TransaksiIuranBulanan.objects.filter(
             kompleks=warga.kompleks
@@ -578,32 +499,20 @@ def detailWarga(request, idwarga):
 def pdfDetailWarga(request, idwarga):
     warga = get_object_or_404(Warga, pk=idwarga)
 
-    # Check permission group if the resident is assigned to a complex
-    if warga.kompleks:
-        try:
-            current_permission_group = UserPermission.objects.get(user=request.user)
-            if str(current_permission_group.permission_group).lower() != "all":
-                if (
-                    warga.kompleks.permission_group
-                    != current_permission_group.permission_group
-                ):
-                    return HttpResponse("Forbidden", status=403)
-        except UserPermission.DoesNotExist:
-            pass
+    if not check_user_permission_for_warga(request.user, warga):
+        return HttpResponse("Forbidden", status=403)
 
     # Fetch other household members (serumah)
     anggota_keluarga = []
     if warga.kompleks:
-        anggota_keluarga = (
-            Warga.objects.filter(kompleks=warga.kompleks)
-            .exclude(pk=warga.pk)
-            .exclude(status_tinggal__in=["PINDAH", "MENINGGAL"])
+        anggota_keluarga = get_anggota_keluarga(
+            warga.kompleks.id, exclude_warga_id=warga.id
         )
 
     # Fetch recent transactions for this complex
     transaksi = []
     if warga.kompleks:
-        from .models import TransaksiIuranBulanan
+        from kependudukan.models import TransaksiIuranBulanan
 
         transaksi = TransaksiIuranBulanan.objects.filter(
             kompleks=warga.kompleks
@@ -654,9 +563,6 @@ def pdfDetailWarga(request, idwarga):
 @login_required
 @require_POST
 def scan_ktp_ajax(request):
-    import uuid
-    from .ai_service import get_ai_provider
-    from .ai_utils import optimize_image
 
     correlation_id = str(uuid.uuid4())
     logger.info(
@@ -718,95 +624,21 @@ def scan_ktp_ajax(request):
             status=400,
         )
 
-    try:
-        optimized_bytes = optimize_image(image_bytes)
-        logger.info(
-            f"[SCAN_KTP_OPTIMIZE] [CorrelationID: {correlation_id}] Optimized size: {len(optimized_bytes)} bytes (Original: {len(image_bytes)} bytes)"
-        )
-    except Exception as e:
-        logger.error(
-            f"[SCAN_KTP_OPTIMIZE_FAIL] [CorrelationID: {correlation_id}] Image optimization failed: {str(e)}",
-            exc_info=True,
-        )
-        return JsonResponse(
-            {"success": False, "message": f"Gagal mengoptimalkan gambar KTP: {str(e)}"},
-            status=500,
-        )
-
-    try:
-        provider = get_ai_provider()
-        extracted_data = provider.extract_ktp_data(
-            optimized_bytes, correlation_id=correlation_id
-        )
-
-        success_fields = []
-        failed_fields = []
-
-        for field in [
-            "nama_lengkap",
-            "nik",
-            "alamat_ktp",
-            "jenis_kelamin",
-            "agama",
-            "tempat_lahir",
-            "tanggal_lahir",
-        ]:
-            if extracted_data.get(field):
-                success_fields.append(field)
-            else:
-                failed_fields.append(field)
-
-        field_labels = {
-            "nama_lengkap": "Nama",
-            "nik": "NIK",
-            "alamat_ktp": "Alamat",
-            "jenis_kelamin": "Jenis Kelamin",
-            "agama": "Agama",
-            "tempat_lahir": "Tempat Lahir",
-            "tanggal_lahir": "Tanggal Lahir",
-        }
-
-        success_labels = [field_labels[f] for f in success_fields]
-        failed_labels = [field_labels[f] for f in failed_fields]
-
-        status_message = "Scan KTP selesai."
-        if success_labels:
-            status_message += f" Berhasil mengenali: {', '.join(success_labels)}."
-        if failed_labels:
-            status_message += f" Gagal mengenali: {', '.join(failed_labels)}."
-
-        quota_warning = False
-        quota_message = ""
-        try:
-            if provider.is_quota_low(correlation_id=correlation_id):
-                quota_warning = True
-                remaining = provider.get_remaining_quota(correlation_id=correlation_id)
-                quota_message = f"Peringatan: Kuota penyedia AI hampir habis (Sisa kuota: {remaining if remaining is not None else 'rendah'})."
-        except Exception as q_err:
-            logger.warning(
-                f"[SCAN_KTP_QUOTA_ERROR] Could not check quota: {str(q_err)}"
-            )
-
-        logger.info(
-            f"[SCAN_KTP_SUCCESS] [CorrelationID: {correlation_id}] Fields extracted: {success_fields}, Quota warning: {quota_warning}"
-        )
-
+    success, msg, extracted_data, quota_warning, quota_message = process_ktp_scan(
+        image_bytes, correlation_id
+    )
+    if success:
         return JsonResponse(
             {
                 "success": True,
                 "data": extracted_data,
-                "message": status_message,
+                "message": msg,
                 "quota_warning": quota_warning,
                 "quota_message": quota_message,
             }
         )
-
-    except Exception as e:
-        logger.error(
-            f"[SCAN_KTP_FAIL] [CorrelationID: {correlation_id}] Extraction failed: {str(e)}",
-            exc_info=True,
-        )
+    else:
         return JsonResponse(
-            {"success": False, "message": f"Gagal memproses KTP dengan AI: {str(e)}"},
+            {"success": False, "message": msg},
             status=500,
         )

@@ -1,6 +1,9 @@
-from .models import Warga, Kompleks, TransaksiIuranBulanan
-from .serializers import wargaSerializer, kompleksSerializer, iuranSerializer
-from django.db.models import Q
+from kependudukan.models import Warga, Kompleks, TransaksiIuranBulanan
+from kependudukan.serializers import (
+    wargaSerializer,
+    kompleksSerializer,
+    iuranSerializer,
+)
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,6 +11,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 import logging
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from kependudukan.selectors.warga_selector import search_warga_queryset
+from kependudukan.selectors.kompleks_selector import search_kompleks_queryset
+from kependudukan.services.iuran_service import record_iuran_payment
+from kependudukan.errors import DatawargaError
 
 logger = logging.getLogger(__name__)
 
@@ -21,22 +28,11 @@ class wargaViewSet(viewsets.ModelViewSet):
     def search(self, request, *args, **kwargs):
         if request.method == "POST":
             search_term = request.data.get("search", "")
-
-            # Check if search term contains blok/nomor format
-            if "/" in search_term:
-                split_keyword = search_term.split("/")
-                queryset = self.queryset.filter(
-                    kompleks__blok__icontains=split_keyword[0].strip(),
-                    kompleks__nomor=split_keyword[1].strip(),
-                )
-            else:
-                queryset = self.queryset.filter(
-                    Q(nama_lengkap__icontains=search_term)
-                    | Q(nik__icontains=search_term)
-                    | Q(no_kk__icontains=search_term)
-                    | Q(kompleks__blok__icontains=search_term)
-                    | Q(kompleks__nomor__icontains=search_term)
-                )
+            queryset = search_warga_queryset(
+                self.queryset,
+                search_term,
+                include_kompleks_fields_in_general_search=True,
+            )
             logger.info(f"search to warga models with keyword {search_term}")
         else:
             queryset = self.queryset
@@ -60,18 +56,8 @@ class kompleksViewSet(viewsets.ModelViewSet):
     def search(self, request, *args, **kwargs):
         if request.method == "POST":
             search_term = request.data.get("search", "")
-
-            if "/" in search_term:
-                split_keyword = search_term.split("/")
-                queryset = self.queryset.filter(
-                    blok__icontains=split_keyword[0].strip(),
-                    nomor=split_keyword[1].strip(),
-                )
-            else:
-                queryset = self.queryset.filter(
-                    Q(cluster__icontains=search_term) | Q(blok__icontains=search_term)
-                )
-                logger.info(f"search to kompleks models with keyword {search_term}")
+            queryset = search_kompleks_queryset(self.queryset, search_term)
+            logger.info(f"search to kompleks models with keyword {search_term}")
         else:
             queryset = self.queryset
         serializer = self.get_serializer(queryset, many=True)
@@ -150,42 +136,9 @@ class kompleksViewSet(viewsets.ModelViewSet):
         total_bayar = request.data.get("total_bayar")
         bukti_bayar = request.FILES.get("bukti_bayar")
 
-        if "/" not in search_term:
-            return Response(
-                {"error": "Format alamat tidak valid"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        split_keyword = search_term.split("/")
-        data_kompleks = self.queryset.filter(
-            blok__icontains=split_keyword[0].strip(),
-            nomor=split_keyword[1].strip(),
-        )
-
-        if not data_kompleks.exists():
-            return Response(
-                {"error": "Alamat tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Check if payment already exists
-        existing_payment = TransaksiIuranBulanan.objects.filter(
-            kompleks=data_kompleks[0],
-            periode_bulan=periode_bulan,
-            periode_tahun=periode_tahun,
-        ).exists()
-
-        if existing_payment:
-            return Response(
-                {
-                    "error": f"Pembayaran untuk periode {periode_bulan}/{periode_tahun} sudah ada"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Record payment
         try:
-            payment = TransaksiIuranBulanan.objects.create(
-                kompleks=data_kompleks[0],
+            payment = record_iuran_payment(
+                blok_no=search_term,
                 periode_bulan=periode_bulan,
                 periode_tahun=periode_tahun,
                 total_bayar=total_bayar,
@@ -193,6 +146,8 @@ class kompleksViewSet(viewsets.ModelViewSet):
             )
             serializer = iuranSerializer(payment)
             return Response(serializer.data)
+        except DatawargaError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.error(f"Failed to record payment: {str(e)}")
             return Response(

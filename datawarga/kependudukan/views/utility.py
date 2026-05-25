@@ -1,6 +1,6 @@
-from .forms import WargaCSVForm
-from .models import Warga, Kompleks, TransaksiIuranBulanan
-from .formatters import format_rupiah
+from kependudukan.forms import WargaCSVForm
+from kependudukan.models import Warga, Kompleks, TransaksiIuranBulanan
+from kependudukan.utils.formatters import format_rupiah
 from django.conf import settings
 
 from django.contrib.auth.decorators import login_required, user_passes_test

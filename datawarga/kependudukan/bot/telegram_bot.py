@@ -16,9 +16,9 @@ from kependudukan.models import TransaksiIuranBulanan
 import tempfile
 import os
 
-from kependudukan.agent import AgentService, DjangoSystemAdapter, AgentConversation
-from kependudukan.ai_service import get_ai_provider
-from kependudukan.formatters import format_rupiah
+from kependudukan.ai.agent import AgentService, DjangoSystemAdapter, AgentConversation
+from kependudukan.ai.ai_service import get_ai_provider
+from kependudukan.utils.formatters import format_rupiah
 
 
 logger = logging.getLogger(__name__)
@@ -622,7 +622,7 @@ async def handle_agent_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         except OSError:
             pass
 
-        from kependudukan.ai_utils import optimize_image, map_extracted_data
+        from kependudukan.ai.ai_utils import optimize_image, map_extracted_data
         from asgiref.sync import sync_to_async
 
         optimized_bytes = await sync_to_async(optimize_image)(image_bytes)

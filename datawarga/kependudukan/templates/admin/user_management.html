@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manajemen User{% endblock %}
+{% block pagetitle %}Manajemen User{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div class="form-card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill"></i>
+            <h5 class="mb-0">Daftar Pengguna Aplikasi</h5>
+        </div>
+        <a href="{% url 'kependudukan:user_add' %}" class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-3 py-2 fw-semibold">
+            <i class="bi bi-person-plus-fill"></i> Tambah User Baru
+        </a>
+    </div>
+    
+    <div class="form-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Nama / Username</th>
+                        <th>Email</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">MFA</th>
+                        <th>Tautan Undangan</th>
+                        <th class="text-end pe-4">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in user_data %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="position-relative">
+                                    {% if item.profile.foto %}
+                                        <img src="{{ item.profile.foto.url }}" alt="{{ item.user.username }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #eaeaea;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 40px; height: 40px; font-size: 1.1rem; border: 2px solid #eaeaea;">
+                                            {{ item.user.username|slice:":2"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark fs-6">{{ item.user.get_full_name|default:item.user.username }}</span>
+                                    <small class="text-muted">@{{ item.user.username }} {% if item.user.is_superuser %}<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0">Superadmin</span>{% endif %}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ item.user.email }}</td>
+                        <td class="text-center">
+                            {% if item.status == 'Active' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-semibold">Aktif</span>
+                            {% elif item.status == 'Blocked' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-semibold">Diblokir</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1 fw-semibold">Menunggu Aktivasi</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if item.profile.mfa_enabled %}
+                                <span class="text-success" title="MFA Aktif"><i class="bi bi-shield-fill-check fs-4"></i></span>
+                            {% else %}
+                                <span class="text-muted" title="MFA Tidak Aktif"><i class="bi bi-shield-slash fs-4"></i></span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.invitation and not item.invitation.is_used %}
+                                {% with token=item.invitation.token %}
+                                    <span class="d-none" id="link-{{ token }}">{{ request.scheme }}://{{ request.get_host }}{% url 'kependudukan:user_activate' token %}</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if item.invitation.is_expired %}
+                                            <span class="badge bg-danger rounded-pill px-2 py-1">Expired</span>
+                                        {% else %}
+                                            <span class="text-muted small">Exp: {{ item.invitation.expires_at|date:"d M H:i" }}</span>
+                                        {% endif %}
+                                        <button class="btn btn-xs btn-outline-secondary p-1 border-0" onclick="copyInvitationLink('{{ token }}', this)" title="Salin Tautan">
+                                            <i class="bi bi-clipboard text-primary"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-outline-secondary p-1 border-0" onclick="copyInvitationTemplate('{{ item.user.first_name|default:item.user.username }}', '{{ token }}', '{{ item.invitation.expires_at|date:'d M Y H:i' }}', this)" title="Salin Template Undangan">
+                                            <i class="bi bi-file-earmark-text text-success"></i>
+                                        </button>
+                                        
+                                        {% if not item.invitation.is_expired %}
+                                        <form method="post" action="{% url 'kependudukan:invitation_expire' item.user.id %}" class="d-inline m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-xs btn-link text-danger p-0 border-0 align-baseline" title="Expire-kan Tautan" onclick="return confirm('Expire-kan tautan ini?')">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4 text-nowrap">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-circle p-2 border-0 shadow-sm-hover" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-1" style="border-radius: 12px; z-index: 1050;">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'kependudukan:user_edit' item.user.id %}">
+                                            <i class="bi bi-pencil text-muted"></i> Edit User
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'kependudukan:user_reset_password' item.user.id %}">
+                                            <i class="bi bi-key text-muted"></i> Reset Password
+                                        </a>
+                                    </li>
+                                    {% if item.profile.mfa_enabled %}
+                                    <li>
+                                        <form method="post" action="{% url 'kependudukan:user_reset_mfa' item.user.id %}" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-warning" onclick="return confirm('Reset MFA untuk pengguna ini? Pengguna harus setup MFA ulang pada login berikutnya.')">
+                                                <i class="bi bi-shield-x"></i> Reset MFA
+                                            </button>
+                                        </form>
+                                    </li>
+                                    {% endif %}
+                                    {% if item.user.id != request.user.id %}
+                                        {% if item.status == 'Blocked' or not item.user.is_active and not item.invitation %}
+                                            <li>
+                                                <form method="post" action="{% url 'kependudukan:user_unblock' item.user.id %}" class="m-0">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-success">
+                                                        <i class="bi bi-unlock"></i> Aktifkan / Unblock
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        {% else %}
+                                            {% if item.status == 'Pending' %}
+                                            <li>
+                                                <form method="post" action="{% url 'kependudukan:invitation_recreate' item.user.id %}" class="m-0">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-info">
+                                                        <i class="bi bi-arrow-repeat"></i> Recreate Undangan
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            {% endif %}
+                                            <li>
+                                                <form method="post" action="{% url 'kependudukan:user_block' item.user.id %}" class="m-0">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" onclick="return confirm('Blokir pengguna {{ item.user.username }}?')">
+                                                        <i class="bi bi-lock"></i> Blokir / Suspend
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        {% endif %}
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                            <p class="mt-3">Belum ada user terdaftar.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination Controls -->
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link text-dark fw-bold">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Modal Auto Copy (Shown when new user added or recreated) -->
+<textarea id="template-invitation-raw" class="d-none">{{ invitation_template }}</textarea>
+
+{% if new_user_invitation_token %}
+<div class="modal fade" id="newInvitationModal" tabindex="-1" aria-labelledby="newInvitationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-success d-flex align-items-center gap-2" id="newInvitationModalLabel">
+                    <i class="bi bi-check-circle-fill"></i> Tautan Undangan Dibuat
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <p>Tautan aktivasi baru berhasil dibuat untuk user. Silakan salin tautan atau gunakan template undangan di bawah untuk dikirimkan secara manual.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Tautan Aktivasi</label>
+                    <div class="input-group">
+                        <input type="text" id="modal-inv-link" class="form-control bg-light" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'kependudukan:user_activate' new_user_invitation_token %}">
+                        <button class="btn btn-outline-primary" type="button" onclick="copyModalLink(this)">
+                            <i class="bi bi-clipboard"></i> Salin
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label small fw-bold text-muted">Preview Template Undangan</label>
+                    <textarea id="modal-inv-template" class="form-control bg-light" rows="7" readonly style="font-size: 0.85rem; resize: none;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button class="btn btn-success w-100 py-2 fw-semibold" style="border-radius: 10px;" onclick="copyModalTemplate(this)">
+                    <i class="bi bi-file-earmark-text me-1"></i> Salin Template Undangan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block jscript %}
+<script>
+    // Show new invitation modal if token exists
+    $(document).ready(function() {
+        if ($('#newInvitationModal').length > 0) {
+            // Fill invitation text preview in modal
+            const rawTemplate = $('#template-invitation-raw').val();
+            const modalLink = $('#modal-inv-link').val();
+            // We use simple placeholder replacement for preview
+            const templateText = rawTemplate
+                .replace('{name}', 'Pengguna')
+                .replace('{link}', modalLink)
+                .replace('{expires_at}', 'Besok (24 Jam)');
+            
+            $('#modal-inv-template').val(templateText);
+            
+            var myModal = new bootstrap.Modal(document.getElementById('newInvitationModal'));
+            myModal.show();
+        }
+    });
+
+    function copyInvitationLink(token, btnElement) {
+        const linkElement = document.getElementById('link-' + token);
+        if (!linkElement) return;
+        const linkText = linkElement.innerText.trim();
+        
+        navigator.clipboard.writeText(linkText).then(() => {
+            const originalHTML = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="bi bi-check text-success fs-5"></i>';
+            setTimeout(() => {
+                btnElement.innerHTML = originalHTML;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy link: ', err);
+        });
+    }
+
+    function copyInvitationTemplate(name, token, expiresAt, btnElement) {
+        const linkElement = document.getElementById('link-' + token);
+        if (!linkElement) return;
+        const linkText = linkElement.innerText.trim();
+        
+        const rawTemplate = document.getElementById('template-invitation-raw').value;
+        const templateText = rawTemplate
+            .replace('{name}', name)
+            .replace('{link}', linkText)
+            .replace('{expires_at}', expiresAt);
+
+        navigator.clipboard.writeText(templateText).then(() => {
+            const originalHTML = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="bi bi-check text-success fs-5"></i>';
+            setTimeout(() => {
+                btnElement.innerHTML = originalHTML;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy template: ', err);
+        });
+    }
+
+    function copyModalLink(btnElement) {
+        const input = document.getElementById('modal-inv-link');
+        navigator.clipboard.writeText(input.value).then(() => {
+            const originalText = btnElement.innerText;
+            btnElement.innerHTML = '<i class="bi bi-check"></i> Disalin';
+            btnElement.classList.replace('btn-outline-primary', 'btn-success');
+            setTimeout(() => {
+                btnElement.innerHTML = '<i class="bi bi-clipboard"></i> Salin';
+                btnElement.classList.replace('btn-success', 'btn-outline-primary');
+            }, 2000);
+        });
+    }
+
+    function copyModalTemplate(btnElement) {
+        const textarea = document.getElementById('modal-inv-template');
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="bi bi-check-lg"></i> Template Disalin ke Clipboard!';
+            btnElement.classList.replace('btn-success', 'btn-outline-success');
+            setTimeout(() => {
+                btnElement.innerHTML = originalText;
+                btnElement.classList.replace('btn-outline-success', 'btn-success');
+            }, 2000);
+        });
+    }
+</script>
+<style>
+    .fs-7 { font-size: 0.75rem; }
+    .btn-xs { padding: 0.15rem 0.3rem; font-size: 0.75rem; border-radius: 4px; }
+    .shadow-sm-hover { transition: box-shadow 0.2s, background-color 0.2s; }
+    .shadow-sm-hover:hover { box-shadow: 0 .125rem .25rem rgba(0,0,0,0.075) !important; background-color: #f8f9fa !important; }
+</style>
+{% endblock %}

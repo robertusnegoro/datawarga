@@ -4,7 +4,9 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 import os
-from .formatters import format_rupiah
+import uuid
+from django.utils import timezone
+from .utils.formatters import format_rupiah
 
 
 # Create your models here.
@@ -421,3 +423,22 @@ class UserProfile(models.Model):
 
     def __str__(self) -> str:
         return f"Profile for {self.user.username}"
+
+
+class UserInvitation(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="invitation"
+    )
+    token = models.CharField(max_length=64, unique=True, default=uuid.uuid4)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    def is_expired(self) -> bool:
+        return timezone.now() > self.expires_at
+
+    def is_valid(self) -> bool:
+        return not self.is_used and not self.is_expired()
+
+    def __str__(self) -> str:
+        return f"Invitation for {self.user.username} (Valid: {self.is_valid()})"

@@ -6,8 +6,8 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
-from ..ai_utils import optimize_image, parse_extracted_json, map_extracted_data
-from ..ai_service import OllamaProvider, OpenRouterProvider, get_ai_provider
+from ..ai.ai_utils import optimize_image, parse_extracted_json, map_extracted_data
+from ..ai.ai_service import OllamaProvider, OpenRouterProvider, get_ai_provider
 from ..models import Warga, Kompleks
 
 
@@ -275,8 +275,8 @@ class KTPScanViewTestCase(TestCase):
             status_tinggal="KONTRAK",
         )
 
-    @patch("kependudukan.ai_service.OllamaProvider.extract_ktp_data")
-    @patch("kependudukan.ai_service.OllamaProvider.is_quota_low")
+    @patch("kependudukan.ai.ai_service.OllamaProvider.extract_ktp_data")
+    @patch("kependudukan.ai.ai_service.OllamaProvider.is_quota_low")
     def test_scan_ktp_view_with_uploaded_file(self, mock_quota, mock_extract):
         mock_quota.return_value = False
         mock_extract.return_value = {
@@ -309,7 +309,7 @@ class KTPScanViewTestCase(TestCase):
         self.assertEqual(data["data"]["tanggal_lahir"], "1995-08-05")
         self.assertFalse(data["quota_warning"])
 
-    @patch("kependudukan.ai_service.OllamaProvider.extract_ktp_data")
+    @patch("kependudukan.ai.ai_service.OllamaProvider.extract_ktp_data")
     def test_scan_ktp_view_with_existing_warga_no_image(self, mock_extract):
         url = reverse("kependudukan:scan_ktp_ajax")
         response = self.client.post(url, {"idwarga": self.warga.id})

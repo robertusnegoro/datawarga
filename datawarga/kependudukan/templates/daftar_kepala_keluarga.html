@@ -106,44 +106,31 @@
 </div>
 
 <!-- Pagination -->
-{% if page_obj.has_other_pages %}
-<div class="d-flex justify-content-between align-items-center mt-4 px-2">
-    <div class="text-muted small">
-        Menampilkan Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}
-    </div>
-    <nav aria-label="Navigasi halaman">
-        <ul class="pagination pagination-sm mb-0">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-            {% endif %}
+<nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">Previous</a>
+        </li>
+        {% endif %}
 
-            <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+        <li class="page-item disabled">
+            <span class="page-link text-dark fw-bold">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
 
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-{% endif %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{search}}{% endif %}{% if cluster %}&cluster={{cluster}}{% endif %}">Last &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
 
 <!-- Bootstrap 5 Offcanvas Sidebar Drawer -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="familyOffcanvas" aria-labelledby="familyOffcanvasLabel" style="width: 520px; max-width: 100%; border-left: none; box-shadow: -10px 0 30px rgba(0,0,0,0.08);">

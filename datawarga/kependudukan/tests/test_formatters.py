@@ -1,5 +1,5 @@
 from django.test import SimpleTestCase
-from ..formatters import format_rupiah
+from ..utils.formatters import format_rupiah
 
 
 class FormattersTestCase(SimpleTestCase):

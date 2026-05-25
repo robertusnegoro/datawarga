@@ -1,8 +1,8 @@
 import json
 from django.test import TestCase
 
-from ..ai_service import BaseAIProvider
-from ..agent import SystemAdapter, AgentService, AgentConversation
+from ..ai.ai_service import BaseAIProvider
+from ..ai.agent import SystemAdapter, AgentService, AgentConversation
 
 
 class MockSystemAdapter(SystemAdapter):

@@ -236,6 +236,31 @@
                             </div>
                         </div>
 
+                        <!-- Group 5: Admin Panel (Superuser Only) -->
+                        {% if request.user.is_superuser %}
+                        <div class="sidebar-group">
+                            <a class="sidebar-group-toggle {% if url_name == 'user_management' or url_name == 'user_add' or url_name == 'user_edit' or url_name == 'user_reset_password' %}active{% endif %}" 
+                               data-bs-toggle="collapse" 
+                               href="#collapseAdmin" 
+                               role="button" 
+                               aria-expanded="{% if url_name == 'user_management' or url_name == 'user_add' or url_name == 'user_edit' or url_name == 'user_reset_password' %}true{% else %}false{% endif %}" 
+                               aria-controls="collapseAdmin">
+                                <i class="bi bi-shield-lock"></i>
+                                <span>Admin Panel</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <div class="collapse {% if url_name == 'user_management' or url_name == 'user_add' or url_name == 'user_edit' or url_name == 'user_reset_password' %}show{% endif %}" id="collapseAdmin">
+                                <ul class="nav flex-column submenu-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'user_management' or url_name == 'user_add' or url_name == 'user_edit' or url_name == 'user_reset_password' %}active{% endif %}" href="{% url 'kependudukan:user_management' %}">
+                                            <i class="bi bi-people-fill"></i> Manajemen User
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <!-- Mobile-only User section -->
                         <ul class="nav flex-column d-md-none mt-3 border-top pt-3">
                             <li class="nav-item px-3 mb-2 d-flex align-items-center gap-2">

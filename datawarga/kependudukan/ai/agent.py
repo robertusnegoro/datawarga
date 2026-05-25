@@ -3,7 +3,7 @@ import json
 import logging
 from datetime import datetime
 from django.db.models import Q
-from .ai_service import BaseAIProvider
+from kependudukan.ai.ai_service import BaseAIProvider
 
 logger = logging.getLogger(__name__)
 
@@ -318,7 +318,7 @@ class AgentService:
         correlation_id: str = None,
     ) -> str:
         messages_with_system = [{"role": "system", "content": SYSTEM_PROMPT}] + messages
-        from .ai_utils import parse_extracted_json
+        from kependudukan.ai.ai_utils import parse_extracted_json
 
         # Allow the agent to perform up to 5 steps of sequential tool calls
         for iteration in range(5):

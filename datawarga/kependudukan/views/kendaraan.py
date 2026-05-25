@@ -6,8 +6,8 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
-from .forms import KendaraanForm
-from .models import Warga, Kendaraan
+from kependudukan.forms import KendaraanForm
+from kependudukan.models import Warga, Kendaraan
 
 logger = logging.getLogger(__name__)
 

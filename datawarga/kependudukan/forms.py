@@ -154,6 +154,51 @@ class UserProfileUpdateForm(forms.ModelForm):
         }
 
 
+class UserAddForm(forms.ModelForm):
+    email = forms.EmailField(
+        required=True, widget=forms.EmailInput(attrs={"class": "form-control"})
+    )
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "first_name", "last_name"]
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email and User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Email ini sudah terdaftar.")
+        return email
+
+
+class UserEditForm(forms.ModelForm):
+    email = forms.EmailField(
+        required=True, widget=forms.EmailInput(attrs={"class": "form-control"})
+    )
+
+    class Meta:
+        model = User
+        fields = ["email", "first_name", "last_name"]
+        widgets = {
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email:
+            qs = User.objects.filter(email__iexact=email)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("Email ini sudah terdaftar.")
+        return email
+
+
 class MfaVerifyForm(forms.Form):
     token = forms.CharField(
         max_length=6,

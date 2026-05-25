@@ -1,6 +1,6 @@
-from .forms import GenerateKompleksForm
-from .models import Warga, Kompleks, WargaPermissionGroup, UserPermission
-from .utility import helper_finance_year_list
+from kependudukan.forms import GenerateKompleksForm
+from kependudukan.models import Warga, Kompleks, WargaPermissionGroup, UserPermission
+from kependudukan.views.utility import helper_finance_year_list
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test

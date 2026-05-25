@@ -9,7 +9,7 @@ from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import logging
 
-from .models import Warga, Surat, Penandatangan
+from kependudukan.models import Warga, Surat, Penandatangan
 from django import forms
 
 logger = logging.getLogger(__name__)

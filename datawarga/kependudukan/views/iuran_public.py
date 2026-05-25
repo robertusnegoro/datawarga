@@ -1,5 +1,5 @@
-from .models import Kompleks, TransaksiIuranBulanan
-from .utility import helper_finance_year_list
+from kependudukan.models import Kompleks, TransaksiIuranBulanan
+from kependudukan.views.utility import helper_finance_year_list
 from django.shortcuts import render
 import logging
 

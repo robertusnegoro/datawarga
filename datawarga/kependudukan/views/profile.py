@@ -15,7 +15,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 import pyotp
 import qrcode
-from .forms import UserUpdateForm, UserProfileUpdateForm, MfaVerifyForm
+from kependudukan.forms import UserUpdateForm, UserProfileUpdateForm, MfaVerifyForm
 
 logger = logging.getLogger(__name__)
 
