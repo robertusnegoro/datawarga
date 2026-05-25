@@ -79,19 +79,19 @@
                             </li>
                         </ul>
 
-                        <!-- Group 1: Kependudukan & Rumah -->
+                        <!-- Group 1: Kependudukan -->
                         <div class="sidebar-group">
-                            <a class="sidebar-group-toggle {% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'kompleksForm' or url_name == 'arsipWargaView' %}active{% endif %}" 
+                            <a class="sidebar-group-toggle {% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'arsipWargaView' %}active{% endif %}" 
                                data-bs-toggle="collapse" 
                                href="#collapseKependudukan" 
                                role="button" 
-                               aria-expanded="{% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'kompleksForm' or url_name == 'arsipWargaView' %}true{% else %}false{% endif %}" 
+                               aria-expanded="{% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'arsipWargaView' %}true{% else %}false{% endif %}" 
                                aria-controls="collapseKependudukan">
                                 <i class="bi bi-people"></i>
                                 <span>Kependudukan</span>
                                 <i class="bi bi-chevron-down chevron-icon"></i>
                             </a>
-                            <div class="collapse {% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'kompleksForm' or url_name == 'arsipWargaView' %}show{% endif %}" id="collapseKependudukan">
+                            <div class="collapse {% if url_name == 'listWargaView' or url_name == 'daftarKepalaKeluarga' or url_name == 'formWarga' or url_name == 'formWargaRumah' or url_name == 'arsipWargaView' %}show{% endif %}" id="collapseKependudukan">
                                 <ul class="nav flex-column submenu-nav">
                                     <li class="nav-item">
                                         <a class="nav-link {% if url_name == 'listWargaView' %}active{% endif %}" href="{% url 'kependudukan:listWargaView' %}">
@@ -104,13 +104,36 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link {% if url_name == 'listKompleksView' or url_name == 'detailKompleks' %}active{% endif %}" href="{% url 'kependudukan:listKompleksView' %}">
-                                            <i class="bi bi-map"></i> Data Kompleks
+                                        <a class="nav-link {% if url_name == 'formWarga' or url_name == 'formWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:formWarga' 0 %}">
+                                            <i class="bi bi-input-cursor-text"></i> Form Warga
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link {% if url_name == 'formWarga' or url_name == 'formWargaRumah' %}active{% endif %}" href="{% url 'kependudukan:formWarga' 0 %}">
-                                            <i class="bi bi-input-cursor-text"></i> Form Warga
+                                        <a class="nav-link {% if url_name == 'arsipWargaView' %}active{% endif %}" href="{% url 'kependudukan:arsipWargaView' %}">
+                                            <i class="bi bi-archive-fill"></i> Arsip Data Warga
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Group 1.5: Rumah & Kompleks -->
+                        <div class="sidebar-group">
+                            <a class="sidebar-group-toggle {% if url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'kompleksForm' %}active{% endif %}" 
+                               data-bs-toggle="collapse" 
+                               href="#collapseKompleks" 
+                               role="button" 
+                               aria-expanded="{% if url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'kompleksForm' %}true{% else %}false{% endif %}" 
+                               aria-controls="collapseKompleks">
+                                <i class="bi bi-house"></i>
+                                <span>Rumah & Kompleks</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <div class="collapse {% if url_name == 'listKompleksView' or url_name == 'detailKompleks' or url_name == 'kompleksForm' %}show{% endif %}" id="collapseKompleks">
+                                <ul class="nav flex-column submenu-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'listKompleksView' or url_name == 'detailKompleks' %}active{% endif %}" href="{% url 'kependudukan:listKompleksView' %}">
+                                            <i class="bi bi-map"></i> Data Kompleks
                                         </a>
                                     </li>
                                     {% if request.user.is_superuser %}
@@ -120,11 +143,6 @@
                                         </a>
                                     </li>
                                     {% endif %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if url_name == 'arsipWargaView' %}active{% endif %}" href="{% url 'kependudukan:arsipWargaView' %}">
-                                            <i class="bi bi-archive-fill"></i> Arsip Data Warga
-                                        </a>
-                                    </li>
                                 </ul>
                             </div>
                         </div>

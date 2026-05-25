@@ -1,168 +1,274 @@
 {% extends "base.html" %}
-{% block title %}Data Rumah{% endblock %}
-{% block pagetitle %}<i class="bi bi-house-door text-primary"></i> Data Rumah Blok {{ data.blok }} / Nomor {{ data.nomor }}{% endblock %}
+{% block title %}Profil Rumah{% endblock %}
+{% block pagetitle %}<i class="bi bi-house-door-fill text-primary"></i> Profil Rumah Blok {{ data.blok }} / {{ data.nomor }}{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
 {% load static %}
 {% now "Y" as current_year %}
 
-<div class="row mt-2">
-    <!-- Left Column: Edit House Info Card -->
-    <div class="col-lg-4">
-        <div class="form-card" style="position: sticky; top: 80px;">
-            <div class="form-card-header">
-                <i class="bi bi-pencil-square"></i>
-                <h5>Edit Data Rumah</h5>
+<style>
+    .house-nav-tabs {
+        border-bottom: 1px solid #dee2e6;
+    }
+    .house-nav-tabs .nav-link {
+        color: #6c757d;
+        border: none;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+        margin-bottom: -1px;
+    }
+    .house-nav-tabs .nav-link:hover {
+        border-color: transparent;
+        color: #495057;
+    }
+    .house-nav-tabs .nav-link.active {
+        color: var(--bs-primary) !important;
+        background-color: transparent !important;
+        border-bottom: 3px solid var(--bs-primary) !important;
+    }
+    .stat-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+</style>
+
+<!-- Top Action Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4 gap-2 flex-wrap">
+    <a href="{% url 'kependudukan:listKompleksView' %}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill shadow-sm">
+        <i class="bi bi-arrow-left"></i> Kembali ke Daftar Rumah
+    </a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'kependudukan:formWargaRumah' 0 data.id %}" class="btn btn-success btn-sm px-4 rounded-pill shadow-sm fw-bold">
+            <i class="bi bi-person-plus-fill me-1"></i> Tambah Warga
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Quick Profile Card -->
+    <div class="col-lg-4 col-md-5">
+        <div class="card border-0 shadow-sm text-center p-4" style="border-radius: 16px; background: #ffffff; position: sticky; top: 80px;">
+            <!-- House Icon -->
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bg-primary-subtle text-primary shadow-sm" style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 0 2px var(--bs-primary-subtle);">
+                <i class="bi bi-house-door-fill" style="font-size: 4rem;"></i>
             </div>
-            <div class="form-card-body">
-                <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:detailKompleks' data.id %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="alamat" class="form-label">Alamat</label>
-                        <input type="text" class="form-control" id="alamat" name="alamat" maxlength="255" value="{{ data.alamat }}">
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="kelurahan" class="form-label">Kelurahan</label>
-                                <input type="text" class="form-control" id="kelurahan" name="kelurahan" maxlength="150" value="{{ data.kelurahan }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="kecamatan" class="form-label">Kecamatan</label>
-                                <input type="text" class="form-control" id="kecamatan" name="kecamatan" maxlength="150" value="{{ data.kecamatan }}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="kota" class="form-label">Kota</label>
-                                <input type="text" class="form-control" id="kota" name="kota" maxlength="150" value="{{ data.kota }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="provinsi" class="form-label">Provinsi</label>
-                                <input type="text" class="form-control" id="provinsi" name="provinsi" maxlength="150" value="{{ data.provinsi }}">
-                            </div>
+            
+            <h3 class="fw-bold text-dark mb-1">Blok {{ data.blok }} / {{ data.nomor }}</h3>
+            <p class="text-muted small mb-3">Cluster {{ data.cluster|default:"-" }}</p>
+            
+            <div class="d-flex justify-content-center gap-2 mb-4">
+                <span class="badge bg-info text-white rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                    RT {{ data.rt }} / RW {{ data.rw }}
+                </span>
+                <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-size: 0.75rem;" id="badge-total-penghuni">
+                    <i class="bi bi-people-fill me-1"></i> - Warga
+                </span>
+            </div>
+            
+            <hr class="my-3 text-muted opacity-25">
+            
+            <!-- Quick Contact info -->
+            <div class="text-start">
+                <div class="d-flex align-items-start mb-3 text-secondary">
+                    <i class="bi bi-geo-alt-fill fs-5 me-3 text-primary mt-1"></i>
+                    <div>
+                        <span class="d-block small text-muted">Alamat Lengkap</span>
+                        <strong class="text-dark">{{ data.alamat|default:"-" }}</strong>
+                        <div class="small mt-1 text-muted">
+                            {{ data.kelurahan }}, {{ data.kecamatan }}<br>
+                            {{ data.kota }}, {{ data.provinsi }} {{ data.kode_pos }}
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="kode_pos" class="form-label">Kode Pos</label>
-                                <input type="text" class="form-control" id="kode_pos" name="kode_pos" maxlength="150" value="{{ data.kode_pos }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="cluster" class="form-label">Nama Cluster</label>
-                                <input type="text" class="form-control" id="cluster" name="cluster" maxlength="150" value="{{ data.cluster }}">
-                            </div>
-                        </div>
+                </div>
+                <div class="d-flex align-items-center mb-3 text-secondary">
+                    <i class="bi bi-chat-right-quote-fill fs-5 me-3 text-primary"></i>
+                    <div>
+                        <span class="d-block small text-muted">Catatan</span>
+                        <strong class="text-dark">{{ data.description|default:"Tidak ada catatan" }}</strong>
                     </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="blok" class="form-label">Blok</label>
-                                <input type="text" class="form-control" id="blok" name="blok" maxlength="10" required value="{{ data.blok }}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="rt" class="form-label">RT</label>
-                                <input type="text" class="form-control" id="rt" name="rt" maxlength="4" required value="{{ data.rt }}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="rw" class="form-label">RW</label>
-                                <input type="text" class="form-control" id="rw" name="rw" maxlength="4" required value="{{ data.rw }}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nomor" class="form-label">Nomor</label>
-                                <input type="text" class="form-control" id="nomor" name="nomor" maxlength="3" required value="{{ data.nomor }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Catatan</label>
-                                <input type="text" class="form-control" id="description" name="description" maxlength="200" value="{% if data.description == None %}{% else %}{{ data.description }}{% endif %}">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="submit-btn w-100 justify-content-center mt-2">
-                        <i class="bi bi-save-fill"></i> Simpan Data Rumah
-                    </button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- Right Column: Residents & Monthly Payments cards -->
-    <div class="col-lg-8">
-
-
-        <!-- Card 1: Residents -->
-        <div class="form-card">
-            <div class="form-card-header">
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-people"></i>
-                        <h5 class="mb-0">Data Warga Penghuni</h5>
-                    </div>
-                    <a href="{% url 'kependudukan:formWargaRumah' 0 data.id %}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
-                        <i class="bi bi-person-plus-fill"></i> Tambah Warga
-                    </a>
+    
+    <!-- Right Column: Rich Detailed Info & Tables -->
+    <div class="col-lg-8 col-md-7">
+        
+        <!-- Summary Stats Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+                <div class="stat-card shadow-sm">
+                    <i class="bi bi-people text-primary mb-2 d-block" style="font-size: 2rem;"></i>
+                    <h3 class="fw-bold text-dark mb-0" id="stat-total-penghuni">-</h3>
+                    <p class="text-muted small mb-0">Total Penghuni Aktif</p>
                 </div>
             </div>
-            <div class="form-card-body">
-                <p class="text-muted small mb-3">Daftar warga penghuni aktif di blok <b>{{ data.blok }} / No. {{ data.nomor }}</b></p>
-                <div id="tabelwarga" class="table-responsive"></div>
+            <div class="col-sm-6">
+                <div class="stat-card shadow-sm">
+                    <i class="bi bi-cash-stack text-success mb-2 d-block" style="font-size: 2rem;"></i>
+                    <h3 class="fw-bold text-dark mb-0" id="stat-total-iuran">-</h3>
+                    <p class="text-muted small mb-0">Pembayaran Iuran Tahun {{ current_year }}</p>
+                </div>
             </div>
         </div>
 
-        <!-- Card 2: Monthly Payments -->
-        <div class="form-card">
-            <div class="form-card-header">
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-cash-stack"></i>
-                        <h5 class="mb-0">Data Pembayaran Iuran Bulanan</h5>
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <!-- Nav Tabs -->
+            <div class="bg-white px-4 pt-3">
+                <ul class="nav nav-tabs house-nav-tabs" id="houseTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="penghuni-tab" data-bs-toggle="tab" data-bs-target="#penghuni" type="button" role="tab">
+                            <i class="bi bi-people me-1"></i> Data Penghuni
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="iuran-tab" data-bs-toggle="tab" data-bs-target="#iuran" type="button" role="tab">
+                            <i class="bi bi-cash-stack me-1"></i> Iuran Bulanan
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab">
+                            <i class="bi bi-pencil-square me-1"></i> Edit Data Rumah
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="houseTabsContent">
+                
+                <!-- Tab: Penghuni -->
+                <div class="tab-pane fade show active" id="penghuni" role="tabpanel">
+                    <div class="card-body p-4 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1 fw-bold text-dark">Daftar Penghuni</h5>
+                            <p class="text-muted small mb-0">Data lengkap warga yang terdaftar pada rumah ini.</p>
+                        </div>
+                        <a href="{% url 'kependudukan:formWargaRumah' 0 data.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 bg-white">
+                            <i class="bi bi-person-plus-fill"></i> Tambah Baru
+                        </a>
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'kependudukan:formIuranBulanan' data.id %}" id="form_iuran_link" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
-                            <i class="bi bi-plus-circle-fill"></i> Entry Iuran
-                        </a>
-                        <a href="{% url 'kependudukan:batchIuranBulanan' data.id current_year %}" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1">
-                            <i class="bi bi-clipboard-check-fill"></i> Entry Batch
-                        </a>
+                    <div class="card-body p-0 pb-3">
+                        <div id="tabelwarga" class="table-responsive"></div>
                     </div>
                 </div>
-            </div>
-            <div class="form-card-body">
-                <form method="get" action="{% url 'kependudukan:listWargaView' %}" class="row g-2 align-items-center mb-3">
-                    <div class="col-auto">
-                        <select class="form-select" id="id_periode_tahun" name="periode_tahun" style="padding: 6px 12px !important; font-size: 0.9rem !important; border-radius: 8px !important;">
-                            {% for x in iuran_year_period %}
-                                <option value="{{ x }}">{{ x }}</option>
-                            {% endfor %}
-                        </select>
-                    </div> 
-                    <div class="col-auto">
-                        <button type="button" id="searchIuranBtn" class="btn btn-sm btn-info d-inline-flex align-items-center gap-1">
-                            <i class="bi bi-search"></i> Cari
-                        </button>
+
+                <!-- Tab: Iuran -->
+                <div class="tab-pane fade" id="iuran" role="tabpanel">
+                    <div class="card-body p-4 bg-light border-bottom d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div>
+                            <h5 class="mb-1 fw-bold text-dark">Riwayat Iuran</h5>
+                            <p class="text-muted small mb-0">Kelola dan pantau pembayaran iuran bulanan.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <form method="get" action="javascript:void(0);" class="d-flex gap-2 align-items-center mb-0">
+                                <select class="form-select form-select-sm rounded-pill px-3 border-secondary" id="id_periode_tahun" name="periode_tahun" style="width: 110px;">
+                                    {% for x in iuran_year_period %}
+                                        <option value="{{ x }}">{{ x }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" id="searchIuranBtn" class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </form>
+                            <a href="{% url 'kependudukan:formIuranBulanan' data.id %}" id="form_iuran_link" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                                <i class="bi bi-plus-circle-fill"></i> Entry
+                            </a>
+                            <a href="{% url 'kependudukan:batchIuranBulanan' data.id current_year %}" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                                <i class="bi bi-clipboard-check-fill"></i> Batch
+                            </a>
+                        </div>
                     </div>
-                </form>
-                <div id="tabelIuranBulanan" class="table-responsive"></div>
+                    <div class="card-body p-0 pb-3">
+                        <div id="tabelIuranBulanan" class="table-responsive"></div>
+                    </div>
+                </div>
+
+                <!-- Tab: Edit Rumah -->
+                <div class="tab-pane fade" id="edit" role="tabpanel">
+                    <div class="card-body p-4 bg-light border-bottom">
+                        <h5 class="mb-1 fw-bold text-dark">Perbarui Data Rumah</h5>
+                        <p class="text-muted small mb-0">Ubah informasi fisik dan administratif rumah.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data" id="warga-form" action="{% url 'kependudukan:detailKompleks' data.id %}">
+                            {% csrf_token %}
+                            
+                            <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Alamat & Lokasi</h6>
+                            <div class="mb-3">
+                                <label for="alamat" class="form-label small text-muted fw-semibold">Alamat Lengkap</label>
+                                <input type="text" class="form-control" id="alamat" name="alamat" maxlength="255" value="{{ data.alamat }}">
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="kelurahan" class="form-label small text-muted fw-semibold">Kelurahan</label>
+                                    <input type="text" class="form-control" id="kelurahan" name="kelurahan" maxlength="150" value="{{ data.kelurahan }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kecamatan" class="form-label small text-muted fw-semibold">Kecamatan</label>
+                                    <input type="text" class="form-control" id="kecamatan" name="kecamatan" maxlength="150" value="{{ data.kecamatan }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kota" class="form-label small text-muted fw-semibold">Kota</label>
+                                    <input type="text" class="form-control" id="kota" name="kota" maxlength="150" value="{{ data.kota }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="provinsi" class="form-label small text-muted fw-semibold">Provinsi</label>
+                                    <input type="text" class="form-control" id="provinsi" name="provinsi" maxlength="150" value="{{ data.provinsi }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kode_pos" class="form-label small text-muted fw-semibold">Kode Pos</label>
+                                    <input type="text" class="form-control" id="kode_pos" name="kode_pos" maxlength="150" value="{{ data.kode_pos }}">
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Detail Blok & Cluster</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-12">
+                                    <label for="cluster" class="form-label small text-muted fw-semibold">Nama Cluster</label>
+                                    <input type="text" class="form-control" id="cluster" name="cluster" maxlength="150" value="{{ data.cluster }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="blok" class="form-label small text-muted fw-semibold">Blok</label>
+                                    <input type="text" class="form-control fw-bold text-primary" id="blok" name="blok" maxlength="10" required value="{{ data.blok }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="nomor" class="form-label small text-muted fw-semibold">Nomor Rumah</label>
+                                    <input type="text" class="form-control fw-bold text-primary" id="nomor" name="nomor" maxlength="3" required value="{{ data.nomor }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="rt" class="form-label small text-muted fw-semibold">RT</label>
+                                    <input type="text" class="form-control" id="rt" name="rt" maxlength="4" required value="{{ data.rt }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="rw" class="form-label small text-muted fw-semibold">RW</label>
+                                    <input type="text" class="form-control" id="rw" name="rw" maxlength="4" required value="{{ data.rw }}">
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="description" class="form-label small text-muted fw-semibold">Catatan Tambahan</label>
+                                    <textarea class="form-control" id="description" name="description" rows="2" maxlength="200">{% if data.description %}{{ data.description }}{% endif %}</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end border-top pt-4">
+                                <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 shadow-sm fw-bold">
+                                    <i class="bi bi-save-fill me-1"></i> Simpan Perubahan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -175,23 +281,29 @@
     load_iuran_bulanan(current_year);
 
     $.getJSON("{{ load_url }}", function(response) {
-        console.log(response);
         var data = response.data;
         var count = response.total;
 
+        // Update Stats
+        $("#stat-total-penghuni").text(count + " Orang");
+        $("#badge-total-penghuni").html('<i class="bi bi-people-fill me-1"></i> ' + count + ' Warga');
+
         if (count === 0) {
-            $("#tabelwarga").html('<div class="text-center py-4 text-muted"><i class="bi bi-people" style="font-size: 2rem;"></i><p class="mt-2 mb-0">Belum ada data warga penghuni di rumah ini.</p></div>');
+            $("#tabelwarga").html('<div class="text-center py-5 text-muted"><i class="bi bi-people" style="font-size: 3rem; color: #ced4da;"></i><p class="mt-3 mb-0 fw-semibold">Belum ada warga terdaftar.</p><p class="small">Silakan tambahkan warga melalui tombol Tambah Warga.</p></div>');
         } else {
             var table = "<table class=\"table table-hover align-middle mb-0\">";
-            table += "<thead class=\"table-light\"><tr><th>NIK</th><th>Nama Lengkap</th><th>No. HP</th><th>Status Tinggal</th><th class=\"text-center\">Status Keluarga</th></tr></thead><tbody>";
+            table += "<thead class=\"table-light\"><tr><th class=\"ps-4\">NIK</th><th>Nama Lengkap</th><th>No. HP</th><th>Status Tinggal</th><th>Status Keluarga</th><th class=\"text-center pe-4\">Status KK</th></tr></thead><tbody>";
             $.each(data, function(key, value) {
                 var kepala_keluarga = "";
                 if (value.fields.kepala_keluarga) {
-                    kepala_keluarga = "<span class=\"badge bg-success px-2 py-1\"><i class=\"bi bi-check-circle-fill\"></i> Kepala Keluarga</span>";
+                    kepala_keluarga = "<span class=\"badge bg-danger rounded-pill px-3 py-2 shadow-sm\" style=\"font-size: 0.75rem;\"><i class=\"bi bi-star-fill me-1\"></i> Kepala Keluarga</span>";
                 } else {
-                    kepala_keluarga = "<a class=\"btn btn-outline-primary btn-sm\" href=\"/warga/set-kk/" + value.pk + "\"> <i class=\"bi bi-person-check-fill\"></i> Set KK </a>";
+                    kepala_keluarga = "<a class=\"btn btn-outline-primary btn-sm rounded-pill px-3\" href=\"/warga/set-kk/" + value.pk + "\"> <i class=\"bi bi-person-check-fill\"></i> Set KK </a>";
                 }
-                table += "<tr><td><code class=\"text-dark\">" + value.fields.nik + "</code></td><td><a href=\"/warga/form-warga/" + value.pk + "\" class=\"font-weight-bold text-primary\" style=\"text-decoration: none;\">" + value.fields.nama_lengkap.toUpperCase() + "</a></td><td>" + (value.fields.no_hp || "-") + "</td><td><span class=\"badge bg-secondary px-2 py-1\">" + value.fields.status_tinggal + "</span></td><td class=\"text-center\">"+ kepala_keluarga +"</td></tr>";
+                
+                var statusKeluargaBadge = "<span class=\"badge bg-secondary-subtle text-dark border rounded-pill px-2 py-1\">" + (value.fields.status_keluarga || "N/A") + "</span>";
+                
+                table += "<tr><td class=\"ps-4\"><code class=\"text-secondary bg-light px-2 py-1 rounded\">" + value.fields.nik + "</code></td><td><a href=\"/warga/detail/" + value.pk + "\" class=\"fw-bold text-primary\" style=\"text-decoration: none;\">" + value.fields.nama_lengkap.toUpperCase() + "</a></td><td>" + (value.fields.no_hp || "-") + "</td><td><span class=\"badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2\" style=\"font-size: 0.75rem;\">" + value.fields.status_tinggal + "</span></td><td>" + statusKeluargaBadge + "</td><td class=\"text-center pe-4\">"+ kepala_keluarga +"</td></tr>";
             });
             table += "</tbody></table>";
             $("#tabelwarga").html(table);
@@ -203,24 +315,26 @@
     });
 
     function load_iuran_bulanan(year) {
-        $("#tabelIuranBulanan").html('<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading...</div>');
+        $("#tabelIuranBulanan").html('<div class="text-center py-5 text-muted"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Memuat Data Iuran...</p></div>');
         $.getJSON("{{ iuran_bulanan_url }}/" + year, function(response){
-            console.log(response);
             var data = response.data;
             var count = response.total;
 
+            // Update stats
+            $("#stat-total-iuran").text(count + " Bulan");
+
             if (count === 0) {
-                $("#tabelIuranBulanan").html('<div class="text-center py-4 text-muted"><i class="bi bi-cash-stack" style="font-size: 2rem;"></i><p class="mt-2 mb-0">Belum ada data pembayaran iuran untuk tahun ' + year + '</p></div>');
+                $("#tabelIuranBulanan").html('<div class="text-center py-5 text-muted"><i class="bi bi-cash-stack" style="font-size: 3rem; color: #ced4da;"></i><p class="mt-3 mb-0 fw-semibold">Tidak ada pembayaran untuk tahun ' + year + '</p></div>');
             } else {
                 var table = "<table class=\"table table-hover align-middle mb-0\">";
-                table += "<thead class=\"table-light\"><tr><th>Bulan</th><th>Bukti Bayar</th><th>Keterangan</th><th class=\"text-end\">Aksi</th></tr></thead><tbody>";
+                table += "<thead class=\"table-light\"><tr><th class=\"ps-4\">Bulan</th><th>Bukti Bayar</th><th>Keterangan</th><th class=\"text-end pe-4\">Aksi</th></tr></thead><tbody>";
                 $.each(data, function(key, value) {
-                    var bukti = "<span class=\"text-muted\">-</span>";
+                    var bukti = "<span class=\"text-muted small fst-italic\">Tidak ada bukti</span>";
                     if (value.fields.bukti_bayar) {
-                        bukti = "<a href=\"/media/"+ value.fields.bukti_bayar +"\" target=\"_blank\" class=\"btn btn-sm btn-outline-info\"><i class=\"bi bi-image-fill\"></i> Lihat Bukti</a>";
+                        bukti = "<a href=\"/media/"+ value.fields.bukti_bayar +"\" target=\"_blank\" class=\"btn btn-sm btn-info text-white rounded-pill px-3 py-1 shadow-sm\"><i class=\"bi bi-image-fill me-1\"></i> Lihat</a>";
                     }
-                    var delete_btn = "<a class=\"btn btn-sm btn-outline-danger\" href=\"/warga/delete-iuran-bulanan/"+value.pk+"\"><i class=\"bi bi-trash-fill\"></i></a>";
-                    table += "<tr><td><a href=\"/warga/form-iuran-bulanan/{{ data.id }}/"+value.fields.periode_tahun+"/"+value.pk+"\" class=\"font-weight-bold text-primary\" style=\"text-decoration: none;\">" + indonesian_months[value.fields.periode_bulan] + "</a></td><td>" + bukti + "</td><td>" + (value.fields.keterangan || "-") + "</td><td class=\"text-end\">" + delete_btn + "</td></tr>";
+                    var delete_btn = "<a class=\"btn btn-sm btn-outline-danger rounded-pill px-2 py-1\" href=\"/warga/delete-iuran-bulanan/"+value.pk+"\"><i class=\"bi bi-trash-fill\"></i></a>";
+                    table += "<tr><td class=\"ps-4 fw-bold text-dark\"><a href=\"/warga/form-iuran-bulanan/{{ data.id }}/"+value.fields.periode_tahun+"/"+value.pk+"\" class=\"text-primary\" style=\"text-decoration: none;\">" + indonesian_months[value.fields.periode_bulan] + "</a></td><td>" + bukti + "</td><td><span class=\"text-muted small\">" + (value.fields.keterangan || "-") + "</span></td><td class=\"text-end pe-4\">" + delete_btn + "</td></tr>";
                 });
                 table += "</tbody></table>";
                 $("#tabelIuranBulanan").html(table);

@@ -27,50 +27,69 @@
         <!-- Search filter bar -->
         <div class="p-3 bg-light border-bottom">
             <form method="get" action="{% url 'kependudukan:listKompleksView' %}" class="row g-2 align-items-center">
-                <div class="col-auto">
-                    <label for="search" class="visually-hidden">Search</label>
-                    <input name="search" type="text" class="form-control" id="search" placeholder="Cari blok/nomor..." {% if search %} value="{{search}}" {% endif %} style="padding: 6px 12px !important; font-size: 0.9rem !important; border-radius: 8px !important;">
-                </div> 
-                <div class="col-auto">
-                    <button type="submit" id="submitBtn" class="btn btn-sm btn-info">
-                        <i class="bi bi-search"></i> Cari
-                    </button>
+                <div class="col-md-6 col-lg-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input name="search" type="text" class="form-control border-start-0 ps-0" id="search" placeholder="Cari cluster, blok, atau nomor..." {% if search %} value="{{search}}" {% endif %}>
+                        <button type="submit" class="btn btn-primary px-4">Cari</button>
+                    </div>
                 </div>
+                {% if search %}
+                <div class="col-auto">
+                    <a href="{% url 'kependudukan:listKompleksView' %}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+                {% endif %}
             </form>
         </div>
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead>
+                <thead class="table-light">
                     <tr>
-                        <th>Cluster</th>
-                        <th>Blok / Nomor</th>
-                        <th>RT</th>
-                        <th>RW</th>
+                        <th>Detail Rumah</th>
+                        <th>RT / RW</th>
                         <th>Catatan</th>
-                        <th>Jumlah Warga</th>
+                        <th class="text-center">Penghuni</th>
                         <th class="text-end">Opsi</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for w in page_obj %}
                     <tr>
-                        <td><span class="fw-bold">{{ w.cluster|default:"-" }}</span></td>
-                        <td><code>{{ w.blok }} / {{ w.nomor }}</code></td>
-                        <td>{{ w.rt }}</td>
-                        <td>{{ w.rw }}</td>
                         <td>
-                            {% if w.description == None %}
-                            -
-                            {% else %} 
-                                {{ w.description }} 
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-dark">{{ w.cluster|default:"Tanpa Cluster" }}</span>
+                                <div class="small mt-1">
+                                    <span class="badge bg-light text-dark border me-1">Blok: {{ w.blok }}</span>
+                                    <span class="badge bg-light text-dark border">No: {{ w.nomor }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-muted">RT <strong class="text-dark">{{ w.rt }}</strong> / RW <strong class="text-dark">{{ w.rw }}</strong></span>
+                        </td>
+                        <td class="text-wrap" style="max-width: 250px;">
+                            <span class="text-muted small">
+                                {% if w.description == None or w.description == "" %}
+                                -
+                                {% else %} 
+                                    {{ w.description|truncatechars:80 }} 
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if w.num_warga > 0 %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
+                                    <i class="bi bi-people-fill me-1"></i> {{ w.num_warga }} Orang
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">
+                                    Kosong
+                                </span>
                             {% endif %}
                         </td>
-                        <td>
-                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">{{ w.num_warga }} Warga</span>
-                        </td>
-                        <td class="text-end">
-                            <a class="btn btn-outline-primary btn-sm" href="{% url 'kependudukan:detailKompleks' w.id %}" title="Detail">
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-outline-info btn-sm" href="{% url 'kependudukan:detailKompleks' w.id %}" title="Detail">
                                 <i class="bi bi-eye"></i> Detail
                             </a>
                             <a class="btn btn-outline-danger btn-sm ms-1" href="{% url 'kependudukan:deleteRumahForm' w.id %}" title="Hapus">
@@ -80,7 +99,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">
+                        <td colspan="5" class="text-center py-4 text-muted">
                             <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
                             Tidak ada data kompleks ditemukan.
                         </td>
