@@ -8,6 +8,8 @@ from django.conf import settings
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import logging
+from kependudukan.utils.auth_guards import admin_or_petugas_required, is_admin_or_petugas
+from django.core.exceptions import PermissionDenied
 
 from kependudukan.models import Warga, Surat, Penandatangan
 from django import forms
@@ -32,6 +34,7 @@ class SuratForm(forms.ModelForm):
 
 
 @login_required
+@admin_or_petugas_required
 def form_surat(request, idwarga):
     warga = get_object_or_404(Warga, pk=idwarga)
     if request.method == "POST":
@@ -60,6 +63,8 @@ def form_surat(request, idwarga):
 @login_required
 def cetak_surat(request, idsurat):
     surat = get_object_or_404(Surat, pk=idsurat)
+    if not (is_admin_or_petugas(request.user) or (hasattr(request.user, 'warga') and request.user.warga == surat.warga)):
+        raise PermissionDenied("Anda tidak memiliki hak akses untuk mencetak surat ini.")
     context = _prepare_surat_context(surat)
     return render(request, "surat/cetak_surat.html", context)
 
@@ -67,6 +72,8 @@ def cetak_surat(request, idsurat):
 @login_required
 def cetak_surat_pdf(request, idsurat):
     surat = get_object_or_404(Surat, pk=idsurat)
+    if not (is_admin_or_petugas(request.user) or (hasattr(request.user, 'warga') and request.user.warga == surat.warga)):
+        raise PermissionDenied("Anda tidak memiliki hak akses untuk mencetak surat ini.")
     context = _prepare_surat_context(surat)
 
     response = HttpResponse(content_type="application/pdf")
@@ -82,6 +89,7 @@ def cetak_surat_pdf(request, idsurat):
 
 
 @login_required
+@admin_or_petugas_required
 def list_surat(request):
     surat_list = Surat.objects.all().order_by("-tanggal_surat")
     context = {"surat_list": surat_list}
@@ -127,6 +135,7 @@ def _prepare_surat_context(surat):
 
 
 @login_required
+@admin_or_petugas_required
 def delete_surat(request, idsurat):
     surat = get_object_or_404(Surat, pk=idsurat)
     warga_id = surat.warga.id

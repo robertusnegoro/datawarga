@@ -66,6 +66,15 @@
                 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse border-end">
                     <div class="position-sticky pt-3 sidebar-sticky">
                         {% with url_name=request.resolver_match.url_name %}
+                        {% if request.user.warga and not request.user.is_superuser %}
+                        <ul class="nav flex-column mb-3">
+                            <li class="nav-item">
+                                <a class="nav-link {% if url_name == 'warga_dashboard' %}active{% endif %}" href="{% url 'kependudukan:warga_dashboard' %}">
+                                    <i class="bi bi-house-door"></i> Dashboard Warga
+                                </a>
+                            </li>
+                        </ul>
+                        {% else %}
                         <ul class="nav flex-column mb-3">
                             <li class="nav-item">
                                 <a class="nav-link {% if url_name == 'dashboardWarga' %}active{% endif %}" href="{% url 'kependudukan:dashboardWarga' %}">
@@ -267,16 +276,22 @@
                                 <span>Admin Panel</span>
                                 <i class="bi bi-chevron-down chevron-icon"></i>
                             </a>
-                            <div class="collapse {% if url_name == 'user_management' or url_name == 'user_add' or url_name == 'user_edit' or url_name == 'user_reset_password' %}show{% endif %}" id="collapseAdmin">
+                            <div class="collapse {% if url_name == 'user_management' or url_name == 'user_add' or url_name == 'user_edit' or url_name == 'user_reset_password' or url_name == 'admin_approvals' %}show{% endif %}" id="collapseAdmin">
                                 <ul class="nav flex-column submenu-nav">
                                     <li class="nav-item">
                                         <a class="nav-link {% if url_name == 'user_management' or url_name == 'user_add' or url_name == 'user_edit' or url_name == 'user_reset_password' %}active{% endif %}" href="{% url 'kependudukan:user_management' %}">
                                             <i class="bi bi-people-fill"></i> Manajemen User
                                         </a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if url_name == 'admin_approvals' %}active{% endif %}" href="{% url 'kependudukan:admin_approvals' %}">
+                                            <i class="bi bi-check2-square"></i> Persetujuan Warga
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
+                        {% endif %}
                         {% endif %}
 
                         <!-- Mobile-only User section -->

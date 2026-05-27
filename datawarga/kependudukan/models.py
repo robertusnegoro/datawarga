@@ -8,6 +8,12 @@ import uuid
 from django.utils import timezone
 from .utils.formatters import format_rupiah
 
+STATUS_CHOICES = (
+    ("PENDING", "Menunggu Persetujuan"),
+    ("APPROVED", "Disetujui"),
+    ("REJECTED", "Ditolak"),
+)
+
 
 # Create your models here.
 class Warga(models.Model):
@@ -93,6 +99,9 @@ class Warga(models.Model):
     ktp_image_path = models.ImageField(upload_to="uploads/", blank=True)
     kompleks = models.ForeignKey("Kompleks", on_delete=models.SET_NULL, null=True)
     kepala_keluarga = models.BooleanField(default=False)
+    user = models.OneToOneField(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="warga"
+    )
 
     class Meta:
         indexes = [
@@ -181,6 +190,8 @@ class TransaksiIuranBulanan(models.Model):
     periode_bulan = models.IntegerField(choices=LIST_BULAN)
     periode_tahun = models.IntegerField()
     total_bayar = models.IntegerField(default=settings.IURAN_BULANAN)
+    status = models.CharField(max_length=20, default="APPROVED", choices=STATUS_CHOICES)
+    keterangan_status = models.TextField(blank=True, null=True)
 
     class Meta:
         indexes = [
@@ -263,6 +274,8 @@ class Surat(models.Model):
     penandatangan = models.ForeignKey(
         Penandatangan, on_delete=models.SET_NULL, null=True
     )
+    status = models.CharField(max_length=20, default="APPROVED", choices=STATUS_CHOICES)
+    keterangan_status = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.jenis_surat} - {self.warga.nama_lengkap}"
@@ -302,6 +315,8 @@ class Kendaraan(models.Model):
     plat_nomor = models.CharField(max_length=20, unique=True)
     pemilik = models.ForeignKey("Warga", on_delete=models.CASCADE)
     keterangan = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, default="APPROVED", choices=STATUS_CHOICES)
+    keterangan_status = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.plat_nomor} - {self.merk} {self.tipe}"
@@ -442,3 +457,32 @@ class UserInvitation(models.Model):
 
     def __str__(self) -> str:
         return f"Invitation for {self.user.username} (Valid: {self.is_valid()})"
+
+
+class WargaUpdateRequest(models.Model):
+    warga = models.ForeignKey(
+        Warga, on_delete=models.CASCADE, related_name="update_requests", null=True, blank=True
+    )
+    requested_by = models.ForeignKey(
+        Warga, on_delete=models.CASCADE, related_name="submitted_update_requests", null=True, blank=True
+    )
+    kompleks = models.ForeignKey(
+        Kompleks, on_delete=models.CASCADE, null=True, blank=True
+    )
+    is_new_warga = models.BooleanField(default=False)
+    data_changes = models.JSONField(default=dict)
+    foto_path = models.ImageField(upload_to="uploads/updates/", blank=True, null=True)
+    ktp_image_path = models.ImageField(
+        upload_to="uploads/updates/", blank=True, null=True
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING",
+    )
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"Update request for {self.warga.nama_lengkap} ({self.status})"

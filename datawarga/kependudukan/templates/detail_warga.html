@@ -12,7 +12,16 @@
     <a href="{% url 'kependudukan:listWargaView' %}" class="btn btn-outline-secondary btn-sm px-3">
         <i class="bi bi-arrow-left"></i> Kembali ke Daftar
     </a>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 align-items-center">
+        {% if warga.user %}
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded" style="font-size: 0.85rem;">
+            <i class="bi bi-shield-check"></i> Akses Portal Aktif (@{{ warga.user.username }})
+        </span>
+        {% else %}
+        <button type="button" class="btn btn-warning btn-sm px-3 text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#inviteWargaModal">
+            <i class="bi bi-envelope-plus"></i> Undang Akses Portal
+        </button>
+        {% endif %}
         <a href="{% url 'kependudukan:form_surat' warga.id %}" class="btn btn-success btn-sm px-3">
             <i class="bi bi-file-earmark-text"></i> Buat Surat
         </a>
@@ -414,4 +423,121 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block jscript %}
+<!-- Modal Undang Warga -->
+<div class="modal fade" id="inviteWargaModal" tabindex="-1" aria-labelledby="inviteWargaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="post" action="{% url 'kependudukan:warga_invite_login' warga.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-dark" id="inviteWargaModalLabel">
+                        <i class="bi bi-envelope-plus-fill text-warning me-2"></i> Undang Akses Portal
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p>Undang warga ini untuk memiliki akun login portal mandiri (warga portal). Pengguna akan menerima tautan aktivasi untuk membuat kata sandi sendiri.</p>
+                    <div class="mb-3">
+                        <label for="invite-email" class="form-label small fw-bold text-muted">Alamat Email Undangan</label>
+                        <input type="email" name="email" id="invite-email" class="form-control" placeholder="nama@email.com" value="{{ warga.email|default:'' }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold" style="border-radius: 10px;">
+                        Kirim Undangan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Auto Copy Activation Link (Shown when new user/invitation created) -->
+<textarea id="template-invitation-raw" class="d-none">{{ invitation_template }}</textarea>
+
+{% if new_user_invitation_token %}
+<div class="modal fade" id="newInvitationModal" tabindex="-1" aria-labelledby="newInvitationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-success d-flex align-items-center gap-2" id="newInvitationModalLabel">
+                    <i class="bi bi-check-circle-fill"></i> Tautan Undangan Dibuat
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                <p>Tautan aktivasi baru berhasil dibuat untuk warga. Silakan salin tautan atau gunakan template undangan di bawah untuk dikirimkan secara manual.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Tautan Aktivasi</label>
+                    <div class="input-group">
+                        <input type="text" id="modal-inv-link" class="form-control bg-light" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'kependudukan:user_activate' new_user_invitation_token %}">
+                        <button class="btn btn-outline-primary" type="button" onclick="copyModalLink(this)">
+                            <i class="bi bi-clipboard"></i> Salin
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label small fw-bold text-muted">Preview Template Undangan</label>
+                    <textarea id="modal-inv-template" class="form-control bg-light" rows="7" readonly style="font-size: 0.85rem; resize: none;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button class="btn btn-success w-100 py-2 fw-semibold" style="border-radius: 10px;" onclick="copyModalTemplate(this)">
+                    <i class="bi bi-file-earmark-text me-1"></i> Salin Template Undangan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    $(document).ready(function() {
+        if ($('#newInvitationModal').length > 0) {
+            // Fill invitation text preview in modal
+            const rawTemplate = $('#template-invitation-raw').val();
+            const modalLink = $('#modal-inv-link').val();
+            const templateText = rawTemplate
+                .replace('{name}', '{{ warga.nama_lengkap }}')
+                .replace('{link}', modalLink)
+                .replace('{expires_at}', 'Besok (24 Jam)');
+            
+            $('#modal-inv-template').val(templateText);
+            
+            var myModal = new bootstrap.Modal(document.getElementById('newInvitationModal'));
+            myModal.show();
+        }
+    });
+
+    function copyModalLink(btnElement) {
+        const input = document.getElementById('modal-inv-link');
+        navigator.clipboard.writeText(input.value).then(() => {
+            btnElement.innerHTML = '<i class="bi bi-check"></i> Disalin';
+            btnElement.classList.replace('btn-outline-primary', 'btn-success');
+            setTimeout(() => {
+                btnElement.innerHTML = '<i class="bi bi-clipboard"></i> Salin';
+                btnElement.classList.replace('btn-success', 'btn-outline-primary');
+            }, 2000);
+        });
+    }
+
+    function copyModalTemplate(btnElement) {
+        const textarea = document.getElementById('modal-inv-template');
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="bi bi-check-lg"></i> Template Disalin ke Clipboard!';
+            btnElement.classList.replace('btn-success', 'btn-outline-success');
+            setTimeout(() => {
+                btnElement.innerHTML = originalText;
+                btnElement.classList.replace('btn-outline-success', 'btn-success');
+            }, 2000);
+        });
+    }
+</script>
 {% endblock %}

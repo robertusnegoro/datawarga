@@ -1,0 +1,701 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Dashboard Portal Warga{% endblock %}
+{% block pagetitle %}
+<i class="bi bi-house-heart-fill text-primary"></i> Portal Mandiri Warga
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left Column: Citizen Profile & Modals -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm text-center p-4 mb-4" style="border-radius: 16px; background: #ffffff;">
+            <!-- Profile Photo -->
+            <div class="mx-auto mb-3 position-relative"
+                style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; border: 4px solid #f1f3f4; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                <img src="{% if warga.foto_path %}{{ MEDIA_URL }}{{ warga.foto_path }}{% else %}{% static 'no-photo.png' %}{% endif %}"
+                    alt="{{ warga.nama_lengkap }}" class="w-100 h-100" style="object-fit: cover;">
+            </div>
+
+            <h4 class="fw-bold text-dark mb-1">{{ warga.nama_lengkap|upper }}</h4>
+            <p class="text-muted small mb-3">NIK: <code class="text-secondary">{{ warga.nik }}</code></p>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                {% if warga.kepala_keluarga %}
+                <span class="badge bg-danger rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                    <i class="bi bi-star-fill me-1"></i> Kepala Keluarga
+                </span>
+                {% endif %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2"
+                    style="font-size: 0.75rem;">
+                    Hubungan: {{ warga.status_keluarga }}
+                </span>
+            </div>
+
+            <hr class="my-3 text-muted opacity-25">
+
+            <div class="text-start mb-4">
+                <div class="mb-2"><span class="text-muted small">No. HP:</span> <strong class="text-dark d-block">{{ warga.no_hp|default:"-" }}</strong></div>
+                <div class="mb-2"><span class="text-muted small">Email:</span> <strong class="text-dark d-block text-truncate">{{ warga.email|default:"-" }}</strong></div>
+                <div class="mb-2"><span class="text-muted small">No. KK:</span> <strong class="text-dark d-block">{{ warga.no_kk|default:"-" }}</strong></div>
+                <div>
+                    <span class="text-muted small">Alamat Rumah:</span>
+                    <strong class="text-dark d-block">
+                        {% if warga.kompleks %}
+                        Cluster {{ warga.kompleks.cluster|default:"-" }}, Blok {{ warga.kompleks.blok }}/{{ warga.kompleks.nomor }} RT {{ warga.kompleks.rt }}/RW {{ warga.kompleks.rw }}
+                        {% else %}
+                        <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Belum Dihubungkan ke
+                            Rumah</span>
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Security / Account Settings Quick Card -->
+        <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px; background: #ffffff;">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-shield-lock text-primary me-2"></i> Keamanan Akun</h5>
+            <p class="text-muted small">Kelola keamanan akun Anda termasuk penggantian kata sandi dan Multi-Factor
+                Authentication (MFA).</p>
+            <div class="d-grid gap-2">
+                <a href="{% url 'kependudukan:profile_edit' %}" class="btn btn-light text-start py-2 border">
+                    <i class="bi bi-person-gear me-2 text-secondary"></i> Ubah Akun & MFA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: History & Request Lists -->
+    <div class="col-lg-8">
+        <!-- Data Keluarga Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i> Data Keluarga
+                </h5>
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold"
+                    onclick="openUpdateModal('NEW')">
+                    <i class="bi bi-person-plus-fill me-1"></i> Tambah Anggota
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Nama Lengkap</th>
+                                <th>NIK</th>
+                                <th>Hubungan</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Diri Sendiri -->
+                            <tr>
+                                <td class="ps-4 fw-semibold text-primary">{{ warga.nama_lengkap }} <span
+                                        class="badge bg-primary-subtle text-primary ms-1">Anda</span></td>
+                                <td><code class="text-secondary">{{ warga.nik }}</code></td>
+                                <td><span class="badge bg-secondary rounded-pill">{{ warga.status_keluarga }}</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                        onclick="openUpdateModal('{{ warga.id }}', '{{ warga.nama_lengkap|escapejs }}', '{{ warga.nik|escapejs }}', '{{ warga.no_hp|default:''|escapejs }}', '{{ warga.no_kk|default:''|escapejs }}', '{{ warga.agama|escapejs }}', '{{ warga.pekerjaan|escapejs }}', '{{ warga.status|escapejs }}', '{{ warga.jenis_kelamin|escapejs }}', '{{ warga.tempat_lahir|default:''|escapejs }}', '{{ warga.tanggal_lahir|date:'Y-m-d' }}', '{{ warga.status_tinggal|escapejs }}', '{{ warga.status_keluarga|escapejs }}', '{{ warga.alamat_ktp|default:''|escapejs }}')">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Anggota Keluarga -->
+                            {% for anggota in anggota_keluarga %}
+                            <tr>
+                                <td class="ps-4 fw-semibold text-dark">{{ anggota.nama_lengkap }}</td>
+                                <td><code class="text-secondary">{{ anggota.nik }}</code></td>
+                                <td><span class="badge bg-info rounded-pill">{{ anggota.status_keluarga }}</span></td>
+                                <td class="text-end pe-4">
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                        onclick="openUpdateModal('{{ anggota.id }}', '{{ anggota.nama_lengkap|escapejs }}', '{{ anggota.nik|escapejs }}', '{{ anggota.no_hp|default:''|escapejs }}', '{{ anggota.no_kk|default:''|escapejs }}', '{{ anggota.agama|escapejs }}', '{{ anggota.pekerjaan|escapejs }}', '{{ anggota.status|escapejs }}', '{{ anggota.jenis_kelamin|escapejs }}', '{{ anggota.tempat_lahir|default:''|escapejs }}', '{{ anggota.tanggal_lahir|date:'Y-m-d' }}', '{{ anggota.status_tinggal|escapejs }}', '{{ anggota.status_keluarga|escapejs }}', '{{ anggota.alamat_ktp|default:''|escapejs }}')">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Request Status/Alert Bar -->
+        {% if update_requests %}
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-primary me-2"></i> Status
+                    Pengajuan Perubahan Data Diri</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Tanggal Pengajuan</th>
+                                <th>Perubahan Diajukan</th>
+                                <th>Status</th>
+                                <th class="pe-4">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in update_requests %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="text-muted small">{{ req.created_at|date:"d M Y H:i" }}</div>
+                                    <div class="fw-bold small mt-1">
+                                        {% if req.is_new_warga %}
+                                        <span class="badge bg-primary rounded-pill">Warga Baru</span>
+                                        {% elif req.warga.id == warga.id %}
+                                        <span class="badge bg-secondary rounded-pill">Diri Sendiri</span>
+                                        {% else %}
+                                        <span class="badge bg-info rounded-pill">{{ req.warga.nama_lengkap }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="small text-dark fw-semibold">
+                                        {% for key, val in req.data_changes.items %}
+                                        {% if not forloop.last %}{{ key }}: <span class="text-secondary">{{ val }}</span>, {% else %}{{ key }}: <span class="text-secondary">{{ val }}</span>{% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if req.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1">Menunggu</span>
+                                    {% elif req.status == 'APPROVED' %}
+                                    <span class="badge bg-success rounded-pill px-3 py-1">Disetujui</span>
+                                    {% else %}
+                                    <span class="badge bg-danger rounded-pill px-3 py-1">Ditolak</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4"><span class="small text-muted">{{ req.notes|default:"-" }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Document Request Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-file-earmark-text-fill text-primary me-2"></i>
+                    Riwayat Pengajuan Surat</h5>
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal"
+                    data-bs-target="#requestSuratModal">
+                    <i class="bi bi-plus-circle"></i> Ajukan Surat
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="table-light">
+                                <th class="ps-4">Tanggal</th>
+                                <th>Jenis Surat</th>
+                                <th>Keperluan</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for surat in surat_list %}
+                            <tr>
+                                <td class="ps-4 text-muted small">{{ surat.tanggal_surat|date:"d M Y" }}</td>
+                                <td><span class="fw-semibold">{{ surat.get_jenis_surat_display }}</span></td>
+                                <td>{{ surat.keperluan|truncatechars:30 }}</td>
+                                <td>
+                                    {% if surat.status == 'PENDING' %}
+                                    <span
+                                        class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2 py-1">Menunggu</span>
+                                    {% elif surat.status == 'APPROVED' %}
+                                    <span
+                                        class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Disetujui</span>
+                                    {% else %}
+                                    <span
+                                        class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1"
+                                        title="{{ surat.keterangan_status }}">Ditolak</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if surat.status == 'APPROVED' %}
+                                    <a href="{% url 'kependudukan:cetak_surat' surat.id %}"
+                                        class="btn btn-outline-primary btn-sm py-1 px-2" target="_blank"
+                                        title="Cetak HTML">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                    <a href="{% url 'kependudukan:cetak_surat_pdf' surat.id %}"
+                                        class="btn btn-outline-danger btn-sm py-1 px-2" title="Cetak PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                    {% elif surat.status == 'REJECTED' and surat.keterangan_status %}
+                                    <span class="text-danger small" title="{{ surat.keterangan_status }}"><i
+                                            class="bi bi-info-circle"></i> Alasan ditolak</span>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Belum ada pengajuan surat.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicles Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i> Kendaraan Saya
+                </h5>
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal"
+                    data-bs-target="#registerKendaraanModal">
+                    <i class="bi bi-plus-circle"></i> Registrasi Kendaraan
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="table-light">
+                                <th class="ps-4">Plat Nomor</th>
+                                <th>Jenis</th>
+                                <th>Merk / Tipe</th>
+                                <th>Status</th>
+                                <th class="pe-4 text-end">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for kendaraan in kendaraan_list %}
+                            <tr>
+                                <td class="ps-4"><span class="fw-bold">{{ kendaraan.plat_nomor }}</span></td>
+                                <td>{{ kendaraan.jenis_kendaraan }}</td>
+                                <td>{{ kendaraan.merk|default:"-" }} {{ kendaraan.tipe|default:"" }}</td>
+                                <td>
+                                    {% if kendaraan.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-2 py-1">Menunggu</span>
+                                    {% elif kendaraan.status == 'APPROVED' %}
+                                    <span class="badge bg-success rounded-pill px-2 py-1">Disetujui</span>
+                                    {% else %}
+                                    <span class="badge bg-danger rounded-pill px-2 py-1"
+                                        title="{{ kendaraan.keterangan_status }}">Ditolak</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 text-end">
+                                    {% if kendaraan.status == 'REJECTED' and kendaraan.keterangan_status %}
+                                    <span class="text-danger small" title="{{ kendaraan.keterangan_status }}"><i
+                                            class="bi bi-info-circle"></i> {{ kendaraan.keterangan_status }}</span>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Belum ada data kendaraan terdaftar.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dues & Payments Section -->
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-cash-coin text-primary me-2"></i> Pembayaran Iuran
+                    Rumah</h5>
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal"
+                    data-bs-target="#uploadIuranModal">
+                    <i class="bi bi-upload"></i> Unggah Bukti Bayar
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="table-light">
+                                <th class="ps-4">Periode</th>
+                                <th>Total Bayar</th>
+                                <th>Keterangan</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Bukti</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transaksi %}
+                            <tr>
+                                <td class="ps-4 fw-semibold text-dark">
+                                    {{ t.get_periode_bulan_display }} {{ t.periode_tahun }}
+                                </td>
+                                <td><span class="fw-bold text-success">Rp {{ t.total_bayar|intcomma }}</span></td>
+                                <td><span class="text-muted small">{{ t.keterangan|default:"-" }}</span></td>
+                                <td>
+                                    {% if t.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-2 py-1">Menunggu</span>
+                                    {% elif t.status == 'APPROVED' %}
+                                    <span class="badge bg-success rounded-pill px-2 py-1">Disetujui</span>
+                                    {% else %}
+                                    <span class="badge bg-danger rounded-pill px-2 py-1"
+                                        title="{{ t.keterangan_status }}">Ditolak</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if t.bukti_bayar %}
+                                    <a href="{{ MEDIA_URL }}{{ t.bukti_bayar }}" target="_blank"
+                                        class="btn btn-outline-info btn-sm py-1 px-2">
+                                        <i class="bi bi-file-image"></i> Lihat
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Belum ada data transaksi iuran.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Edit Profile Request -->
+<div class="modal fade" id="updateProfileModal" tabindex="-1" aria-labelledby="updateProfileModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="post" action="{% url 'kependudukan:warga_submit_update' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-dark" id="updateProfileModalLabel">
+                        <i class="bi bi-pencil-square text-primary me-2"></i> Pengajuan Perubahan Data Diri
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Semua perubahan data memerlukan persetujuan dari pengurus/admin RT/RW
+                        sebelum diterapkan.</p>
+                    <input type="hidden" name="target_warga_id" value="">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
+                            <input type="text" name="nama_lengkap" class="form-control" value="{{ warga.nama_lengkap }}"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">NIK (Nomor Induk Kependudukan)</label>
+                            <input type="text" name="nik" class="form-control" value="{{ warga.nik }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">No. Handphone</label>
+                            <input type="text" name="no_hp" class="form-control" value="{{ warga.no_hp|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">No. Kartu Keluarga</label>
+                            <input type="text" name="no_kk" class="form-control" value="{{ warga.no_kk|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Agama</label>
+                            <select name="agama" class="form-select">
+                                {% for r in religions %}
+                                <option value="{{ r.0 }}" {% if warga.agama == r.0 %}selected{% endif %}>{{ r.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Pekerjaan</label>
+                            <select name="pekerjaan" class="form-select">
+                                {% for p in pekerjaan_choices %}
+                                <option value="{{ p.0 }}" {% if warga.pekerjaan == p.0 %}selected{% endif %}>{{ p.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Status Pernikahan</label>
+                            <select name="status" class="form-select">
+                                {% for s in status_kawin %}
+                                <option value="{{ s.0 }}" {% if warga.status == s.0 %}selected{% endif %}>{{ s.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Jenis Kelamin</label>
+                            <select name="jenis_kelamin" class="form-select">
+                                {% for jk in jenis_kelamin_choices %}
+                                <option value="{{ jk.0 }}" {% if warga.jenis_kelamin == jk.0 %}selected{% endif %}>{{ jk.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Tempat Lahir</label>
+                            <input type="text" name="tempat_lahir" class="form-control"
+                                value="{{ warga.tempat_lahir|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Tanggal Lahir (YYYY-MM-DD)</label>
+                            <input type="date" name="tanggal_lahir" class="form-control"
+                                value="{{ warga.tanggal_lahir|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Status Tinggal</label>
+                            <select name="status_tinggal" class="form-select">
+                                {% for st in status_tinggal %}
+                                <option value="{{ st.0 }}" {% if warga.status_tinggal == st.0 %}selected{% endif %}>{{ st.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Status Hubungan Keluarga</label>
+                            <select name="status_keluarga" class="form-select">
+                                {% for sk in status_keluarga_choices %}
+                                <option value="{{ sk.0 }}" {% if warga.status_keluarga == sk.0 %}selected{% endif %}>{{ sk.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Alamat KTP Lengkap</label>
+                            <textarea name="alamat_ktp" class="form-control"
+                                rows="2">{{ warga.alamat_ktp|default:'' }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Foto Profil Baru (Opsional)</label>
+                            <input type="file" name="foto_path" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Foto KTP Baru (Opsional)</label>
+                            <input type="file" name="ktp_image_path" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold" style="border-radius: 10px;">
+                        Kirim Pengajuan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Request Surat -->
+<div class="modal fade" id="requestSuratModal" tabindex="-1" aria-labelledby="requestSuratModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="post" action="{% url 'kependudukan:warga_request_surat' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-dark" id="requestSuratModalLabel">
+                        <i class="bi bi-file-earmark-plus-fill text-success me-2"></i> Ajukan Surat Keterangan /
+                        Pengantar
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Jenis Surat</label>
+                        <select name="jenis_surat" class="form-select" required>
+                            <option value="SPRT">Surat Pengantar RT</option>
+                            <option value="SKD">Surat Keterangan Domisili</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Keperluan</label>
+                        <textarea name="keperluan" class="form-control" rows="3"
+                            placeholder="Contoh: Mengurus perpanjangan KTP / pembukaan rekening bank"
+                            required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius: 10px;">
+                        Kirim Permohonan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Register Vehicle -->
+<div class="modal fade" id="registerKendaraanModal" tabindex="-1" aria-labelledby="registerKendaraanModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="post" action="{% url 'kependudukan:warga_register_kendaraan' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-dark" id="registerKendaraanModalLabel">
+                        <i class="bi bi-plus-circle-fill text-success me-2"></i> Registrasi Kendaraan Kompleks
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Jenis Kendaraan</label>
+                            <select name="jenis_kendaraan" class="form-select" required>
+                                <option value="MOBIL">Mobil</option>
+                                <option value="MOTOR">Motor</option>
+                                <option value="SEPEDA">Sepeda</option>
+                                <option value="LAINNYA">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Plat Nomor</label>
+                            <input type="text" name="plat_nomor" class="form-control" placeholder="B 1234 ABC" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Merk</label>
+                            <input type="text" name="merk" class="form-control" placeholder="Honda / Toyota">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Tipe / Warna</label>
+                            <input type="text" name="tipe" class="form-control"
+                                placeholder="Vario Hitam / Avanza Putih">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Keterangan Tambahan</label>
+                            <textarea name="keterangan" class="form-control" rows="2"
+                                placeholder="Keterangan stiker kompleks / parkir"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius: 10px;">
+                        Kirim Registrasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Upload Iuran Proof -->
+<div class="modal fade" id="uploadIuranModal" tabindex="-1" aria-labelledby="uploadIuranModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="post" action="{% url 'kependudukan:warga_upload_iuran' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-dark" id="uploadIuranModalLabel">
+                        <i class="bi bi-upload text-success me-2"></i> Unggah Bukti Pembayaran Iuran
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Periode Bulan</label>
+                            <select name="periode_bulan" class="form-select" required>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Periode Tahun</label>
+                            <input type="number" name="periode_tahun" class="form-control" value="2026" min="2020"
+                                max="2035" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Total Bayar (Rupiah)</label>
+                            <input type="number" name="total_bayar" class="form-control" value="{{ iuran_bulanan }}"
+                                required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Unggah Foto Bukti Transfer</label>
+                            <input type="file" name="bukti_bayar" class="form-control" accept="image/*" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">Keterangan</label>
+                            <textarea name="keterangan" class="form-control" rows="2"
+                                placeholder="Catatan pembayaran transfer Bank Mandiri / E-wallet"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius: 10px;">
+                        Kirim Bukti Pembayaran
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscript %}
+<script>
+    function openUpdateModal(id, nama = '', nik = '', hp = '', kk = '', agama = '', pekerjaan = '', status = '', kelamin = '', tempat = '', tanggal = '', tinggal = '', hubungan = '', alamat = '') {
+        const modalEl = document.getElementById('updateProfileModal');
+        const form = modalEl.querySelector('form');
+
+        form.querySelector('input[name="target_warga_id"]').value = id;
+
+        if (id === 'NEW') {
+            form.querySelectorAll('input[type="text"], input[type="date"], textarea').forEach(input => input.value = '');
+            form.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+            document.getElementById('updateProfileModalLabel').innerHTML = '<i class="bi bi-person-plus text-primary me-2"></i> Tambah Anggota Keluarga Baru';
+        } else {
+            form.querySelector('input[name="nama_lengkap"]').value = nama;
+            form.querySelector('input[name="nik"]').value = nik;
+            form.querySelector('input[name="no_hp"]').value = hp;
+            form.querySelector('input[name="no_kk"]').value = kk;
+            form.querySelector('select[name="agama"]').value = agama;
+            form.querySelector('select[name="pekerjaan"]').value = pekerjaan;
+            form.querySelector('select[name="status"]').value = status;
+            form.querySelector('select[name="jenis_kelamin"]').value = kelamin;
+            form.querySelector('input[name="tempat_lahir"]').value = tempat;
+            form.querySelector('input[name="tanggal_lahir"]').value = tanggal;
+            form.querySelector('select[name="status_tinggal"]').value = tinggal;
+            form.querySelector('select[name="status_keluarga"]').value = hubungan;
+            form.querySelector('textarea[name="alamat_ktp"]').value = alamat;
+            document.getElementById('updateProfileModalLabel').innerHTML = '<i class="bi bi-pencil-square text-primary me-2"></i> Pengajuan Perubahan Data Diri';
+        }
+
+        // Use getOrCreateInstance instead of new Modal to avoid backdrop issues if opened multiple times
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        bsModal.show();
+    }
+</script>
+{% endblock %}

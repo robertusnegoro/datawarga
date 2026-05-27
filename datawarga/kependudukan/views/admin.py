@@ -11,10 +11,12 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 
 from kependudukan.forms import UserAddForm, UserEditForm
-from kependudukan.models import UserProfile, UserInvitation
+from kependudukan.models import UserProfile, UserInvitation, Warga
+from kependudukan.utils.auth_guards import admin_or_petugas_required
 
 logger = logging.getLogger(__name__)
 
@@ -656,18 +658,6 @@ def user_activate(request: HttpRequest, token: str) -> HttpResponse:
                 "Akun Anda berhasil diaktifkan! Silakan masuk dengan kata sandi baru Anda.",
             )
             return redirect("login")
-        else:
-            duration = int((time.time() - start_time) * 1000)
-            logger.error(
-                "Operation failure: invalid form",
-                extra={
-                    "operation": "user_activate",
-                    "userId": target_user.id,
-                    "correlationId": correlation_id,
-                    "duration": duration,
-                    "error": str(form.errors),
-                },
-            )
     else:
         form = SetPasswordForm(user=target_user)
 
@@ -677,3 +667,222 @@ def user_activate(request: HttpRequest, token: str) -> HttpResponse:
         "token": token,
     }
     return render(request, "registration/invite_activate.html", context)
+
+
+@admin_or_petugas_required
+def admin_approvals(request: HttpRequest) -> HttpResponse:
+    """
+    Unified dashboard for admins to process pending profile updates,
+    document requests, vehicle registrations, and iuran payment proofs.
+    """
+    correlation_id = str(uuid.uuid4())
+    start_time = time.time()
+    user = request.user
+
+    logger.info(
+        "Operation started",
+        extra={
+            "operation": "admin_approvals",
+            "userId": user.id,
+            "correlationId": correlation_id,
+        },
+    )
+
+    from kependudukan.models import (
+        WargaUpdateRequest,
+        Surat,
+        TransaksiIuranBulanan,
+        Kendaraan,
+        Penandatangan,
+    )
+    from kependudukan.services.warga_service import (
+        approve_warga_update_request,
+        reject_warga_update_request,
+        approve_surat,
+        reject_surat,
+        approve_iuran,
+        reject_iuran,
+        approve_kendaraan,
+        reject_kendaraan,
+    )
+    from kependudukan.errors import ValidationError
+    from django.conf import settings
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        target_id = int(request.POST.get("id", 0))
+        reason = request.POST.get("reason", "").strip()
+
+        try:
+            if action == "approve_warga":
+                approve_warga_update_request(target_id, user)
+                messages.success(request, "Perubahan data warga berhasil disetujui.")
+            elif action == "reject_warga":
+                if not reason:
+                    raise ValidationError("Alasan penolakan harus diisi.")
+                reject_warga_update_request(target_id, user, reason)
+                messages.success(request, "Perubahan data warga berhasil ditolak.")
+
+            elif action == "approve_surat":
+                nomor_surat = request.POST.get("nomor_surat", "").strip()
+                penandatangan_id = request.POST.get("penandatangan")
+                if penandatangan_id:
+                    penandatangan_id = int(penandatangan_id)
+                approve_surat(target_id, user, nomor_surat, penandatangan_id)
+                messages.success(request, "Permohonan surat berhasil disetujui.")
+            elif action == "reject_surat":
+                if not reason:
+                    raise ValidationError("Alasan penolakan harus diisi.")
+                reject_surat(target_id, user, reason)
+                messages.success(request, "Permohonan surat berhasil ditolak.")
+
+            elif action == "approve_iuran":
+                approve_iuran(target_id, user)
+                messages.success(request, "Bukti pembayaran iuran berhasil disetujui.")
+            elif action == "reject_iuran":
+                if not reason:
+                    raise ValidationError("Alasan penolakan harus diisi.")
+                reject_iuran(target_id, user, reason)
+                messages.success(request, "Bukti pembayaran iuran berhasil ditolak.")
+
+            elif action == "approve_kendaraan":
+                approve_kendaraan(target_id, user)
+                messages.success(request, "Registrasi kendaraan berhasil disetujui.")
+            elif action == "reject_kendaraan":
+                if not reason:
+                    raise ValidationError("Alasan penolakan harus diisi.")
+                reject_kendaraan(target_id, user, reason)
+                messages.success(request, "Registrasi kendaraan berhasil ditolak.")
+
+        except ValidationError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            logger.error(
+                f"Failed to process approval action {action} on ID {target_id}: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(
+                request, "Terjadi kesalahan sistem saat memproses persetujuan."
+            )
+
+        return redirect("kependudukan:admin_approvals")
+
+    # Fetch pending requests
+    pending_warga = WargaUpdateRequest.objects.filter(status="PENDING").order_by(
+        "-created_at"
+    )
+    pending_surat = Surat.objects.filter(status="PENDING").order_by("-tanggal_surat")
+    pending_iuran = TransaksiIuranBulanan.objects.filter(status="PENDING").order_by(
+        "-id"
+    )
+    pending_kendaraan = Kendaraan.objects.filter(status="PENDING").order_by("-id")
+
+    penandatangan_choices = Penandatangan.objects.filter(aktif=True)
+
+    context = {
+        "pending_warga": pending_warga,
+        "pending_surat": pending_surat,
+        "pending_iuran": pending_iuran,
+        "pending_kendaraan": pending_kendaraan,
+        "penandatangan_choices": penandatangan_choices,
+        "MEDIA_URL": settings.MEDIA_URL,
+    }
+
+    duration = int((time.time() - start_time) * 1000)
+    logger.info(
+        "Operation success",
+        extra={
+            "operation": "admin_approvals",
+            "userId": user.id,
+            "correlationId": correlation_id,
+            "duration": duration,
+        },
+    )
+    return render(request, "admin/admin_approvals.html", context)
+
+
+@admin_or_petugas_required
+def warga_invite_login(request: HttpRequest, idwarga: int) -> HttpResponse:
+    """
+    Creates and issues an activation invitation for a registered resident (warga).
+    """
+    correlation_id = str(uuid.uuid4())
+    start_time = time.time()
+    user = request.user
+
+    logger.info(
+        "Operation started",
+        extra={
+            "operation": "warga_invite_login",
+            "userId": user.id,
+            "wargaId": idwarga,
+            "correlationId": correlation_id,
+        },
+    )
+
+    warga = get_object_or_404(Warga, pk=idwarga)
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip()
+        if not email:
+            messages.error(request, "Email wajib diisi.")
+            return redirect(
+                reverse("kependudukan:detailWarga", kwargs={"idwarga": idwarga})
+            )
+
+        from kependudukan.services.warga_service import create_warga_invitation
+        from kependudukan.errors import ValidationError
+
+        try:
+            activation_link = create_warga_invitation(idwarga, email, request)
+
+            # Keep compatibility with existing javascript clipboard copy modal
+            token = activation_link.split("/")[-2]
+            request.session["new_user_invitation_token"] = token
+
+            messages.success(
+                request,
+                f"Undangan untuk {warga.nama_lengkap} berhasil dibuat. Silakan salin tautan undangan.",
+            )
+        except ValidationError as e:
+            duration = int((time.time() - start_time) * 1000)
+            logger.warning(
+                "Operation failed validation",
+                extra={
+                    "operation": "warga_invite_login",
+                    "userId": user.id,
+                    "wargaId": idwarga,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": str(e),
+                },
+            )
+            messages.error(request, str(e))
+        except Exception as e:
+            duration = int((time.time() - start_time) * 1000)
+            logger.error(
+                "Operation failed",
+                extra={
+                    "operation": "warga_invite_login",
+                    "userId": user.id,
+                    "wargaId": idwarga,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": str(e),
+                },
+                exc_info=True,
+            )
+            messages.error(request, "Terjadi kesalahan saat membuat undangan.")
+
+        duration = int((time.time() - start_time) * 1000)
+        logger.info(
+            "Operation success",
+            extra={
+                "operation": "warga_invite_login",
+                "userId": user.id,
+                "wargaId": idwarga,
+                "correlationId": correlation_id,
+                "duration": duration,
+            },
+        )
+
+    return redirect(reverse("kependudukan:detailWarga", kwargs={"idwarga": idwarga}))

@@ -222,6 +222,22 @@ urlpatterns = [
     ),
     path("warga/iuran-yearly", iuran.iuranYearly, name="iuranYearly"),
     path("warga/scan-ktp", warga.scan_ktp_ajax, name="scan_ktp_ajax"),
+    # Citizen (Warga) Portal URL Patterns
+    path("warga/dashboard/", warga.warga_dashboard, name="warga_dashboard"),
+    path("warga/request-surat/", warga.warga_request_surat, name="warga_request_surat"),
+    path(
+        "warga/register-kendaraan/",
+        warga.warga_register_kendaraan,
+        name="warga_register_kendaraan",
+    ),
+    path("warga/upload-iuran/", warga.warga_upload_iuran, name="warga_upload_iuran"),
+    path("warga/submit-update/", warga.warga_submit_update, name="warga_submit_update"),
+    path("warga/admin/approvals/", views_admin.admin_approvals, name="admin_approvals"),
+    path(
+        "warga/invite-login/<int:idwarga>/",
+        views_admin.warga_invite_login,
+        name="warga_invite_login",
+    ),
     path(
         "warga/detail/<int:idwarga>/buat-surat",
         views_surat.form_surat,

@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Dashboard Persetujuan Admin{% endblock %}
+{% block pagetitle %}
+    <i class="bi bi-check2-all text-primary"></i> Persetujuan Pengajuan Warga
+{% endblock %}
+
+{% block content %}
+<!-- Tabs Navigation -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+    <div class="card-header bg-white border-0 pt-3">
+        <ul class="nav nav-tabs card-header-tabs" id="approvalTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold text-dark position-relative" id="warga-tab" data-bs-toggle="tab" data-bs-target="#warga-pane" type="button" role="tab" aria-controls="warga-pane" aria-selected="true">
+                    <i class="bi bi-person-fill-exclamation me-1 text-primary"></i> Data Warga
+                    {% if pending_warga %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="transform: translate(-30%, -20%) !important;">
+                        {{ pending_warga|length }}
+                    </span>
+                    {% endif %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-dark position-relative" id="surat-tab" data-bs-toggle="tab" data-bs-target="#surat-pane" type="button" role="tab" aria-controls="surat-pane" aria-selected="false">
+                    <i class="bi bi-file-earmark-text-fill me-1 text-success"></i> Permohonan Surat
+                    {% if pending_surat %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="transform: translate(-30%, -20%) !important;">
+                        {{ pending_surat|length }}
+                    </span>
+                    {% endif %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-dark position-relative" id="iuran-tab" data-bs-toggle="tab" data-bs-target="#iuran-pane" type="button" role="tab" aria-controls="iuran-pane" aria-selected="false">
+                    <i class="bi bi-cash-coin me-1 text-warning"></i> Bukti Bayar Iuran
+                    {% if pending_iuran %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="transform: translate(-30%, -20%) !important;">
+                        {{ pending_iuran|length }}
+                    </span>
+                    {% endif %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-dark position-relative" id="kendaraan-tab" data-bs-toggle="tab" data-bs-target="#kendaraan-pane" type="button" role="tab" aria-controls="kendaraan-pane" aria-selected="false">
+                    <i class="bi bi-car-front-fill me-1 text-info"></i> Registrasi Kendaraan
+                    {% if pending_kendaraan %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="transform: translate(-30%, -20%) !important;">
+                        {{ pending_kendaraan|length }}
+                    </span>
+                    {% endif %}
+                </button>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="tab-content" id="approvalTabsContent">
+            <!-- 1. DATA WARGA TAB -->
+            <div class="tab-pane fade show active" id="warga-pane" role="tabpanel" aria-labelledby="warga-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Warga</th>
+                                <th>Diajukan Pada</th>
+                                <th>Perubahan Detail (Lama &rarr; Baru)</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in pending_warga %}
+                            <tr>
+                                <td class="ps-4">
+                                    {% if req.is_new_warga %}
+                                        <div class="fw-bold"><span class="badge bg-primary me-2">BARU</span>{{ req.data_changes.nama_lengkap|default:"Warga Baru" }}</div>
+                                        <small class="text-muted">Diajukan oleh: {{ req.requested_by.nama_lengkap }}</small>
+                                    {% else %}
+                                        <div class="fw-bold">{{ req.warga.nama_lengkap }}</div>
+                                        <small class="text-muted">NIK: {{ req.warga.nik }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ req.created_at|date:"d M Y H:i" }}</td>
+                                <td>
+                                    <div class="small" style="max-width: 450px;">
+                                        {% for key, val in req.data_changes.items %}
+                                        {% if req.is_new_warga %}
+                                        <div class="mb-1">
+                                            <span class="badge bg-light text-dark border">{{ key }}</span>: 
+                                            <span class="text-dark fw-semibold">{{ val }}</span>
+                                        </div>
+                                        {% else %}
+                                        <div class="mb-1">
+                                            <span class="badge bg-light text-dark border">{{ key }}</span>: 
+                                            <span class="text-muted text-decoration-line-through">
+                                                {% if key == "agama" %}{{ req.warga.agama }}
+                                                {% elif key == "no_hp" %}{{ req.warga.no_hp }}
+                                                {% elif key == "no_kk" %}{{ req.warga.no_kk }}
+                                                {% elif key == "pekerjaan" %}{{ req.warga.pekerjaan }}
+                                                {% elif key == "status" %}{{ req.warga.status }}
+                                                {% elif key == "tanggal_lahir" %}{{ req.warga.tanggal_lahir|date:"Y-m-d" }}
+                                                {% elif key == "tempat_lahir" %}{{ req.warga.tempat_lahir }}
+                                                {% elif key == "jenis_kelamin" %}{{ req.warga.jenis_kelamin }}
+                                                {% elif key == "status_tinggal" %}{{ req.warga.status_tinggal }}
+                                                {% elif key == "status_keluarga" %}{{ req.warga.status_keluarga }}
+                                                {% elif key == "alamat_ktp" %}{{ req.warga.alamat_ktp }}
+                                                {% else %}-{% endif %}
+                                            </span>
+                                            &rarr;
+                                            <span class="text-dark fw-semibold">{{ val }}</span>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% if req.foto_path %}
+                                        <div class="mt-1 small"><i class="bi bi-image"></i> Foto Profil Baru Diajukan</div>
+                                        {% endif %}
+                                        {% if req.ktp_image_path %}
+                                        <div class="mt-1 small"><i class="bi bi-card-image"></i> Dokumen KTP Baru Diajukan</div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <form method="post" action="{% url 'kependudukan:admin_approvals' %}" class="d-inline m-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve_warga">
+                                        <input type="hidden" name="id" value="{{ req.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success px-3 me-1 rounded-pill">Setujui</button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-danger px-3 rounded-pill" onclick="openRejectModal('reject_warga', {{ req.id }}, 'Data Warga: {% if req.is_new_warga %}Baru{% else %}{{ req.warga.nama_lengkap }}{% endif %}')">Tolak</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                    Tidak ada pengajuan perubahan data warga yang tertunda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 2. PERMOHONAN SURAT TAB -->
+            <div class="tab-pane fade" id="surat-pane" role="tabpanel" aria-labelledby="surat-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Warga Pemohon</th>
+                                <th>Jenis Surat</th>
+                                <th>Keperluan</th>
+                                <th>Tanggal Pengajuan</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for surat in pending_surat %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ surat.warga.nama_lengkap }}</div>
+                                    <small class="text-muted">
+                                        {% if surat.warga.kompleks %}
+                                        Blok {{ surat.warga.kompleks.blok }}/{{ surat.warga.kompleks.nomor }} RT {{ surat.warga.kompleks.rt }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td><span class="badge bg-secondary-subtle text-dark border">{{ surat.get_jenis_surat_display }}</span></td>
+                                <td>{{ surat.keperluan }}</td>
+                                <td>{{ surat.tanggal_surat|date:"d M Y" }}</td>
+                                <td class="text-end pe-4 text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-success px-3 me-1 rounded-pill" onclick="openApproveSuratModal({{ surat.id }}, '{{ surat.warga.nama_lengkap }}', '{{ surat.get_jenis_surat_display }}')">Setujui</button>
+                                    <button type="button" class="btn btn-sm btn-danger px-3 rounded-pill" onclick="openRejectModal('reject_surat', {{ surat.id }}, 'Surat: {{ surat.get_jenis_surat_display }} - {{ surat.warga.nama_lengkap }}')">Tolak</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                    Tidak ada permohonan surat yang tertunda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 3. BUKTI BAYAR IURAN TAB -->
+            <div class="tab-pane fade" id="iuran-pane" role="tabpanel" aria-labelledby="iuran-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Kompleks Rumah</th>
+                                <th>Periode Iuran</th>
+                                <th>Total Pembayaran</th>
+                                <th>Keterangan Warga</th>
+                                <th>Bukti Transfer</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for iuran in pending_iuran %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">
+                                        {% if iuran.kompleks %}
+                                        Cluster {{ iuran.kompleks.cluster|default:"-" }}, Blok {{ iuran.kompleks.blok }}/{{ iuran.kompleks.nomor }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">
+                                        {% if iuran.kompleks %}
+                                        RT {{ iuran.kompleks.rt }}/RW {{ iuran.kompleks.rw }}
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td class="fw-semibold">{{ iuran.get_periode_bulan_display }} {{ iuran.periode_tahun }}</td>
+                                <td class="text-success fw-bold">Rp {{ iuran.total_bayar|intcomma }}</td>
+                                <td><span class="small text-muted">{{ iuran.keterangan|default:"-" }}</span></td>
+                                <td>
+                                    {% if iuran.bukti_bayar %}
+                                    <a href="{{ MEDIA_URL }}{{ iuran.bukti_bayar }}" target="_blank" class="btn btn-outline-info btn-xs py-1 px-2">
+                                        <i class="bi bi-file-image"></i> Lihat Bukti
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4 text-nowrap">
+                                    <form method="post" action="{% url 'kependudukan:admin_approvals' %}" class="d-inline m-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve_iuran">
+                                        <input type="hidden" name="id" value="{{ iuran.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success px-3 me-1 rounded-pill">Setujui</button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-danger px-3 rounded-pill" onclick="openRejectModal('reject_iuran', {{ iuran.id }}, 'Iuran: {{ iuran.get_periode_bulan_display }} {{ iuran.periode_tahun }} - Blok {{ iuran.kompleks.blok }}/{{ iuran.kompleks.nomor }}')">Tolak</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                    Tidak ada bukti pembayaran iuran yang tertunda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 4. REGISTRASI KENDARAAN TAB -->
+            <div class="tab-pane fade" id="kendaraan-pane" role="tabpanel" aria-labelledby="kendaraan-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Pemilik</th>
+                                <th>Plat Nomor</th>
+                                <th>Jenis Kendaraan</th>
+                                <th>Merk / Tipe</th>
+                                <th>Keterangan</th>
+                                <th class="text-end pe-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for kendaraan in pending_kendaraan %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ kendaraan.pemilik.nama_lengkap }}</div>
+                                    <small class="text-muted">
+                                        {% if kendaraan.pemilik.kompleks %}
+                                        Blok {{ kendaraan.pemilik.kompleks.blok }}/{{ kendaraan.pemilik.kompleks.nomor }}
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td><span class="fw-bold text-dark">{{ kendaraan.plat_nomor }}</span></td>
+                                <td>{{ kendaraan.jenis_kendaraan }}</td>
+                                <td>{{ kendaraan.merk|default:"-" }} {{ kendaraan.tipe|default:"" }}</td>
+                                <td><span class="small text-muted">{{ kendaraan.keterangan|default:"-" }}</span></td>
+                                <td class="text-end pe-4 text-nowrap">
+                                    <form method="post" action="{% url 'kependudukan:admin_approvals' %}" class="d-inline m-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve_kendaraan">
+                                        <input type="hidden" name="id" value="{{ kendaraan.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success px-3 me-1 rounded-pill">Setujui</button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-danger px-3 rounded-pill" onclick="openRejectModal('reject_kendaraan', {{ kendaraan.id }}, 'Kendaraan: {{ kendaraan.plat_nomor }} - {{ kendaraan.pemilik.nama_lengkap }}')">Tolak</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                    Tidak ada registrasi kendaraan yang tertunda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Approve Surat with Details (Nomor Surat, Penandatangan) -->
+<div class="modal fade" id="approveSuratModal" tabindex="-1" aria-labelledby="approveSuratModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="post" action="{% url 'kependudukan:admin_approvals' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve_surat">
+                <input type="hidden" name="id" id="approve-surat-id">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-success" id="approveSuratModalLabel">
+                        <i class="bi bi-check2-circle me-1"></i> Setujui & Tanda Tangani Surat
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p class="small text-muted mb-3">Lengkapi nomor surat dan pilih pejabat penandatangan sebelum mencetak surat keterangan.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Pemohon</label>
+                        <input type="text" id="approve-surat-warga" class="form-control bg-light" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Jenis Surat</label>
+                        <input type="text" id="approve-surat-jenis" class="form-control bg-light" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nomor_surat" class="form-label small fw-bold text-muted">Nomor Surat</label>
+                        <input type="text" name="nomor_surat" id="nomor_surat" class="form-control" placeholder="Contoh: 04/SKD/RT01/V/2026" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="penandatangan" class="form-label small fw-bold text-muted">Pejabat Penandatangan</label>
+                        <select name="penandatangan" id="penandatangan" class="form-select" required>
+                            <option value="">-- Pilih Penandatangan --</option>
+                            {% for p in penandatangan_choices %}
+                            <option value="{{ p.id }}">{{ p.nama }} ({{ p.jabatan }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius: 10px;">Setujui & Tanda Tangani</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Generic Rejection Reason -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="post" action="{% url 'kependudukan:admin_approvals' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="reject-action">
+                <input type="hidden" name="id" id="reject-id">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger" id="rejectModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Tolak Pengajuan Warga
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <div class="mb-3 text-start">
+                        <label class="form-label small text-muted">Deskripsi Item</label>
+                        <input type="text" id="reject-item-desc" class="form-control bg-light" readonly>
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label for="reject-reason" class="form-label small fw-bold text-muted">Alasan Penolakan</label>
+                        <textarea name="reason" id="reject-reason" class="form-control" rows="3" placeholder="Tulis alasan penolakan untuk diinformasikan kepada warga" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-semibold" style="border-radius: 10px;">Ya, Tolak Pengajuan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscript %}
+<script>
+    function openApproveSuratModal(id, warga, jenis) {
+        document.getElementById('approve-surat-id').value = id;
+        document.getElementById('approve-surat-warga').value = warga;
+        document.getElementById('approve-surat-jenis').value = jenis;
+        
+        var myModal = new bootstrap.Modal(document.getElementById('approveSuratModal'));
+        myModal.show();
+    }
+
+    function openRejectModal(action, id, description) {
+        document.getElementById('reject-action').value = action;
+        document.getElementById('reject-id').value = id;
+        document.getElementById('reject-item-desc').value = description;
+        document.getElementById('reject-reason').value = '';
+        
+        var myModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+        myModal.show();
+    }
+</script>
+<style>
+    .btn-xs { padding: 0.15rem 0.3rem; font-size: 0.75rem; border-radius: 4px; }
+</style>
+{% endblock %}

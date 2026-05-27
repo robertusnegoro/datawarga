@@ -1,5 +1,14 @@
 from kependudukan.forms import WargaForm
-from kependudukan.models import Warga, Kompleks, UserPermission, Kendaraan
+from kependudukan.models import (
+    Warga,
+    Kompleks,
+    UserPermission,
+    Kendaraan,
+    Surat,
+    TransaksiIuranBulanan,
+    WargaUpdateRequest,
+)
+from django.core.exceptions import PermissionDenied
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -31,6 +40,7 @@ from kependudukan.selectors.warga_selector import (
     get_anggota_keluarga,
     get_no_kk_for_kompleks,
 )
+from kependudukan.utils.auth_guards import admin_or_petugas_required
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +52,7 @@ def index(request):
 
 
 @login_required
+@admin_or_petugas_required
 def formWarga(request, idwarga=0, idkompleks=0):
     context = {"idkompleks": int(idkompleks)}
     if idkompleks > 0:
@@ -73,6 +84,7 @@ def formWarga(request, idwarga=0, idkompleks=0):
 
 
 @login_required
+@admin_or_petugas_required
 def formWargaSimpan(request):
     if request.POST:
         if "idwarga" in request.POST:
@@ -101,6 +113,7 @@ def formWargaSimpan(request):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(admin_or_petugas_required, name="dispatch")
 class WargaListView(ListView):
     paginate_by = 50
     template_name = "list_warga_view.html"
@@ -139,6 +152,7 @@ class WargaListView(ListView):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(admin_or_petugas_required, name="dispatch")
 class KepalaKeluargaListView(ListView):
     paginate_by = 50
     template_name = "daftar_kepala_keluarga.html"
@@ -182,6 +196,7 @@ class KepalaKeluargaListView(ListView):
 
 
 @login_required
+@admin_or_petugas_required
 def detail_anggota_keluarga_snippet(request, idkompleks):
     kompleks = get_object_or_404(Kompleks, pk=idkompleks)
 
@@ -201,6 +216,7 @@ def detail_anggota_keluarga_snippet(request, idkompleks):
 
 
 @login_required
+@admin_or_petugas_required
 def deleteFormWarga(request, idwarga=0):
     warga_record = get_object_or_404(Warga, pk=idwarga)
     next_url = request.GET.get("next")
@@ -227,6 +243,7 @@ def deleteFormWarga(request, idwarga=0):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(admin_or_petugas_required, name="dispatch")
 class ArsipWargaListView(ListView):
     paginate_by = 50
     template_name = "arsip_warga.html"
@@ -273,6 +290,7 @@ def testView(request):
 
 
 @login_required
+@admin_or_petugas_required
 def listWargaReportForm(request):
     list_cluster = Kompleks.objects.order_by().values("cluster").distinct()
     context = {"list_cluster": list_cluster, "status_tinggal": Warga.STATUS_TINGGAL}
@@ -282,6 +300,7 @@ def listWargaReportForm(request):
 
 
 @login_required
+@admin_or_petugas_required
 def pdfWargaReport(request):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     dataWarga = Warga.objects.all().order_by("kompleks__blok", "kompleks__nomor")
@@ -426,6 +445,7 @@ def protected_serve(request, path, document_root=None, show_indexes=False):
 
 
 @login_required
+@admin_or_petugas_required
 def list_warga_no_kompleks_json(request):
     data_warga = Warga.objects.filter(kompleks=None)
     if request.POST:
@@ -438,6 +458,7 @@ def list_warga_no_kompleks_json(request):
 
 
 @login_required
+@admin_or_petugas_required
 def set_kepala_keluarga(request, idwarga):
     warga_record = assign_kepala_keluarga(idwarga)
 
@@ -450,6 +471,7 @@ def set_kepala_keluarga(request, idwarga):
 
 
 @login_required
+@admin_or_petugas_required
 def detailWarga(request, idwarga):
     warga = get_object_or_404(Warga, pk=idwarga)
 
@@ -491,11 +513,24 @@ def detailWarga(request, idwarga):
         "umur": umur,
         "kendaraan_list": kendaraan_list,
         "MEDIA_URL": settings.MEDIA_URL,
+        "new_user_invitation_token": request.session.pop(
+            "new_user_invitation_token", None
+        ),
+        "invitation_template": (
+            "Halo {name},\n\n"
+            "Anda diundang untuk mengaktifkan akun portal Warga di sistem DataWarga. "
+            "Silakan klik tautan di bawah ini untuk mengatur kata sandi Anda dan mengaktifkan akun Anda:\n\n"
+            "{link}\n\n"
+            "Tautan ini berlaku sampai {expires_at}.\n\n"
+            "Salam,\n"
+            "Pengurus RT/RW"
+        ),
     }
     return render(request, "detail_warga.html", context)
 
 
 @login_required
+@admin_or_petugas_required
 def pdfDetailWarga(request, idwarga):
     warga = get_object_or_404(Warga, pk=idwarga)
 
@@ -562,6 +597,7 @@ def pdfDetailWarga(request, idwarga):
 
 @login_required
 @require_POST
+@admin_or_petugas_required
 def scan_ktp_ajax(request):
 
     correlation_id = str(uuid.uuid4())
@@ -642,3 +678,292 @@ def scan_ktp_ajax(request):
             {"success": False, "message": msg},
             status=500,
         )
+
+
+@login_required
+def warga_dashboard(request):
+    """
+    Renders a premium dashboard customized for citizens (warga).
+    """
+    try:
+        warga = request.user.warga
+    except AttributeError:
+        raise PermissionDenied("Hanya warga terdaftar yang dapat mengakses portal ini.")
+
+    if warga is None:
+        raise PermissionDenied("Hanya warga terdaftar yang dapat mengakses portal ini.")
+
+    # Retrieve family members in the same complex
+    anggota_keluarga = []
+    if warga.kompleks:
+        anggota_keluarga = get_anggota_keluarga(
+            warga.kompleks.id, exclude_warga_id=warga.id
+        )
+
+    # Retrieve registered vehicles (including pending registrations)
+    kendaraan_list = Kendaraan.objects.filter(pemilik=warga).order_by("-id")
+
+    # Retrieve document requests (Surat)
+    surat_list = Surat.objects.filter(warga=warga).order_by("-tanggal_surat")
+
+    # Retrieve dues payments for their complex
+    transaksi = []
+    if warga.kompleks:
+        transaksi = TransaksiIuranBulanan.objects.filter(
+            kompleks=warga.kompleks
+        ).order_by("-periode_tahun", "-periode_bulan")
+
+    # Retrieve pending profile updates
+    from django.db.models import Q
+    update_requests = WargaUpdateRequest.objects.filter(
+        Q(warga=warga) | Q(requested_by=warga)
+    ).distinct().order_by("-created_at")
+
+    context = {
+        "warga": warga,
+        "anggota_keluarga": anggota_keluarga,
+        "kendaraan_list": kendaraan_list,
+        "surat_list": surat_list,
+        "transaksi": transaksi,
+        "update_requests": update_requests,
+        "MEDIA_URL": settings.MEDIA_URL,
+        "religions": Warga.RELIGIONS,
+        "status_kawin": Warga.STATUS_KAWIN,
+        "status_tinggal": Warga.STATUS_TINGGAL,
+        "pekerjaan_choices": Warga.PEKERJAAN,
+        "jenis_kelamin_choices": Warga.JENIS_KELAMIN,
+        "status_keluarga_choices": Warga.STATUS_KELUARGA,
+        "iuran_bulanan": settings.IURAN_BULANAN,
+    }
+    return render(request, "warga_dashboard.html", context)
+
+
+@login_required
+def warga_request_surat(request):
+    """
+    Post handler for warga to request a document (Surat).
+    """
+    if request.method == "POST":
+        try:
+            warga = request.user.warga
+        except AttributeError:
+            raise PermissionDenied()
+
+        if warga is None:
+            raise PermissionDenied()
+
+        jenis_surat = request.POST.get("jenis_surat")
+        keperluan = request.POST.get("keperluan", "").strip()
+
+        if not jenis_surat or not keperluan:
+            messages.error(request, "Jenis surat dan keperluan harus diisi.")
+            return redirect("kependudukan:warga_dashboard")
+
+        Surat.objects.create(
+            warga=warga, jenis_surat=jenis_surat, keperluan=keperluan, status="PENDING"
+        )
+        messages.success(
+            request,
+            "Permohonan surat berhasil diajukan dan sedang menunggu persetujuan.",
+        )
+    return redirect("kependudukan:warga_dashboard")
+
+
+@login_required
+def warga_register_kendaraan(request):
+    """
+    Post handler for warga to register a vehicle.
+    """
+    if request.method == "POST":
+        try:
+            warga = request.user.warga
+        except AttributeError:
+            raise PermissionDenied()
+
+        if warga is None:
+            raise PermissionDenied()
+
+        jenis_kendaraan = request.POST.get("jenis_kendaraan", "MOBIL")
+        merk = request.POST.get("merk", "").strip()
+        tipe = request.POST.get("tipe", "").strip()
+        plat_nomor = request.POST.get("plat_nomor", "").strip().upper()
+        keterangan = request.POST.get("keterangan", "").strip()
+
+        if not plat_nomor:
+            messages.error(request, "Plat nomor kendaraan harus diisi.")
+            return redirect("kependudukan:warga_dashboard")
+
+        # User-friendly check for unique license plate constraint
+        if Kendaraan.objects.filter(plat_nomor=plat_nomor).exists():
+            messages.error(request, f"Plat nomor {plat_nomor} sudah terdaftar.")
+            return redirect("kependudukan:warga_dashboard")
+
+        Kendaraan.objects.create(
+            pemilik=warga,
+            jenis_kendaraan=jenis_kendaraan,
+            merk=merk,
+            tipe=tipe,
+            plat_nomor=plat_nomor,
+            keterangan=keterangan,
+            status="PENDING",
+        )
+        messages.success(
+            request,
+            "Registrasi kendaraan berhasil diajukan dan sedang menunggu persetujuan.",
+        )
+    return redirect("kependudukan:warga_dashboard")
+
+
+@login_required
+def warga_upload_iuran(request):
+    """
+    Post handler for warga to submit dues payment proof.
+    """
+    if request.method == "POST":
+        try:
+            warga = request.user.warga
+        except AttributeError:
+            raise PermissionDenied()
+
+        if warga is None:
+            raise PermissionDenied()
+
+        if not warga.kompleks:
+            messages.error(
+                request,
+                "Akun Anda belum terasosiasi dengan nomor rumah/kompleks. Hubungi admin.",
+            )
+            return redirect("kependudukan:warga_dashboard")
+
+        try:
+            periode_bulan = int(request.POST.get("periode_bulan", 0))
+            periode_tahun = int(request.POST.get("periode_tahun", 0))
+            total_bayar_str = request.POST.get("total_bayar")
+            if total_bayar_str is not None and total_bayar_str.strip() != "":
+                total_bayar = int(total_bayar_str)
+            else:
+                total_bayar = settings.IURAN_BULANAN
+        except (TypeError, ValueError):
+            messages.error(
+                request, "Input periode bulan, tahun, atau total bayar tidak valid."
+            )
+            return redirect("kependudukan:warga_dashboard")
+
+        bukti_bayar = request.FILES.get("bukti_bayar")
+        keterangan = request.POST.get("keterangan", "").strip()
+
+        if not periode_bulan or not periode_tahun or not bukti_bayar:
+            messages.error(
+                request, "Bulan, tahun, dan file bukti pembayaran harus dilampirkan."
+            )
+            return redirect("kependudukan:warga_dashboard")
+
+        # Exclude rejected transactions when checking duplicate attempts
+        existing = (
+            TransaksiIuranBulanan.objects.filter(
+                kompleks=warga.kompleks,
+                periode_bulan=periode_bulan,
+                periode_tahun=periode_tahun,
+            )
+            .exclude(status="REJECTED")
+            .exists()
+        )
+
+        if existing:
+            messages.error(
+                request,
+                f"Pembayaran untuk periode bulan {periode_bulan} tahun {periode_tahun} sudah tercatat atau sedang menunggu persetujuan.",
+            )
+            return redirect("kependudukan:warga_dashboard")
+
+        TransaksiIuranBulanan.objects.create(
+            kompleks=warga.kompleks,
+            periode_bulan=periode_bulan,
+            periode_tahun=periode_tahun,
+            total_bayar=total_bayar,
+            bukti_bayar=bukti_bayar,
+            keterangan=keterangan,
+            status="PENDING",
+        )
+        messages.success(
+            request,
+            "Bukti pembayaran iuran berhasil diunggah dan sedang menunggu persetujuan.",
+        )
+    return redirect("kependudukan:warga_dashboard")
+
+
+@login_required
+def warga_submit_update(request):
+    """
+    Post handler for warga to submit a profile update request.
+    """
+    if request.method == "POST":
+        try:
+            warga = request.user.warga
+        except AttributeError:
+            raise PermissionDenied()
+
+        if warga is None:
+            raise PermissionDenied()
+
+        target_warga_id = request.POST.get("target_warga_id")
+        target_warga = None
+        is_new_warga = False
+        
+        if target_warga_id == "NEW":
+            is_new_warga = True
+        elif target_warga_id:
+            try:
+                target_warga = Warga.objects.get(pk=target_warga_id)
+                if not (target_warga == warga or (warga.kompleks and target_warga.kompleks == warga.kompleks)):
+                    messages.error(request, "Target warga tidak valid atau tidak berada dalam satu rumah.")
+                    return redirect("kependudukan:warga_dashboard")
+            except Warga.DoesNotExist:
+                messages.error(request, "Target warga tidak ditemukan.")
+                return redirect("kependudukan:warga_dashboard")
+        else:
+            target_warga = warga
+
+        updatable_fields = [
+            "nama_lengkap",
+            "nik",
+            "no_hp",
+            "no_kk",
+            "pekerjaan",
+            "agama",
+            "status",
+            "tanggal_lahir",
+            "tempat_lahir",
+            "jenis_kelamin",
+            "kewarganegaraan",
+            "status_tinggal",
+            "status_keluarga",
+            "alamat_ktp",
+        ]
+        changes = {}
+        for field in updatable_fields:
+            val = request.POST.get(field)
+            if val is not None:
+                changes[field] = val.strip()
+
+        files = {}
+        if "foto_path" in request.FILES:
+            files["foto_path"] = request.FILES["foto_path"]
+        if "ktp_image_path" in request.FILES:
+            files["ktp_image_path"] = request.FILES["ktp_image_path"]
+
+        from kependudukan.services.warga_service import submit_warga_update_request
+
+        submit_warga_update_request(
+            warga=target_warga,
+            fields_data=changes,
+            files=files,
+            requested_by=warga,
+            is_new_warga=is_new_warga,
+            kompleks=warga.kompleks
+        )
+        messages.success(
+            request,
+            "Perubahan data diri berhasil diajukan dan sedang menunggu persetujuan.",
+        )
+    return redirect("kependudukan:warga_dashboard")

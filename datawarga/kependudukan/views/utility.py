@@ -4,6 +4,7 @@ from kependudukan.utils.formatters import format_rupiah
 from django.conf import settings
 
 from django.contrib.auth.decorators import login_required, user_passes_test
+from kependudukan.utils.auth_guards import admin_or_petugas_required
 from django.db.models import Count, Sum
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -19,6 +20,13 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def dashboard_warga(request):
+    if (
+        hasattr(request.user, "warga")
+        and request.user.warga is not None
+        and not request.user.is_superuser
+    ):
+        return redirect("kependudukan:warga_dashboard")
+
     total_warga = Warga.objects.exclude(status_tinggal="PINDAH").count()
     ultah = Warga.objects.filter(tanggal_lahir__month=datetime.now().month).exclude(
         status_tinggal="PINDAH"
@@ -180,6 +188,7 @@ def dashboard_warga(request):
 
 
 @login_required
+@admin_or_petugas_required
 def statistic_warga(request):
     all_data = (
         Warga.objects.values("kompleks__rt", "kompleks__rw")
@@ -286,6 +295,7 @@ def generate_data_warga(request, count=10):
 
 
 @login_required
+@admin_or_petugas_required
 def import_data_warga_form(request):
     if request.POST:
         form = WargaCSVForm(request.POST, request.FILES)
@@ -356,11 +366,13 @@ def import_data_warga_form(request):
 
 
 @login_required
+@admin_or_petugas_required
 def assign_warga_rumah(request):
     return render(request=request, template_name="form_assign_warga_rumah.html")
 
 
 @login_required
+@admin_or_petugas_required
 def assign_warga_rumah_exec(request):
     if request.POST:
         list_warga_ids = request.POST.getlist("warga_ids[]")

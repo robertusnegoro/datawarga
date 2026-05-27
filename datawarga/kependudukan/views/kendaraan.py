@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.decorators import login_required
+from kependudukan.utils.auth_guards import admin_or_petugas_required
 from django.contrib import messages
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@admin_or_petugas_required
 def form_kendaraan(request, idwarga, idkendaraan=0):
     warga_record = get_object_or_404(Warga, pk=idwarga)
     context = {"warga": warga_record, "idwarga": idwarga, "idkendaraan": idkendaraan}
@@ -34,6 +36,7 @@ def form_kendaraan(request, idwarga, idkendaraan=0):
 
 
 @login_required
+@admin_or_petugas_required
 def form_kendaraan_save(request):
     if request.POST:
         idwarga = int(request.POST.get("idwarga", 0))
@@ -72,6 +75,7 @@ def form_kendaraan_save(request):
 
 
 @login_required
+@admin_or_petugas_required
 def delete_kendaraan(request, idkendaraan=0):
     kendaraan_record = get_object_or_404(Kendaraan, pk=idkendaraan)
     warga_id = kendaraan_record.pemilik.id

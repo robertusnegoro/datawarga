@@ -11,8 +11,13 @@ logger = logging.getLogger(__name__)
 def sync_iuran_to_kas_post_save(sender, instance, created, **kwargs):
     """
     Automatically creates or updates a KasTransaksi record when a
-    TransaksiIuranBulanan is saved.
+    TransaksiIuranBulanan is saved with status 'APPROVED'.
+    If status is not approved, deletes any existing KasTransaksi.
     """
+    if instance.status != "APPROVED":
+        KasTransaksi.objects.filter(iuran_asal=instance).delete()
+        return
+
     # Build a standard keterangan for auto-sync
     keterangan_auto = (
         instance.keterangan

@@ -11,6 +11,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
+from kependudukan.utils.auth_guards import admin_or_petugas_required
 import logging
 import json
 
@@ -35,6 +36,7 @@ def kompleks_form(request):
 
 
 @login_required
+@admin_or_petugas_required
 def generate_kompleks(request):
     if request.POST:
         form = GenerateKompleksForm(request.POST)
@@ -99,6 +101,7 @@ def generate_kompleks(request):
 
 
 @method_decorator(login_required, name="dispatch")
+@method_decorator(admin_or_petugas_required, name="dispatch")
 class KompleksListView(ListView):
     paginate_by = 50
     template_name = "list_kompleks_view.html"
@@ -139,6 +142,7 @@ class KompleksListView(ListView):
 
 
 @login_required
+@admin_or_petugas_required
 def delete_blok_form(request):
     if request.POST:
         blok = str(request.POST["blok"])
@@ -157,6 +161,7 @@ def delete_blok_form(request):
 
 
 @login_required
+@admin_or_petugas_required
 def detail_kompleks(request, idkompleks):
     data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
     context = {}
@@ -208,6 +213,7 @@ def detail_kompleks(request, idkompleks):
 
 
 @login_required
+@admin_or_petugas_required
 def warga_rumah(request, idkompleks):
     data_warga = Warga.objects.filter(kompleks=idkompleks).exclude(
         status_tinggal__in=["PINDAH", "MENINGGAL"]
@@ -219,6 +225,7 @@ def warga_rumah(request, idkompleks):
 
 
 @login_required
+@admin_or_petugas_required
 def delete_rumah_form(request, idkompleks):
     data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
     context = {"data_kompleks": data_kompleks}
@@ -239,6 +246,7 @@ def delete_rumah_form(request, idkompleks):
 
 
 @login_required
+@admin_or_petugas_required
 def list_kompleks_json(request):
     from django.db.models import Prefetch
     from kependudukan.selectors.kompleks_selector import search_kompleks_queryset

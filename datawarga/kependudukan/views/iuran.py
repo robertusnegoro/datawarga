@@ -16,11 +16,13 @@ from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import json
 import logging
+from kependudukan.utils.auth_guards import admin_or_petugas_required
 
 logger = logging.getLogger(__name__)
 
 
 @login_required
+@admin_or_petugas_required
 def form_iuran_bulanan(
     request, idkompleks, year=datetime.now().strftime("%Y"), idtransaksi=0
 ):
@@ -61,6 +63,7 @@ def check_existing_trx_bulan(bulan, tahun, kompleks):
 
 
 @login_required
+@admin_or_petugas_required
 def form_iuran_bulanan_save(request):
     if request.POST:
         form = IuranBulananForm(request.POST, request.FILES)
@@ -151,6 +154,7 @@ def form_iuran_bulanan_save(request):
 
 
 @login_required
+@admin_or_petugas_required
 def list_iuran_kompleks_tahun_json(
     request, idkompleks, year=datetime.now().strftime("%Y")
 ):
@@ -164,6 +168,7 @@ def list_iuran_kompleks_tahun_json(
 
 
 @login_required
+@admin_or_petugas_required
 def delete_iuran_bulanan(request, idtransaksi):
     data_transaksi = get_object_or_404(TransaksiIuranBulanan, pk=idtransaksi)
     kompleks_id = data_transaksi.kompleks.id
@@ -193,6 +198,7 @@ def delete_iuran_bulanan(request, idtransaksi):
 
 
 @login_required
+@admin_or_petugas_required
 def pdfReportIuranBulananForm(request):
     get_year = (
         (
@@ -210,6 +216,7 @@ def pdfReportIuranBulananForm(request):
 
 
 @login_required
+@admin_or_petugas_required
 def pdf_report_iuranbulanan(request, year):
     data_iuran_summary = SummaryTransaksiBulanan.objects.filter(
         periode_tahun=year
@@ -230,6 +237,7 @@ def pdf_report_iuranbulanan(request, year):
 
 
 @login_required
+@admin_or_petugas_required
 def iuranIncomeStatementReportForm(request):
     context = {}
     current_year = int(datetime.now().strftime("%Y"))
@@ -243,6 +251,7 @@ def iuranIncomeStatementReportForm(request):
 
 
 @login_required
+@admin_or_petugas_required
 def iuranIncomeStatementReportFormExec(request):
     context = {}
     if request.POST:
@@ -264,6 +273,7 @@ def iuranIncomeStatementReportFormExec(request):
 
 
 @login_required
+@admin_or_petugas_required
 def iuranYearly(request):
     context = {}
     current_year = int(datetime.now().strftime("%Y"))
@@ -294,6 +304,7 @@ def iuranYearly(request):
 
 
 @login_required
+@admin_or_petugas_required
 def form_batch_iuran_bulanan(request, idkompleks, year=datetime.now().strftime("%Y")):
     data_kompleks = get_object_or_404(Kompleks, pk=idkompleks)
 

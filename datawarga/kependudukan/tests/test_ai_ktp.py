@@ -256,7 +256,9 @@ class AIServiceTestCase(TestCase):
 
 class KTPScanViewTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="admin", password="password")
+        self.user = User.objects.create_user(
+            username="admin", password="password", is_staff=True
+        )
         self.client.login(username="admin", password="password")
 
         # Create a Kompleks for test warga
