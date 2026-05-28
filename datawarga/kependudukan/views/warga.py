@@ -715,9 +715,12 @@ def warga_dashboard(request):
 
     # Retrieve pending profile updates
     from django.db.models import Q
-    update_requests = WargaUpdateRequest.objects.filter(
-        Q(warga=warga) | Q(requested_by=warga)
-    ).distinct().order_by("-created_at")
+
+    update_requests = (
+        WargaUpdateRequest.objects.filter(Q(warga=warga) | Q(requested_by=warga))
+        .distinct()
+        .order_by("-created_at")
+    )
 
     context = {
         "warga": warga,
@@ -909,14 +912,20 @@ def warga_submit_update(request):
         target_warga_id = request.POST.get("target_warga_id")
         target_warga = None
         is_new_warga = False
-        
+
         if target_warga_id == "NEW":
             is_new_warga = True
         elif target_warga_id:
             try:
                 target_warga = Warga.objects.get(pk=target_warga_id)
-                if not (target_warga == warga or (warga.kompleks and target_warga.kompleks == warga.kompleks)):
-                    messages.error(request, "Target warga tidak valid atau tidak berada dalam satu rumah.")
+                if not (
+                    target_warga == warga
+                    or (warga.kompleks and target_warga.kompleks == warga.kompleks)
+                ):
+                    messages.error(
+                        request,
+                        "Target warga tidak valid atau tidak berada dalam satu rumah.",
+                    )
                     return redirect("kependudukan:warga_dashboard")
             except Warga.DoesNotExist:
                 messages.error(request, "Target warga tidak ditemukan.")
@@ -960,7 +969,7 @@ def warga_submit_update(request):
             files=files,
             requested_by=warga,
             is_new_warga=is_new_warga,
-            kompleks=warga.kompleks
+            kompleks=warga.kompleks,
         )
         messages.success(
             request,

@@ -1,6 +1,12 @@
 import logging
 import uuid
 
+import base64
+import io
+import time
+import pyotp
+import qrcode
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -16,7 +22,13 @@ from kependudukan.serializers import (
     kompleksSerializer,
     iuranSerializer,
     KtpScanRequestSerializer,
+    UserProfileDetailSerializer,
+    ChangePasswordSerializer,
+    MfaEnableSerializer,
+    MfaDisableSerializer,
+    CustomTokenObtainPairSerializer,
 )
+from rest_framework_simplejwt.views import TokenObtainPairView
 from drf_yasg.utils import swagger_auto_schema
 from kependudukan.services.iuran_service import record_iuran_payment
 from kependudukan.services.warga_service import process_ktp_scan
@@ -25,11 +37,57 @@ from kependudukan.utils.auth_guards import IsAdminOrPetugas
 
 logger = logging.getLogger(__name__)
 
+def _get_allowed_kompleks_queryset(user, queryset):
+    """Helper to filter Kompleks queryset based on user permissions"""
+    if user.is_superuser:
+        return queryset
+    try:
+        from kependudukan.models import UserPermission
+        perm = UserPermission.objects.get(user=user)
+        if str(perm.permission_group).lower() != "all":
+            return queryset.filter(permission_group=perm.permission_group)
+    except Exception:
+        pass
+    return queryset
+
+def _get_allowed_warga_queryset(user, queryset):
+    """Helper to filter Warga queryset based on user permissions"""
+    if user.is_superuser:
+        return queryset
+    try:
+        from kependudukan.models import UserPermission
+        perm = UserPermission.objects.get(user=user)
+        if str(perm.permission_group).lower() != "all":
+            return queryset.filter(kompleks__permission_group=perm.permission_group)
+    except Exception:
+        pass
+    return queryset
+
+def _get_allowed_iuran_queryset(user, queryset):
+    """Helper to filter Iuran queryset based on user permissions"""
+    if user.is_superuser:
+        return queryset
+    try:
+        from kependudukan.models import UserPermission
+        perm = UserPermission.objects.get(user=user)
+        if str(perm.permission_group).lower() != "all":
+            return queryset.filter(kompleks__permission_group=perm.permission_group)
+    except Exception:
+        pass
+    return queryset
+
 
 class wargaViewSet(viewsets.ModelViewSet):
     queryset = Warga.objects.order_by("id")
     serializer_class = wargaSerializer
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+        if self.action in ["me", "me_update", "me_requests", "me_surat", "me_kendaraan", "me_iuran"]:
+            return queryset
+        return _get_allowed_warga_queryset(user, queryset)
 
     def get_permissions(self):
         if self.action in [
@@ -396,13 +454,13 @@ class wargaViewSet(viewsets.ModelViewSet):
         if request.method == "POST":
             search_term = request.data.get("search", "")
             queryset = search_warga_queryset(
-                self.queryset,
+                self.get_queryset(),
                 search_term,
                 include_kompleks_fields_in_general_search=True,
             )
             logger.info(f"search to warga models with keyword {search_term}")
         else:
-            queryset = self.queryset
+            queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -412,6 +470,9 @@ class iuranViewSet(viewsets.ModelViewSet):
     serializer_class = iuranSerializer
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
 
+    def get_queryset(self):
+        return _get_allowed_iuran_queryset(self.request.user, super().get_queryset())
+
 
 class kompleksViewSet(viewsets.ModelViewSet):
     queryset = Kompleks.objects.order_by("id")
@@ -419,14 +480,17 @@ class kompleksViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
     parser_classes = (MultiPartParser, FormParser, JSONParser)
 
+    def get_queryset(self):
+        return _get_allowed_kompleks_queryset(self.request.user, super().get_queryset())
+
     @action(detail=False, methods=["post"], url_path="search")
     def search(self, request, *args, **kwargs):
         if request.method == "POST":
             search_term = request.data.get("search", "")
-            queryset = search_kompleks_queryset(self.queryset, search_term)
+            queryset = search_kompleks_queryset(self.get_queryset(), search_term)
             logger.info(f"search to kompleks models with keyword {search_term}")
         else:
-            queryset = self.queryset
+            queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -439,7 +503,7 @@ class kompleksViewSet(viewsets.ModelViewSet):
 
             if "/" in search_term:
                 split_keyword = search_term.split("/")
-                data_kompleks = self.queryset.filter(
+                data_kompleks = self.get_queryset().filter(
                     blok__icontains=split_keyword[0].strip(),
                     nomor=split_keyword[1].strip(),
                 )
@@ -477,7 +541,7 @@ class kompleksViewSet(viewsets.ModelViewSet):
 
             if "/" in search_term:
                 split_keyword = search_term.split("/")
-                data_kompleks = self.queryset.filter(
+                data_kompleks = self.get_queryset().filter(
                     blok__icontains=split_keyword[0].strip(),
                     nomor=split_keyword[1].strip(),
                 )
@@ -503,6 +567,17 @@ class kompleksViewSet(viewsets.ModelViewSet):
         total_bayar = request.data.get("total_bayar")
         bukti_bayar = request.FILES.get("bukti_bayar")
 
+        if "/" in search_term:
+            split_keyword = search_term.split("/")
+            data_kompleks = self.get_queryset().filter(
+                blok__icontains=split_keyword[0].strip(),
+                nomor=split_keyword[1].strip(),
+            ).first()
+            if not data_kompleks:
+                return Response({"error": "Kompleks tidak ditemukan atau Anda tidak memiliki akses."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "Format blok_no tidak valid."}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             payment = record_iuran_payment(
                 blok_no=search_term,
@@ -521,3 +596,388 @@ class kompleksViewSet(viewsets.ModelViewSet):
                 {"error": "Gagal mencatat pembayaran"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class UserProfileViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+
+    def list(self, request):
+        correlation_id = str(uuid.uuid4())
+        user = request.user
+        start_time = time.time()
+
+        logger.info(
+            "Operation started",
+            extra={
+                "operation": "get_profile",
+                "userId": user.id,
+                "correlationId": correlation_id,
+            },
+        )
+
+        serializer = UserProfileDetailSerializer(user, context={"request": request})
+
+        duration = int((time.time() - start_time) * 1000)
+        logger.info(
+            "Operation success",
+            extra={
+                "operation": "get_profile",
+                "userId": user.id,
+                "correlationId": correlation_id,
+                "duration": duration,
+            },
+        )
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["put", "patch"], url_path="update")
+    def update_profile(self, request):
+        correlation_id = str(uuid.uuid4())
+        user = request.user
+        start_time = time.time()
+
+        logger.info(
+            "Operation started",
+            extra={
+                "operation": "update_profile_api",
+                "userId": user.id,
+                "correlationId": correlation_id,
+            },
+        )
+
+        serializer = UserProfileDetailSerializer(
+            user,
+            data=request.data,
+            partial=(request.method == "PATCH"),
+            context={"request": request},
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            duration = int((time.time() - start_time) * 1000)
+            logger.info(
+                "Operation success",
+                extra={
+                    "operation": "update_profile_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                },
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            duration = int((time.time() - start_time) * 1000)
+            logger.error(
+                "Operation failure",
+                extra={
+                    "operation": "update_profile_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": str(serializer.errors),
+                },
+            )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"], url_path="change-password")
+    def change_password(self, request):
+        correlation_id = str(uuid.uuid4())
+        user = request.user
+        start_time = time.time()
+
+        logger.info(
+            "Operation started",
+            extra={
+                "operation": "change_password_api",
+                "userId": user.id,
+                "correlationId": correlation_id,
+            },
+        )
+
+        serializer = ChangePasswordSerializer(
+            data=request.data, context={"request": request}
+        )
+        if serializer.is_valid():
+            user.set_password(serializer.validated_data["new_password"])
+            user.save()
+
+            from django.contrib.auth import update_session_auth_hash
+
+            update_session_auth_hash(request, user)
+
+            duration = int((time.time() - start_time) * 1000)
+            logger.info(
+                "Operation success",
+                extra={
+                    "operation": "change_password_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                },
+            )
+            return Response(
+                {"message": "Kata sandi Anda berhasil diperbarui."},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            duration = int((time.time() - start_time) * 1000)
+            logger.error(
+                "Operation failure",
+                extra={
+                    "operation": "change_password_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": str(serializer.errors),
+                },
+            )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"], url_path="mfa/setup")
+    def mfa_setup(self, request):
+        correlation_id = str(uuid.uuid4())
+        user = request.user
+        start_time = time.time()
+
+        logger.info(
+            "Operation started",
+            extra={
+                "operation": "mfa_setup_api",
+                "userId": user.id,
+                "correlationId": correlation_id,
+            },
+        )
+
+        profile = user.profile
+        if profile.mfa_enabled:
+            duration = int((time.time() - start_time) * 1000)
+            logger.warning(
+                "Operation failure: MFA already enabled",
+                extra={
+                    "operation": "mfa_setup_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": "MFA is already enabled",
+                },
+            )
+            return Response(
+                {"error": "MFA sudah aktif pada akun Anda."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        temp_secret = pyotp.random_base32()
+        totp = pyotp.TOTP(temp_secret)
+        provisioning_uri = totp.provisioning_uri(
+            name=user.username, issuer_name="DataWarga"
+        )
+
+        qr = qrcode.QRCode(version=1, box_size=5, border=3)
+        qr.add_data(provisioning_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        qr_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+        duration = int((time.time() - start_time) * 1000)
+        logger.info(
+            "Operation success",
+            extra={
+                "operation": "mfa_setup_api",
+                "userId": user.id,
+                "correlationId": correlation_id,
+                "duration": duration,
+            },
+        )
+        return Response(
+            {
+                "secret_key": temp_secret,
+                "provisioning_uri": provisioning_uri,
+                "qr_base64": qr_base64,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["post"], url_path="mfa/enable")
+    def mfa_enable(self, request):
+        correlation_id = str(uuid.uuid4())
+        user = request.user
+        start_time = time.time()
+
+        logger.info(
+            "Operation started",
+            extra={
+                "operation": "mfa_enable_api",
+                "userId": user.id,
+                "correlationId": correlation_id,
+            },
+        )
+
+        profile = user.profile
+        if profile.mfa_enabled:
+            duration = int((time.time() - start_time) * 1000)
+            logger.warning(
+                "Operation failure: MFA already enabled",
+                extra={
+                    "operation": "mfa_enable_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": "MFA is already enabled",
+                },
+            )
+            return Response(
+                {"error": "MFA sudah aktif pada akun Anda."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = MfaEnableSerializer(data=request.data)
+        if serializer.is_valid():
+            secret_key = serializer.validated_data["secret_key"]
+            token = serializer.validated_data["token"].strip()
+
+            totp = pyotp.TOTP(secret_key)
+            if totp.verify(token):
+                profile.totp_secret = secret_key
+                profile.mfa_enabled = True
+                profile.save()
+
+                duration = int((time.time() - start_time) * 1000)
+                logger.info(
+                    "Operation success",
+                    extra={
+                        "operation": "mfa_enable_api",
+                        "userId": user.id,
+                        "correlationId": correlation_id,
+                        "duration": duration,
+                    },
+                )
+                return Response(
+                    {
+                        "message": "Multi-Factor Authentication (MFA) berhasil diaktifkan."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                duration = int((time.time() - start_time) * 1000)
+                logger.warning(
+                    "Operation failure: invalid token for setup verification",
+                    extra={
+                        "operation": "mfa_enable_api",
+                        "userId": user.id,
+                        "correlationId": correlation_id,
+                        "duration": duration,
+                        "error": "Invalid verification token supplied during setup",
+                    },
+                )
+                return Response(
+                    {"token": ["Kode verification salah. Silakan coba lagi."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            duration = int((time.time() - start_time) * 1000)
+            logger.error(
+                "Operation failure",
+                extra={
+                    "operation": "mfa_enable_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": str(serializer.errors),
+                },
+            )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"], url_path="mfa/disable")
+    def mfa_disable(self, request):
+        correlation_id = str(uuid.uuid4())
+        user = request.user
+        start_time = time.time()
+
+        logger.info(
+            "Operation started",
+            extra={
+                "operation": "mfa_disable_api",
+                "userId": user.id,
+                "correlationId": correlation_id,
+            },
+        )
+
+        profile = user.profile
+        if not profile.mfa_enabled:
+            duration = int((time.time() - start_time) * 1000)
+            logger.warning(
+                "Operation failure: MFA is not enabled",
+                extra={
+                    "operation": "mfa_disable_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": "MFA is not enabled",
+                },
+            )
+            return Response(
+                {"error": "MFA tidak aktif pada akun Anda."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = MfaDisableSerializer(data=request.data)
+        if serializer.is_valid():
+            token = serializer.validated_data["token"].strip()
+
+            totp = pyotp.TOTP(profile.totp_secret)
+            if totp.verify(token):
+                profile.mfa_enabled = False
+                profile.totp_secret = None
+                profile.save()
+
+                duration = int((time.time() - start_time) * 1000)
+                logger.info(
+                    "Operation success",
+                    extra={
+                        "operation": "mfa_disable_api",
+                        "userId": user.id,
+                        "correlationId": correlation_id,
+                        "duration": duration,
+                    },
+                )
+                return Response(
+                    {
+                        "message": "Multi-Factor Authentication (MFA) berhasil dinonaktifkan."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                duration = int((time.time() - start_time) * 1000)
+                logger.warning(
+                    "Operation failure: invalid token for disabling MFA",
+                    extra={
+                        "operation": "mfa_disable_api",
+                        "userId": user.id,
+                        "correlationId": correlation_id,
+                        "duration": duration,
+                        "error": "Invalid verification token supplied during disable attempt",
+                    },
+                )
+                return Response(
+                    {"token": ["Kode verification salah. Silakan coba lagi."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            duration = int((time.time() - start_time) * 1000)
+            logger.error(
+                "Operation failure",
+                extra={
+                    "operation": "mfa_disable_api",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": str(serializer.errors),
+                },
+            )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

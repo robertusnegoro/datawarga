@@ -283,3 +283,72 @@ class MfaTestCase(TestCase):
             str(messages_list[0]),
             "Akun Anda sedang dibekukan sementara selama 30 menit karena 3 kali salah memasukkan kata sandi.",
         )
+
+    def test_api_token_mfa_required(self):
+        """Test that the API token endpoint requires MFA token if MFA is enabled."""
+        secret = pyotp.random_base32()
+        self.profile.mfa_enabled = True
+        self.profile.totp_secret = secret
+        self.profile.save()
+
+        response = self.client.post(
+            reverse("kependudukan:token_obtain_pair"),
+            data={"username": self.username, "password": self.password},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("mfa_token", response.json())
+        self.assertEqual(response.json()["mfa_token"][0], "MFA token is required for this account.")
+
+    def test_api_token_mfa_invalid(self):
+        """Test that the API token endpoint rejects invalid MFA tokens."""
+        secret = pyotp.random_base32()
+        self.profile.mfa_enabled = True
+        self.profile.totp_secret = secret
+        self.profile.save()
+
+        response = self.client.post(
+            reverse("kependudukan:token_obtain_pair"),
+            data={
+                "username": self.username,
+                "password": self.password,
+                "mfa_token": "000000",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("mfa_token", response.json())
+        self.assertEqual(response.json()["mfa_token"][0], "Invalid MFA token.")
+
+    def test_api_token_mfa_valid(self):
+        """Test that the API token endpoint issues a token when valid MFA token is provided."""
+        secret = pyotp.random_base32()
+        self.profile.mfa_enabled = True
+        self.profile.totp_secret = secret
+        self.profile.save()
+
+        totp = pyotp.TOTP(secret)
+        valid_token = totp.now()
+
+        response = self.client.post(
+            reverse("kependudukan:token_obtain_pair"),
+            data={
+                "username": self.username,
+                "password": self.password,
+                "mfa_token": valid_token,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.json())
+        self.assertIn("refresh", response.json())
+
+    def test_api_token_mfa_disabled(self):
+        """Test that the API token endpoint works without MFA token if MFA is disabled."""
+        self.profile.mfa_enabled = False
+        self.profile.save()
+
+        response = self.client.post(
+            reverse("kependudukan:token_obtain_pair"),
+            data={"username": self.username, "password": self.password},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.json())
+        self.assertIn("refresh", response.json())

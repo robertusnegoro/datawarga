@@ -8,7 +8,10 @@ from django.conf import settings
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 import logging
-from kependudukan.utils.auth_guards import admin_or_petugas_required, is_admin_or_petugas
+from kependudukan.utils.auth_guards import (
+    admin_or_petugas_required,
+    is_admin_or_petugas,
+)
 from django.core.exceptions import PermissionDenied
 
 from kependudukan.models import Warga, Surat, Penandatangan
@@ -63,8 +66,13 @@ def form_surat(request, idwarga):
 @login_required
 def cetak_surat(request, idsurat):
     surat = get_object_or_404(Surat, pk=idsurat)
-    if not (is_admin_or_petugas(request.user) or (hasattr(request.user, 'warga') and request.user.warga == surat.warga)):
-        raise PermissionDenied("Anda tidak memiliki hak akses untuk mencetak surat ini.")
+    if not (
+        is_admin_or_petugas(request.user)
+        or (hasattr(request.user, "warga") and request.user.warga == surat.warga)
+    ):
+        raise PermissionDenied(
+            "Anda tidak memiliki hak akses untuk mencetak surat ini."
+        )
     context = _prepare_surat_context(surat)
     return render(request, "surat/cetak_surat.html", context)
 
@@ -72,8 +80,13 @@ def cetak_surat(request, idsurat):
 @login_required
 def cetak_surat_pdf(request, idsurat):
     surat = get_object_or_404(Surat, pk=idsurat)
-    if not (is_admin_or_petugas(request.user) or (hasattr(request.user, 'warga') and request.user.warga == surat.warga)):
-        raise PermissionDenied("Anda tidak memiliki hak akses untuk mencetak surat ini.")
+    if not (
+        is_admin_or_petugas(request.user)
+        or (hasattr(request.user, "warga") and request.user.warga == surat.warga)
+    ):
+        raise PermissionDenied(
+            "Anda tidak memiliki hak akses untuk mencetak surat ini."
+        )
     context = _prepare_surat_context(surat)
 
     response = HttpResponse(content_type="application/pdf")

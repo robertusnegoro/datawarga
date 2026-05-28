@@ -434,3 +434,159 @@ class WargaAPIEndpointsTestCase(APITestCase):
         """
         response = self.client.get("/api/warga/")
         self.assertEqual(response.status_code, 403)
+
+    def test_warga_me_update_family_member(self):
+        """
+        Verify that citizen can submit update request for a family member in the same complex.
+        """
+        family_member = Warga.objects.create(
+            nama_lengkap="Family Member",
+            nik="8888888888888888",
+            agama="ISLAM",
+            jenis_kelamin="PEREMPUAN",
+            kompleks=self.kompleks,
+        )
+        response = self.client.post(
+            "/api/warga/me/update/",
+            {
+                "target_warga_id": family_member.id,
+                "nama_lengkap": "Family Member Updated",
+                "pekerjaan": "KARYAWAN",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # Verify request created in DB
+        update_req = WargaUpdateRequest.objects.get(warga=family_member)
+        self.assertEqual(update_req.status, "PENDING")
+        self.assertEqual(
+            update_req.data_changes["nama_lengkap"], "Family Member Updated"
+        )
+        self.assertEqual(update_req.requested_by, self.warga)
+
+    def test_warga_me_update_new_family_member(self):
+        """
+        Verify that citizen can submit update request for a new family member (NEW).
+        """
+        response = self.client.post(
+            "/api/warga/me/update/",
+            {
+                "target_warga_id": "NEW",
+                "nama_lengkap": "New Born Baby",
+                "pekerjaan": "BELUM/TIDAK BEKERJA",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # Verify request created in DB
+        update_req = WargaUpdateRequest.objects.get(warga=None, is_new_warga=True)
+        self.assertEqual(update_req.status, "PENDING")
+        self.assertEqual(update_req.data_changes["nama_lengkap"], "New Born Baby")
+        self.assertEqual(update_req.kompleks, self.kompleks)
+        self.assertEqual(update_req.requested_by, self.warga)
+
+    def test_warga_me_update_other_house_blocked(self):
+        """
+        Verify that citizen cannot update data of a resident in a different complex.
+        """
+        other_kompleks = Kompleks.objects.create(
+            alamat="Jl. Tulip", blok="B", nomor="20", rt="01", rw="02"
+        )
+        other_warga = Warga.objects.create(
+            nama_lengkap="Other Resident",
+            nik="7777777777777777",
+            agama="KRISTEN",
+            jenis_kelamin="LAKI-LAKI",
+            kompleks=other_kompleks,
+        )
+        response = self.client.post(
+            "/api/warga/me/update/",
+            {
+                "target_warga_id": other_warga.id,
+                "nama_lengkap": "Malicious Update",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.json())
+        self.assertEqual(
+            response.json()["error"],
+            "Target warga tidak valid atau tidak berada dalam satu rumah.",
+        )
+
+        # Verify no request is created in DB for other_warga
+        self.assertFalse(WargaUpdateRequest.objects.filter(warga=other_warga).exists())
+
+    def test_warga_me_iuran_own_complex(self):
+        """
+        Verify that citizen can submit dues payment proof for their own complex.
+        """
+        im = Image.new("RGB", (50, 50), (255, 0, 0))
+        im_io = io.BytesIO()
+        im.save(im_io, "JPEG")
+        bukti_file = SimpleUploadedFile(
+            "bukti.jpg", im_io.getvalue(), content_type="image/jpeg"
+        )
+
+        response = self.client.post(
+            "/api/warga/me/iuran/",
+            {
+                "periode_bulan": 8,
+                "periode_tahun": 2026,
+                "total_bayar": 100000,
+                "bukti_bayar": bukti_file,
+                "keterangan": "Iuran Agustus",
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # Verify created in DB and associated with user's complex
+        iuran = TransaksiIuranBulanan.objects.get(
+            kompleks=self.kompleks, periode_bulan=8, periode_tahun=2026
+        )
+        self.assertEqual(iuran.status, "PENDING")
+        self.assertEqual(iuran.total_bayar, 100000)
+
+    def test_warga_me_iuran_always_uses_own_complex(self):
+        """
+        Verify that citizen submitting dues payment cannot target another complex.
+        Even if they try to pass metadata/fields, the system always uses their own complex.
+        """
+        other_kompleks = Kompleks.objects.create(
+            alamat="Jl. Tulip", blok="B", nomor="20", rt="01", rw="02"
+        )
+        im = Image.new("RGB", (50, 50), (255, 0, 0))
+        im_io = io.BytesIO()
+        im.save(im_io, "JPEG")
+        bukti_file = SimpleUploadedFile(
+            "bukti.jpg", im_io.getvalue(), content_type="image/jpeg"
+        )
+
+        response = self.client.post(
+            "/api/warga/me/iuran/",
+            {
+                "kompleks": other_kompleks.id,  # Attempt to target other complex
+                "periode_bulan": 9,
+                "periode_tahun": 2026,
+                "total_bayar": 100000,
+                "bukti_bayar": bukti_file,
+                "keterangan": "Attempt other complex",
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # Verify the created transaction is for own complex, NOT other_kompleks
+        self.assertFalse(
+            TransaksiIuranBulanan.objects.filter(
+                kompleks=other_kompleks, periode_bulan=9, periode_tahun=2026
+            ).exists()
+        )
+        self.assertTrue(
+            TransaksiIuranBulanan.objects.filter(
+                kompleks=self.kompleks, periode_bulan=9, periode_tahun=2026
+            ).exists()
+        )

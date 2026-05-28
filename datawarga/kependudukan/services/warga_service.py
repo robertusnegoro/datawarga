@@ -184,8 +184,12 @@ def create_warga_invitation(warga_id: int, email: str, request) -> str:
 
 
 def submit_warga_update_request(
-    warga: Warga, fields_data: dict, files: dict = None,
-    requested_by: Warga = None, is_new_warga: bool = False, kompleks=None
+    warga: Warga,
+    fields_data: dict,
+    files: dict = None,
+    requested_by: Warga = None,
+    is_new_warga: bool = False,
+    kompleks=None,
 ) -> WargaUpdateRequest:
     """
     Saves warga change requests in WargaUpdateRequest to await admin approval.
@@ -202,7 +206,9 @@ def submit_warga_update_request(
         ktp_image_path=files.get("ktp_image_path"),
     )
     req.save()
-    logger.info(f"Submitted profile update request {req.id} for warga {warga.id if warga else 'NEW'}")
+    logger.info(
+        f"Submitted profile update request {req.id} for warga {warga.id if warga else 'NEW'}"
+    )
     return req
 
 

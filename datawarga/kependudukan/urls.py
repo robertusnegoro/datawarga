@@ -16,7 +16,6 @@ from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 
@@ -29,6 +28,7 @@ router = DefaultRouter()
 router.register(r"warga", api_view.wargaViewSet)
 router.register(r"kompleks", api_view.kompleksViewSet)
 router.register(r"iuran", api_view.iuranViewSet)
+router.register(r"profile", api_view.UserProfileViewSet, basename="profile")
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -344,7 +344,7 @@ urlpatterns = [
         "accounts/invite/<str:token>/", views_admin.user_activate, name="user_activate"
     ),
     path("api/", include(router.urls)),
-    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/", api_view.CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(
         "swagger/",

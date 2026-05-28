@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kependudukan", "0035_kendaraan_keterangan_status_kendaraan_status_and_more"),
     ]

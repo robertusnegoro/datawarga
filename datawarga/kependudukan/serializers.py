@@ -1,4 +1,9 @@
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import pyotp
+
 from .models import (
     Warga,
     Kompleks,
@@ -134,3 +139,103 @@ class KtpScanRequestSerializer(serializers.Serializer):
     ktp_image = serializers.FileField(
         help_text="File foto KTP (ktp_image) harus dilampirkan."
     )
+
+
+class UserProfileDetailSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(required=True)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    foto = serializers.ImageField(
+        source="profile.foto", required=False, allow_null=True
+    )
+    mfa_enabled = serializers.BooleanField(source="profile.mfa_enabled", read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "foto",
+            "mfa_enabled",
+        ]
+
+    def validate_email(self, value):
+        user = self.context["request"].user
+        if User.objects.filter(email__iexact=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("Email ini sudah terdaftar.")
+        return value
+
+    def update(self, instance, validated_data):
+        # Update User fields
+        instance.email = validated_data.get("email", instance.email)
+        instance.first_name = validated_data.get("first_name", instance.first_name)
+        instance.last_name = validated_data.get("last_name", instance.last_name)
+        instance.save()
+
+        # Update UserProfile fields (e.g. foto)
+        profile_data = validated_data.get("profile", {})
+        if "foto" in profile_data:
+            profile = instance.profile
+            profile.foto = profile_data["foto"]
+            profile.save()
+
+        return instance
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Kata sandi lama salah.")
+        return value
+
+    def validate(self, data):
+        if data["new_password"] != data["confirm_password"]:
+            raise serializers.ValidationError(
+                {"confirm_password": "Konfirmasi kata sandi tidak cocok."}
+            )
+        try:
+            validate_password(data["new_password"], self.context["request"].user)
+        except Exception as e:
+            from django.core.exceptions import ValidationError as DjangoValidationError
+
+            if isinstance(e, DjangoValidationError):
+                raise serializers.ValidationError({"new_password": list(e.messages)})
+            raise e
+        return data
+
+
+class MfaEnableSerializer(serializers.Serializer):
+    secret_key = serializers.CharField(required=True)
+    token = serializers.CharField(required=True, min_length=6, max_length=6)
+
+
+class MfaDisableSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True, min_length=6, max_length=6)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    mfa_token = serializers.CharField(required=False, min_length=6, max_length=6, allow_blank=True)
+
+    def validate(self, attrs):
+        # The default validate method validates the user credentials and sets self.user
+        data = super().validate(attrs)
+
+        if hasattr(self.user, 'profile') and self.user.profile.mfa_enabled:
+            mfa_token = attrs.get('mfa_token', '').strip()
+            if not mfa_token:
+                raise serializers.ValidationError({"mfa_token": "MFA token is required for this account."})
+            
+            totp = pyotp.TOTP(self.user.profile.totp_secret)
+            if not totp.verify(mfa_token):
+                raise serializers.ValidationError({"mfa_token": "Invalid MFA token."})
+
+        return data

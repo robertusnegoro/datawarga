@@ -461,10 +461,18 @@ class UserInvitation(models.Model):
 
 class WargaUpdateRequest(models.Model):
     warga = models.ForeignKey(
-        Warga, on_delete=models.CASCADE, related_name="update_requests", null=True, blank=True
+        Warga,
+        on_delete=models.CASCADE,
+        related_name="update_requests",
+        null=True,
+        blank=True,
     )
     requested_by = models.ForeignKey(
-        Warga, on_delete=models.CASCADE, related_name="submitted_update_requests", null=True, blank=True
+        Warga,
+        on_delete=models.CASCADE,
+        related_name="submitted_update_requests",
+        null=True,
+        blank=True,
     )
     kompleks = models.ForeignKey(
         Kompleks, on_delete=models.CASCADE, null=True, blank=True
