@@ -128,3 +128,9 @@ class IuranRequestSerializer(serializers.ModelSerializer):
             "keterangan_status",
         ]
         read_only_fields = ["id", "kompleks", "status", "keterangan_status"]
+
+
+class KtpScanRequestSerializer(serializers.Serializer):
+    ktp_image = serializers.FileField(
+        help_text="File foto KTP (ktp_image) harus dilampirkan."
+    )

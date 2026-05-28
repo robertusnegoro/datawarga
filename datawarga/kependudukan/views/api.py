@@ -1,20 +1,26 @@
+import logging
+import uuid
+
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from kependudukan.errors import DatawargaError
 from kependudukan.models import Warga, Kompleks, TransaksiIuranBulanan
+from kependudukan.selectors.kompleks_selector import search_kompleks_queryset
+from kependudukan.selectors.warga_selector import search_warga_queryset
 from kependudukan.serializers import (
     wargaSerializer,
     kompleksSerializer,
     iuranSerializer,
+    KtpScanRequestSerializer,
 )
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-import logging
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from kependudukan.selectors.warga_selector import search_warga_queryset
-from kependudukan.selectors.kompleks_selector import search_kompleks_queryset
+from drf_yasg.utils import swagger_auto_schema
 from kependudukan.services.iuran_service import record_iuran_payment
-from kependudukan.errors import DatawargaError
+from kependudukan.services.warga_service import process_ktp_scan
+from kependudukan.throttles import KtpScanRateThrottle
 from kependudukan.utils.auth_guards import IsAdminOrPetugas
 
 logger = logging.getLogger(__name__)
@@ -60,20 +66,26 @@ class wargaViewSet(viewsets.ModelViewSet):
     )
     def me_update(self, request):
         warga = self._get_warga(request)
-        
+
         target_warga_id = request.data.get("target_warga_id")
         target_warga = None
         is_new_warga = False
-        
+
         if target_warga_id == "NEW":
             is_new_warga = True
         elif target_warga_id:
             try:
                 from kependudukan.models import Warga
+
                 target_warga = Warga.objects.get(pk=target_warga_id)
-                if not (target_warga == warga or (warga.kompleks and target_warga.kompleks == warga.kompleks)):
+                if not (
+                    target_warga == warga
+                    or (warga.kompleks and target_warga.kompleks == warga.kompleks)
+                ):
                     return Response(
-                        {"error": "Target warga tidak valid atau tidak berada dalam satu rumah."},
+                        {
+                            "error": "Target warga tidak valid atau tidak berada dalam satu rumah."
+                        },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
             except Warga.DoesNotExist:
@@ -121,7 +133,7 @@ class wargaViewSet(viewsets.ModelViewSet):
             files=files,
             requested_by=warga,
             is_new_warga=is_new_warga,
-            kompleks=warga.kompleks
+            kompleks=warga.kompleks,
         )
         serializer = WargaUpdateRequestSerializer(update_request)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -133,9 +145,11 @@ class wargaViewSet(viewsets.ModelViewSet):
         from kependudukan.serializers import WargaUpdateRequestSerializer
         from django.db.models import Q
 
-        queryset = WargaUpdateRequest.objects.filter(
-            Q(warga=warga) | Q(requested_by=warga)
-        ).distinct().order_by("-created_at")
+        queryset = (
+            WargaUpdateRequest.objects.filter(Q(warga=warga) | Q(requested_by=warga))
+            .distinct()
+            .order_by("-created_at")
+        )
         serializer = WargaUpdateRequestSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -296,6 +310,86 @@ class wargaViewSet(viewsets.ModelViewSet):
         ).order_by("-periode_tahun", "-periode_bulan")
         serializer = IuranRequestSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    @swagger_auto_schema(
+        request_body=KtpScanRequestSerializer,
+        responses={
+            200: "Successfully scanned KTP",
+            400: "Invalid file or parameters",
+            500: "Internal server/AI error",
+        },
+    )
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="scan-ktp",
+        parser_classes=(MultiPartParser, FormParser),
+        throttle_classes=[KtpScanRateThrottle],
+    )
+    def scan_ktp(self, request):
+        """AI-powered KTP field recognition.
+
+        Accepts a KTP image and returns extracted fields
+        (NIK, nama, alamat, jenis_kelamin, agama, tempat_lahir, tanggal_lahir).
+        """
+        correlation_id = str(uuid.uuid4())
+        logger.info(
+            "[API_SCAN_KTP_START] [CorrelationID: %s] User: %s",
+            correlation_id,
+            request.user.username,
+        )
+
+        ktp_file = request.FILES.get("ktp_image")
+        if not ktp_file:
+            logger.warning(
+                "[API_SCAN_KTP_FAIL] [CorrelationID: %s] No ktp_image file provided",
+                correlation_id,
+            )
+            return Response(
+                {
+                    "success": False,
+                    "message": "File foto KTP (ktp_image) harus dilampirkan.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        image_bytes = ktp_file.read()
+        logger.info(
+            "[API_SCAN_KTP_IMAGE] [CorrelationID: %s] File: %s, Size: %d bytes",
+            correlation_id,
+            ktp_file.name,
+            len(image_bytes),
+        )
+
+        success, msg, extracted_data, quota_warning, quota_message = process_ktp_scan(
+            image_bytes, correlation_id
+        )
+
+        if success:
+            logger.info(
+                "[API_SCAN_KTP_SUCCESS] [CorrelationID: %s] Duration: completed",
+                correlation_id,
+            )
+            return Response(
+                {
+                    "success": True,
+                    "data": extracted_data,
+                    "message": msg,
+                    "quota_warning": quota_warning,
+                    "quota_message": quota_message,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        logger.error(
+            "[API_SCAN_KTP_FAIL] [CorrelationID: %s] Error: %s",
+            correlation_id,
+            msg,
+        )
+        return Response(
+            {"success": False, "message": msg},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     @action(detail=False, methods=["post"], url_path="search")
     def search(self, request, *args, **kwargs):

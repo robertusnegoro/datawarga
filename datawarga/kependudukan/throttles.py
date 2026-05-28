@@ -9,3 +9,9 @@ class BotUserRateThrottle(UserRateThrottle):
         if request.user.username == settings.BOT_API_USER:
             return True  # No throttling for bot user
         return super().allow_request(request, view)
+
+
+class KtpScanRateThrottle(UserRateThrottle):
+    """Rate limit for AI-powered KTP scan to prevent abuse of expensive AI calls."""
+
+    rate = "5/minute"

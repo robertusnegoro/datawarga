@@ -328,3 +328,119 @@ class KTPScanViewTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         data = response.json()
         self.assertFalse(data["success"])
+
+
+class KTPScanAPITestCase(TestCase):
+    """Tests for the DRF-based KTP scan API endpoint at /api/warga/scan-ktp/."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+
+        self.api_client = APIClient()
+        self.admin_user = User.objects.create_user(
+            username="apiadmin", password="password", is_staff=True
+        )
+        self.regular_user = User.objects.create_user(
+            username="regularuser", password="password", is_staff=False
+        )
+        self.kompleks = Kompleks.objects.create(
+            alamat="Jl. API Test", blok="B1", nomor="2", rt="03", rw="04"
+        )
+        self.warga = Warga.objects.create(
+            nama_lengkap="API Test Warga",
+            nik="9999888877776666",
+            jenis_kelamin="PEREMPUAN",
+            agama="ISLAM",
+            kompleks=self.kompleks,
+            status_tinggal="TETAP",
+            user=self.regular_user,
+        )
+
+    def _create_test_image(self):
+        """Creates a minimal valid PNG image for upload."""
+        im = Image.new("RGB", (100, 100), (0, 128, 255))
+        im_io = io.BytesIO()
+        im.save(im_io, "PNG")
+        return SimpleUploadedFile(
+            "test_ktp.png", im_io.getvalue(), content_type="image/png"
+        )
+
+    @patch("kependudukan.services.warga_service.get_ai_provider")
+    def test_scan_ktp_api_with_uploaded_file(self, mock_get_provider):
+        """Should return extracted KTP fields on successful AI scan."""
+        mock_provider = MagicMock()
+        mock_provider.extract_ktp_data.return_value = {
+            "nik": "5555666677778888",
+            "nama_lengkap": "API SCAN RESULT",
+            "alamat_ktp": "Jl. AI API",
+            "jenis_kelamin": "LAKI-LAKI",
+            "agama": "HINDU",
+            "tempat_lahir": "SURABAYA",
+            "tanggal_lahir": "1990-01-15",
+        }
+        mock_provider.is_quota_low.return_value = False
+        mock_get_provider.return_value = mock_provider
+
+        self.api_client.force_authenticate(user=self.admin_user)
+        url = "/api/warga/scan-ktp/"
+        response = self.api_client.post(
+            url, {"ktp_image": self._create_test_image()}, format="multipart"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["data"]["nik"], "5555666677778888")
+        self.assertEqual(data["data"]["nama_lengkap"], "API SCAN RESULT")
+        self.assertEqual(data["data"]["tempat_lahir"], "SURABAYA")
+        self.assertFalse(data["quota_warning"])
+
+    def test_scan_ktp_api_no_file(self):
+        """Should return 400 when no ktp_image file is provided."""
+        self.api_client.force_authenticate(user=self.admin_user)
+        url = "/api/warga/scan-ktp/"
+        response = self.api_client.post(url, {}, format="multipart")
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data["success"])
+        self.assertIn("ktp_image", data["message"])
+
+    def test_scan_ktp_api_unauthenticated(self):
+        """Should return 401 or 403 for unauthenticated requests."""
+        url = "/api/warga/scan-ktp/"
+        response = self.api_client.post(
+            url, {"ktp_image": self._create_test_image()}, format="multipart"
+        )
+
+        self.assertIn(response.status_code, [401, 403])
+
+    def test_scan_ktp_api_non_admin(self):
+        """Should return 403 for non-admin users."""
+        self.api_client.force_authenticate(user=self.regular_user)
+        url = "/api/warga/scan-ktp/"
+        response = self.api_client.post(
+            url, {"ktp_image": self._create_test_image()}, format="multipart"
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    @patch("kependudukan.services.warga_service.get_ai_provider")
+    def test_scan_ktp_api_ai_failure(self, mock_get_provider):
+        """Should return 500 when AI provider raises an exception."""
+        mock_provider = MagicMock()
+        mock_provider.extract_ktp_data.side_effect = RuntimeError(
+            "AI provider unavailable"
+        )
+        mock_get_provider.return_value = mock_provider
+
+        self.api_client.force_authenticate(user=self.admin_user)
+        url = "/api/warga/scan-ktp/"
+        response = self.api_client.post(
+            url, {"ktp_image": self._create_test_image()}, format="multipart"
+        )
+
+        self.assertEqual(response.status_code, 500)
+        data = response.json()
+        self.assertFalse(data["success"])
+        self.assertIn("AI provider unavailable", data["message"])
