@@ -50,6 +50,28 @@ class iuranSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class WargaMeUpdateRequestSerializer(serializers.Serializer):
+    target_warga_id = serializers.CharField(
+        required=False, help_text="ID of target warga or 'NEW'"
+    )
+    nama_lengkap = serializers.CharField(required=False)
+    nik = serializers.CharField(required=False)
+    no_hp = serializers.CharField(required=False)
+    no_kk = serializers.CharField(required=False)
+    pekerjaan = serializers.CharField(required=False)
+    agama = serializers.CharField(required=False)
+    status = serializers.CharField(required=False)
+    tanggal_lahir = serializers.DateField(required=False)
+    tempat_lahir = serializers.CharField(required=False)
+    jenis_kelamin = serializers.CharField(required=False)
+    kewarganegaraan = serializers.CharField(required=False)
+    status_tinggal = serializers.CharField(required=False)
+    status_keluarga = serializers.CharField(required=False)
+    alamat_ktp = serializers.CharField(required=False)
+    foto_path = serializers.FileField(required=False)
+    ktp_image_path = serializers.FileField(required=False)
+
+
 class WargaUpdateRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = WargaUpdateRequest
@@ -223,17 +245,21 @@ class MfaDisableSerializer(serializers.Serializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    mfa_token = serializers.CharField(required=False, min_length=6, max_length=6, allow_blank=True)
+    mfa_token = serializers.CharField(
+        required=False, min_length=6, max_length=6, allow_blank=True
+    )
 
     def validate(self, attrs):
         # The default validate method validates the user credentials and sets self.user
         data = super().validate(attrs)
 
-        if hasattr(self.user, 'profile') and self.user.profile.mfa_enabled:
-            mfa_token = attrs.get('mfa_token', '').strip()
+        if hasattr(self.user, "profile") and self.user.profile.mfa_enabled:
+            mfa_token = attrs.get("mfa_token", "").strip()
             if not mfa_token:
-                raise serializers.ValidationError({"mfa_token": "MFA token is required for this account."})
-            
+                raise serializers.ValidationError(
+                    {"mfa_token": "MFA token is required for this account."}
+                )
+
             totp = pyotp.TOTP(self.user.profile.totp_secret)
             if not totp.verify(mfa_token):
                 raise serializers.ValidationError({"mfa_token": "Invalid MFA token."})

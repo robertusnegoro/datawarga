@@ -27,6 +27,11 @@ from kependudukan.serializers import (
     MfaEnableSerializer,
     MfaDisableSerializer,
     CustomTokenObtainPairSerializer,
+    SuratRequestSerializer,
+    KendaraanRequestSerializer,
+    IuranRequestSerializer,
+    WargaUpdateRequestSerializer,
+    WargaMeUpdateRequestSerializer,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView
 from drf_yasg.utils import swagger_auto_schema
@@ -37,12 +42,14 @@ from kependudukan.utils.auth_guards import IsAdminOrPetugas
 
 logger = logging.getLogger(__name__)
 
+
 def _get_allowed_kompleks_queryset(user, queryset):
     """Helper to filter Kompleks queryset based on user permissions"""
     if user.is_superuser:
         return queryset
     try:
         from kependudukan.models import UserPermission
+
         perm = UserPermission.objects.get(user=user)
         if str(perm.permission_group).lower() != "all":
             return queryset.filter(permission_group=perm.permission_group)
@@ -50,12 +57,14 @@ def _get_allowed_kompleks_queryset(user, queryset):
         pass
     return queryset
 
+
 def _get_allowed_warga_queryset(user, queryset):
     """Helper to filter Warga queryset based on user permissions"""
     if user.is_superuser:
         return queryset
     try:
         from kependudukan.models import UserPermission
+
         perm = UserPermission.objects.get(user=user)
         if str(perm.permission_group).lower() != "all":
             return queryset.filter(kompleks__permission_group=perm.permission_group)
@@ -63,12 +72,14 @@ def _get_allowed_warga_queryset(user, queryset):
         pass
     return queryset
 
+
 def _get_allowed_iuran_queryset(user, queryset):
     """Helper to filter Iuran queryset based on user permissions"""
     if user.is_superuser:
         return queryset
     try:
         from kependudukan.models import UserPermission
+
         perm = UserPermission.objects.get(user=user)
         if str(perm.permission_group).lower() != "all":
             return queryset.filter(kompleks__permission_group=perm.permission_group)
@@ -85,7 +96,14 @@ class wargaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = super().get_queryset()
-        if self.action in ["me", "me_update", "me_requests", "me_surat", "me_kendaraan", "me_iuran"]:
+        if self.action in [
+            "me",
+            "me_update",
+            "me_requests",
+            "me_surat",
+            "me_kendaraan",
+            "me_iuran",
+        ]:
             return queryset
         return _get_allowed_warga_queryset(user, queryset)
 
@@ -116,6 +134,11 @@ class wargaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(warga)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        request_body=WargaMeUpdateRequestSerializer,
+        responses={201: WargaUpdateRequestSerializer},
+        operation_description="Ajukan perubahan data warga (atau pembuatan warga baru dalam satu kompleks).",
+    )
     @action(
         detail=False,
         methods=["post"],
@@ -183,7 +206,6 @@ class wargaViewSet(viewsets.ModelViewSet):
             files["ktp_image_path"] = request.FILES["ktp_image_path"]
 
         from kependudukan.services.warga_service import submit_warga_update_request
-        from kependudukan.serializers import WargaUpdateRequestSerializer
 
         update_request = submit_warga_update_request(
             warga=target_warga,
@@ -196,11 +218,14 @@ class wargaViewSet(viewsets.ModelViewSet):
         serializer = WargaUpdateRequestSerializer(update_request)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        responses={200: WargaUpdateRequestSerializer(many=True)},
+        operation_description="Dapatkan daftar riwayat pengajuan perubahan data warga.",
+    )
     @action(detail=False, methods=["get"], url_path="me/requests")
     def me_requests(self, request):
         warga = self._get_warga(request)
         from kependudukan.models import WargaUpdateRequest
-        from kependudukan.serializers import WargaUpdateRequestSerializer
         from django.db.models import Q
 
         queryset = (
@@ -211,11 +236,21 @@ class wargaViewSet(viewsets.ModelViewSet):
         serializer = WargaUpdateRequestSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        method="get",
+        responses={200: SuratRequestSerializer(many=True)},
+        operation_description="Dapatkan daftar permohonan surat milik warga aktif.",
+    )
+    @swagger_auto_schema(
+        method="post",
+        request_body=SuratRequestSerializer,
+        responses={201: SuratRequestSerializer},
+        operation_description="Ajukan permohonan surat baru.",
+    )
     @action(detail=False, methods=["get", "post"], url_path="me/surat")
     def me_surat(self, request):
         warga = self._get_warga(request)
         from kependudukan.models import Surat
-        from kependudukan.serializers import SuratRequestSerializer
 
         if request.method == "POST":
             jenis_surat = request.data.get("jenis_surat")
@@ -240,11 +275,21 @@ class wargaViewSet(viewsets.ModelViewSet):
         serializer = SuratRequestSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        method="get",
+        responses={200: KendaraanRequestSerializer(many=True)},
+        operation_description="Dapatkan daftar kendaraan terdaftar milik warga aktif.",
+    )
+    @swagger_auto_schema(
+        method="post",
+        request_body=KendaraanRequestSerializer,
+        responses={201: KendaraanRequestSerializer},
+        operation_description="Daftarkan kendaraan baru.",
+    )
     @action(detail=False, methods=["get", "post"], url_path="me/kendaraan")
     def me_kendaraan(self, request):
         warga = self._get_warga(request)
         from kependudukan.models import Kendaraan
-        from kependudukan.serializers import KendaraanRequestSerializer
 
         if request.method == "POST":
             jenis_kendaraan = request.data.get("jenis_kendaraan", "MOBIL")
@@ -281,6 +326,17 @@ class wargaViewSet(viewsets.ModelViewSet):
         serializer = KendaraanRequestSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        method="get",
+        responses={200: IuranRequestSerializer(many=True)},
+        operation_description="Dapatkan daftar pembayaran iuran bulanan untuk kompleks warga aktif.",
+    )
+    @swagger_auto_schema(
+        method="post",
+        request_body=IuranRequestSerializer,
+        responses={201: IuranRequestSerializer},
+        operation_description="Unggah bukti pembayaran iuran bulanan baru.",
+    )
     @action(
         detail=False,
         methods=["get", "post"],
@@ -290,7 +346,6 @@ class wargaViewSet(viewsets.ModelViewSet):
     def me_iuran(self, request):
         warga = self._get_warga(request)
         from kependudukan.models import TransaksiIuranBulanan
-        from kependudukan.serializers import IuranRequestSerializer
 
         if request.method == "POST":
             if not warga.kompleks:
@@ -569,14 +624,26 @@ class kompleksViewSet(viewsets.ModelViewSet):
 
         if "/" in search_term:
             split_keyword = search_term.split("/")
-            data_kompleks = self.get_queryset().filter(
-                blok__icontains=split_keyword[0].strip(),
-                nomor=split_keyword[1].strip(),
-            ).first()
+            data_kompleks = (
+                self.get_queryset()
+                .filter(
+                    blok__icontains=split_keyword[0].strip(),
+                    nomor=split_keyword[1].strip(),
+                )
+                .first()
+            )
             if not data_kompleks:
-                return Response({"error": "Kompleks tidak ditemukan atau Anda tidak memiliki akses."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {
+                        "error": "Kompleks tidak ditemukan atau Anda tidak memiliki akses."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         else:
-            return Response({"error": "Format blok_no tidak valid."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Format blok_no tidak valid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             payment = record_iuran_payment(
@@ -978,6 +1045,7 @@ class UserProfileViewSet(viewsets.ViewSet):
                 },
             )
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
