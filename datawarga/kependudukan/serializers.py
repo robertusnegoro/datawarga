@@ -172,6 +172,7 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
         source="profile.foto", required=False, allow_null=True
     )
     mfa_enabled = serializers.BooleanField(source="profile.mfa_enabled", read_only=True)
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -183,7 +184,12 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
             "last_name",
             "foto",
             "mfa_enabled",
+            "role",
         ]
+
+    def get_role(self, obj):
+        from .utils.auth_guards import is_admin_or_petugas
+        return "admin" if is_admin_or_petugas(obj) else "warga"
 
     def validate_email(self, value):
         user = self.context["request"].user
