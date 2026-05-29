@@ -11,6 +11,7 @@ from .views import (
     kas as views_kas,
     profile as views_profile,
     admin as views_admin,
+    health as views_health,
 )
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
@@ -44,6 +45,10 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path("health", views_health.health_check, name="health_check"),
+    path("ready", views_health.ready_check, name="ready_check"),
+    path("api/health", views_health.health_check, name="api_health_check"),
+    path("api/ready", views_health.ready_check, name="api_ready_check"),
     path("", warga.index, name="index"),
     path("warga/form-warga/<int:idwarga>", warga.formWarga, name="formWarga"),
     path(
@@ -344,7 +349,11 @@ urlpatterns = [
         "accounts/invite/<str:token>/", views_admin.user_activate, name="user_activate"
     ),
     path("api/", include(router.urls)),
-    path("api/token/", api_view.CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path(
+        "api/token/",
+        api_view.CustomTokenObtainPairView.as_view(),
+        name="token_obtain_pair",
+    ),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(
         "swagger/",
