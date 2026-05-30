@@ -189,6 +189,7 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
 
     def get_role(self, obj):
         from .utils.auth_guards import is_admin_or_petugas
+
         return "admin" if is_admin_or_petugas(obj) else "warga"
 
     def validate_email(self, value):

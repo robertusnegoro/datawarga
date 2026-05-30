@@ -7,14 +7,22 @@ import time
 import pyotp
 import qrcode
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, serializers
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from kependudukan.errors import DatawargaError
-from kependudukan.models import Warga, Kompleks, TransaksiIuranBulanan
+from kependudukan.models import (
+    Warga,
+    Kompleks,
+    TransaksiIuranBulanan,
+    WargaUpdateRequest,
+    Surat,
+    Kendaraan,
+    Penandatangan,
+)
 from kependudukan.selectors.kompleks_selector import search_kompleks_queryset
 from kependudukan.selectors.warga_selector import search_warga_queryset
 from kependudukan.serializers import (
@@ -527,6 +535,42 @@ class iuranViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return _get_allowed_iuran_queryset(self.request.user, super().get_queryset())
+
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        from kependudukan.services.warga_service import approve_iuran
+        from kependudukan.errors import ValidationError
+
+        try:
+            iuran = approve_iuran(pk, request.user)
+            return Response(self.get_serializer(iuran).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=["post"], url_path="reject")
+    def reject(self, request, pk=None):
+        from kependudukan.services.warga_service import reject_iuran
+        from kependudukan.errors import ValidationError
+
+        reason = request.data.get("reason", "").strip()
+        if not reason:
+            return Response(
+                {"error": "Alasan penolakan harus diisi."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            iuran = reject_iuran(pk, request.user, reason)
+            return Response(self.get_serializer(iuran).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class kompleksViewSet(viewsets.ModelViewSet):
@@ -1049,3 +1093,151 @@ class UserProfileViewSet(viewsets.ViewSet):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+
+class WargaUpdateRequestViewSet(viewsets.ModelViewSet):
+    queryset = WargaUpdateRequest.objects.all().order_by("-created_at")
+    serializer_class = WargaUpdateRequestSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrPetugas]
+
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        from kependudukan.services.warga_service import approve_warga_update_request
+        from kependudukan.errors import ValidationError
+
+        try:
+            update_req = approve_warga_update_request(pk, request.user)
+            return Response(self.get_serializer(update_req).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=["post"], url_path="reject")
+    def reject(self, request, pk=None):
+        from kependudukan.services.warga_service import reject_warga_update_request
+        from kependudukan.errors import ValidationError
+
+        reason = request.data.get("reason", "").strip()
+        if not reason:
+            return Response(
+                {"error": "Alasan penolakan harus diisi."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            update_req = reject_warga_update_request(pk, request.user, reason)
+            return Response(self.get_serializer(update_req).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AdminSuratViewSet(viewsets.ModelViewSet):
+    queryset = Surat.objects.all().order_by("-tanggal_surat")
+    serializer_class = SuratRequestSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrPetugas]
+
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        from kependudukan.services.warga_service import approve_surat
+        from kependudukan.errors import ValidationError
+
+        nomor_surat = request.data.get("nomor_surat", "").strip()
+        penandatangan_id = request.data.get("penandatangan")
+        if penandatangan_id:
+            try:
+                penandatangan_id = int(penandatangan_id)
+            except ValueError:
+                return Response(
+                    {"error": "Penandatangan ID tidak valid."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        try:
+            surat = approve_surat(pk, request.user, nomor_surat, penandatangan_id)
+            return Response(self.get_serializer(surat).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=["post"], url_path="reject")
+    def reject(self, request, pk=None):
+        from kependudukan.services.warga_service import reject_surat
+        from kependudukan.errors import ValidationError
+
+        reason = request.data.get("reason", "").strip()
+        if not reason:
+            return Response(
+                {"error": "Alasan penolakan harus diisi."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            surat = reject_surat(pk, request.user, reason)
+            return Response(self.get_serializer(surat).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AdminKendaraanViewSet(viewsets.ModelViewSet):
+    queryset = Kendaraan.objects.all().order_by("-id")
+    serializer_class = KendaraanRequestSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrPetugas]
+
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        from kependudukan.services.warga_service import approve_kendaraan
+        from kependudukan.errors import ValidationError
+
+        try:
+            kendaraan = approve_kendaraan(pk, request.user)
+            return Response(self.get_serializer(kendaraan).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=["post"], url_path="reject")
+    def reject(self, request, pk=None):
+        from kependudukan.services.warga_service import reject_kendaraan
+        from kependudukan.errors import ValidationError
+
+        reason = request.data.get("reason", "").strip()
+        if not reason:
+            return Response(
+                {"error": "Alasan penolakan harus diisi."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            kendaraan = reject_kendaraan(pk, request.user, reason)
+            return Response(self.get_serializer(kendaraan).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class PenandatanganSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Penandatangan
+        fields = ["id", "nama", "jabatan", "aktif"]
+
+
+class PenandatanganViewSet(viewsets.ModelViewSet):
+    queryset = Penandatangan.objects.all().order_by("nama")
+    serializer_class = PenandatanganSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrPetugas]

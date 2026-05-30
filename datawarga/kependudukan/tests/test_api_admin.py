@@ -1,0 +1,406 @@
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from kependudukan.models import (
+    Warga,
+    Kompleks,
+    TransaksiIuranBulanan,
+    WargaUpdateRequest,
+    Surat,
+    Kendaraan,
+    Penandatangan,
+    KasTransaksi,
+)
+
+
+class AdminAPIEndpointsTestCase(APITestCase):
+    def setUp(self):
+        # 1. Create standard structures
+        self.kompleks_a = Kompleks.objects.create(
+            alamat="Jl. Melati 1",
+            cluster="Melati",
+            blok="M1",
+            nomor="10",
+            rt="01",
+            rw="02",
+        )
+        self.kompleks_b = Kompleks.objects.create(
+            alamat="Jl. Melati 2",
+            cluster="Melati",
+            blok="M1",
+            nomor="11",
+            rt="01",
+            rw="02",
+        )
+
+        # 2. Create users and associate Warga
+        # Admin / Staff user (no warga profile, has staff role)
+        self.admin_user = User.objects.create_user(
+            username="admin_staff_api", password="password123", is_staff=True
+        )
+
+        # Citizen User A
+        self.citizen_user_a = User.objects.create_user(
+            username="citizen_a", password="password123"
+        )
+        self.warga_a = Warga.objects.create(
+            nama_lengkap="Warga A",
+            nik="1111111111111112",
+            agama="ISLAM",
+            jenis_kelamin="LAKI-LAKI",
+            kompleks=self.kompleks_a,
+            user=self.citizen_user_a,
+        )
+
+        # Citizen User B
+        self.citizen_user_b = User.objects.create_user(
+            username="citizen_b", password="password123"
+        )
+        self.warga_b = Warga.objects.create(
+            nama_lengkap="Warga B",
+            nik="2222222222222223",
+            agama="KRISTEN",
+            jenis_kelamin="PEREMPUAN",
+            kompleks=self.kompleks_b,
+            user=self.citizen_user_b,
+        )
+
+        # Penandatangan (Signee)
+        self.penandatangan = Penandatangan.objects.create(
+            nama="Pak RT A", jabatan="Ketua RT 01", aktif=True
+        )
+
+        # 3. Create dummy entities for processing
+        # Iuran pending
+        self.iuran_pending = TransaksiIuranBulanan.objects.create(
+            kompleks=self.kompleks_a,
+            periode_bulan=1,
+            periode_tahun=2026,
+            total_bayar=100000,
+            status="PENDING",
+        )
+
+        # Warga update request pending
+        self.update_req_pending = WargaUpdateRequest.objects.create(
+            warga=self.warga_a,
+            requested_by=self.warga_a,
+            kompleks=self.kompleks_a,
+            is_new_warga=False,
+            data_changes={"nama_lengkap": "Warga A Updated"},
+            status="PENDING",
+        )
+
+        # Surat pending
+        self.surat_pending = Surat.objects.create(
+            warga=self.warga_a,
+            jenis_surat="PENGANTAR_RT",
+            keperluan="Mengurus KTP",
+            status="PENDING",
+        )
+
+        # Kendaraan pending
+        self.kendaraan_pending = Kendaraan.objects.create(
+            pemilik=self.warga_a,
+            jenis_kendaraan="MOBIL",
+            plat_nomor="B1234ABC",
+            status="PENDING",
+        )
+
+    def test_anonymous_user_access_blocked(self):
+        """Verify anonymous users are rejected with 401 Unauthorized for admin APIs."""
+        self.client.force_authenticate(user=None)
+
+        endpoints = [
+            ("/api/admin/warga-updates/", "get"),
+            (f"/api/admin/warga-updates/{self.update_req_pending.id}/approve/", "post"),
+            (f"/api/admin/warga-updates/{self.update_req_pending.id}/reject/", "post"),
+            ("/api/admin/surat/", "get"),
+            (f"/api/admin/surat/{self.surat_pending.id}/approve/", "post"),
+            (f"/api/admin/surat/{self.surat_pending.id}/reject/", "post"),
+            ("/api/admin/kendaraan/", "get"),
+            (f"/api/admin/kendaraan/{self.kendaraan_pending.id}/approve/", "post"),
+            (f"/api/admin/kendaraan/{self.kendaraan_pending.id}/reject/", "post"),
+            ("/api/admin/penandatangan/", "get"),
+            (f"/api/iuran/{self.iuran_pending.id}/approve/", "post"),
+            (f"/api/iuran/{self.iuran_pending.id}/reject/", "post"),
+        ]
+
+        for path, method in endpoints:
+            if method == "get":
+                response = self.client.get(path)
+            else:
+                response = self.client.post(path, data={"reason": "Test Reject"})
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_401_UNAUTHORIZED,
+                f"Path {path} did not return 401",
+            )
+
+    def test_citizen_user_access_blocked(self):
+        """Verify citizens are rejected with 403 Forbidden for admin APIs."""
+        self.client.force_authenticate(user=self.citizen_user_a)
+
+        endpoints = [
+            ("/api/admin/warga-updates/", "get"),
+            (f"/api/admin/warga-updates/{self.update_req_pending.id}/approve/", "post"),
+            (f"/api/admin/warga-updates/{self.update_req_pending.id}/reject/", "post"),
+            ("/api/admin/surat/", "get"),
+            (f"/api/admin/surat/{self.surat_pending.id}/approve/", "post"),
+            (f"/api/admin/surat/{self.surat_pending.id}/reject/", "post"),
+            ("/api/admin/kendaraan/", "get"),
+            (f"/api/admin/kendaraan/{self.kendaraan_pending.id}/approve/", "post"),
+            (f"/api/admin/kendaraan/{self.kendaraan_pending.id}/reject/", "post"),
+            ("/api/admin/penandatangan/", "get"),
+            (f"/api/iuran/{self.iuran_pending.id}/approve/", "post"),
+            (f"/api/iuran/{self.iuran_pending.id}/reject/", "post"),
+        ]
+
+        for path, method in endpoints:
+            if method == "get":
+                response = self.client.get(path)
+            else:
+                response = self.client.post(path, data={"reason": "Test Reject"})
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_403_FORBIDDEN,
+                f"Path {path} did not return 403",
+            )
+
+    def test_warga_me_update_limits_to_same_rumah(self):
+        """Verify warga can only update their own or family member (same kompleks) data."""
+        self.client.force_authenticate(user=self.citizen_user_a)
+
+        # 1. Update own profile: should succeed
+        response = self.client.post(
+            "/api/warga/me/update/",
+            {"nama_lengkap": "My New Name", "pekerjaan": "PNS"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # 2. Update Warga B (in different kompleks): should return 400 Bad Request
+        response = self.client.post(
+            "/api/warga/me/update/",
+            {
+                "target_warga_id": self.warga_b.id,
+                "nama_lengkap": "Warga B Modified Name",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["error"],
+            "Target warga tidak valid atau tidak berada dalam satu rumah.",
+        )
+
+        # 3. Create family member in same house (Kompleks A)
+        family_member = Warga.objects.create(
+            nama_lengkap="Family Member of A",
+            nik="3333333333333334",
+            agama="ISLAM",
+            jenis_kelamin="PEREMPUAN",
+            kompleks=self.kompleks_a,
+        )
+        response = self.client.post(
+            "/api/warga/me/update/",
+            {
+                "target_warga_id": family_member.id,
+                "nama_lengkap": "Family Member Name Updated",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_admin_approve_and_reject_iuran(self):
+        """Verify admin can approve/reject iuran requests."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # 1. Approve iuran
+        response = self.client.post(f"/api/iuran/{self.iuran_pending.id}/approve/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.iuran_pending.refresh_from_db()
+        self.assertEqual(self.iuran_pending.status, "APPROVED")
+        self.assertTrue(
+            KasTransaksi.objects.filter(iuran_asal=self.iuran_pending).exists()
+        )
+
+        # 2. Reject iuran (needs reason)
+        iuran_reject = TransaksiIuranBulanan.objects.create(
+            kompleks=self.kompleks_b,
+            periode_bulan=2,
+            periode_tahun=2026,
+            total_bayar=100000,
+            status="PENDING",
+        )
+        response = self.client.post(f"/api/iuran/{iuran_reject.id}/reject/")
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST
+        )  # No reason provided
+
+        response = self.client.post(
+            f"/api/iuran/{iuran_reject.id}/reject/",
+            {"reason": "Bukti transfer tidak jelas"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        iuran_reject.refresh_from_db()
+        self.assertEqual(iuran_reject.status, "REJECTED")
+        self.assertIn("Bukti transfer tidak jelas", iuran_reject.keterangan_status)
+
+    def test_admin_approve_and_reject_warga_updates(self):
+        """Verify admin can list, approve, and reject warga update requests."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # 1. List
+        response = self.client.get("/api/admin/warga-updates/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
+
+        # 2. Approve update request
+        response = self.client.post(
+            f"/api/admin/warga-updates/{self.update_req_pending.id}/approve/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.update_req_pending.refresh_from_db()
+        self.assertEqual(self.update_req_pending.status, "APPROVED")
+        self.warga_a.refresh_from_db()
+        self.assertEqual(self.warga_a.nama_lengkap, "Warga A Updated")
+
+        # 3. Reject update request
+        update_req_reject = WargaUpdateRequest.objects.create(
+            warga=self.warga_b,
+            requested_by=self.warga_b,
+            kompleks=self.kompleks_b,
+            is_new_warga=False,
+            data_changes={"nama_lengkap": "Warga B Spam"},
+            status="PENDING",
+        )
+        response = self.client.post(
+            f"/api/admin/warga-updates/{update_req_reject.id}/reject/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)  # No reason
+
+        response = self.client.post(
+            f"/api/admin/warga-updates/{update_req_reject.id}/reject/",
+            {"reason": "Data tidak valid"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        update_req_reject.refresh_from_db()
+        self.assertEqual(update_req_reject.status, "REJECTED")
+        self.assertIn("Data tidak valid", update_req_reject.notes)
+
+    def test_admin_approve_and_reject_surat(self):
+        """Verify admin can list, approve, and reject document (surat) requests."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # 1. List
+        response = self.client.get("/api/admin/surat/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 2. Approve surat (supports nomor_surat and penandatangan ID)
+        data = {
+            "nomor_surat": "123/RT/2026",
+            "penandatangan": self.penandatangan.id,
+        }
+        response = self.client.post(
+            f"/api/admin/surat/{self.surat_pending.id}/approve/", data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.surat_pending.refresh_from_db()
+        self.assertEqual(self.surat_pending.status, "APPROVED")
+        self.assertEqual(self.surat_pending.nomor_surat, "123/RT/2026")
+        self.assertEqual(self.surat_pending.penandatangan, self.penandatangan)
+
+        # 3. Reject surat
+        surat_reject = Surat.objects.create(
+            warga=self.warga_b,
+            jenis_surat="KETERANGAN_DOMISILI",
+            keperluan="Bekerja",
+            status="PENDING",
+        )
+        response = self.client.post(f"/api/admin/surat/{surat_reject.id}/reject/")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)  # No reason
+
+        response = self.client.post(
+            f"/api/admin/surat/{surat_reject.id}/reject/", {"reason": "Kurang lampiran"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        surat_reject.refresh_from_db()
+        self.assertEqual(surat_reject.status, "REJECTED")
+        self.assertIn("Kurang lampiran", surat_reject.keterangan_status)
+
+    def test_admin_approve_and_reject_kendaraan(self):
+        """Verify admin can list, approve, and reject vehicle (kendaraan) registrations."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # 1. List
+        response = self.client.get("/api/admin/kendaraan/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 2. Approve kendaraan
+        response = self.client.post(
+            f"/api/admin/kendaraan/{self.kendaraan_pending.id}/approve/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.kendaraan_pending.refresh_from_db()
+        self.assertEqual(self.kendaraan_pending.status, "APPROVED")
+
+        # 3. Reject kendaraan
+        kendaraan_reject = Kendaraan.objects.create(
+            pemilik=self.warga_b,
+            jenis_kendaraan="MOTOR",
+            plat_nomor="D9876XYZ",
+            status="PENDING",
+        )
+        response = self.client.post(
+            f"/api/admin/kendaraan/{kendaraan_reject.id}/reject/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)  # No reason
+
+        response = self.client.post(
+            f"/api/admin/kendaraan/{kendaraan_reject.id}/reject/",
+            {"reason": "Bukan penghuni"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        kendaraan_reject.refresh_from_db()
+        self.assertEqual(kendaraan_reject.status, "REJECTED")
+        self.assertIn("Bukan penghuni", kendaraan_reject.keterangan_status)
+
+    def test_admin_penandatangan_crud(self):
+        """Verify admin can perform CRUD on Penandatangan."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # 1. List
+        response = self.client.get("/api/admin/penandatangan/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
+
+        # 2. Create
+        data = {
+            "nama": "Pak RT B",
+            "jabatan": "Ketua RT 02",
+            "aktif": True,
+        }
+        response = self.client.post("/api/admin/penandatangan/", data=data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Penandatangan.objects.filter(nama="Pak RT B").exists())
+
+        # 3. Update
+        created_pt = Penandatangan.objects.get(nama="Pak RT B")
+        response = self.client.put(
+            f"/api/admin/penandatangan/{created_pt.id}/",
+            {
+                "nama": "Pak RT B Updated",
+                "jabatan": "Ketua RT 02 Baru",
+                "aktif": False,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        created_pt.refresh_from_db()
+        self.assertEqual(created_pt.nama, "Pak RT B Updated")
+        self.assertFalse(created_pt.aktif)
+
+        # 4. Delete
+        response = self.client.delete(f"/api/admin/penandatangan/{created_pt.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Penandatangan.objects.filter(nama="Pak RT B Updated").exists())

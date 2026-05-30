@@ -297,7 +297,9 @@ class MfaTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("mfa_token", response.json())
-        self.assertEqual(response.json()["mfa_token"][0], "MFA token is required for this account.")
+        self.assertEqual(
+            response.json()["mfa_token"][0], "MFA token is required for this account."
+        )
 
     def test_api_token_mfa_invalid(self):
         """Test that the API token endpoint rejects invalid MFA tokens."""

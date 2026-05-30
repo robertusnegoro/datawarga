@@ -30,6 +30,20 @@ router.register(r"warga", api_view.wargaViewSet)
 router.register(r"kompleks", api_view.kompleksViewSet)
 router.register(r"iuran", api_view.iuranViewSet)
 router.register(r"profile", api_view.UserProfileViewSet, basename="profile")
+router.register(
+    r"admin/warga-updates",
+    api_view.WargaUpdateRequestViewSet,
+    basename="admin-warga-updates",
+)
+router.register(r"admin/surat", api_view.AdminSuratViewSet, basename="admin-surat")
+router.register(
+    r"admin/kendaraan", api_view.AdminKendaraanViewSet, basename="admin-kendaraan"
+)
+router.register(
+    r"admin/penandatangan",
+    api_view.PenandatanganViewSet,
+    basename="admin-penandatangan",
+)
 
 schema_view = get_schema_view(
     openapi.Info(
