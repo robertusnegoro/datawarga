@@ -1277,9 +1277,11 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         from django.db.models import Sum
         from django.utils import timezone
         from kependudukan.models import (
+            Kompleks,
             TransaksiIuranBulanan,
             Kendaraan,
             Surat,
+            Warga,
             WargaUpdateRequest,
         )
         from kependudukan.serializers import (
@@ -1291,7 +1293,12 @@ class AdminDashboardViewSet(viewsets.ViewSet):
 
         current_year = timezone.now().year
 
-        # 1. Calculate current year total approved iuran income
+        # 1. Summary totals — use .count() directly on the full queryset so these
+        #    are never affected by pagination settings.
+        total_warga = Warga.objects.count()
+        total_rumah = Kompleks.objects.count()
+
+        # 2. Calculate current year total approved iuran income
         total_iuran = (
             TransaksiIuranBulanan.objects.filter(
                 periode_tahun=current_year, status="APPROVED"
@@ -1299,7 +1306,7 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             or 0
         )
 
-        # 2. Get pending querysets
+        # 3. Get pending querysets
         pending_iurans = TransaksiIuranBulanan.objects.filter(
             status="PENDING"
         ).order_by("id")
@@ -1311,7 +1318,7 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             status="PENDING"
         ).order_by("-created_at")
 
-        # 3. Calculate counts
+        # 4. Calculate counts
         pending_counts = {
             "iuran": pending_iurans.count(),
             "kendaraan": pending_kendaraans.count(),
@@ -1319,7 +1326,7 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             "warga_updates": pending_warga_updates.count(),
         }
 
-        # 4. Serialize pending lists
+        # 5. Serialize pending lists
         context = {"request": request}
         pending_list = {
             "iuran": iuranSerializer(pending_iurans, many=True, context=context).data,
@@ -1336,6 +1343,8 @@ class AdminDashboardViewSet(viewsets.ViewSet):
 
         return Response(
             {
+                "total_warga": total_warga,
+                "total_rumah": total_rumah,
                 "total_iuran_current_year": total_iuran,
                 "pending_counts": pending_counts,
                 "pending_list": pending_list,

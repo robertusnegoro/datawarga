@@ -511,6 +511,12 @@ class AdminAPIEndpointsTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
+
+        # Verify summary totals — must be DB-level counts, not page-limited results.
+        # setUp creates 2 Warga (warga_a, warga_b) and 2 Kompleks (kompleks_a, kompleks_b).
+        self.assertEqual(data["total_warga"], 2)
+        self.assertEqual(data["total_rumah"], 2)
+
         # Verify total iuran current year (only APPROVED, not PENDING)
         # We had:
         # self.iuran_pending (status=PENDING, current year 2026, total_bayar=100000) -> not counted
