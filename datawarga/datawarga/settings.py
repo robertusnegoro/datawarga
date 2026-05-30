@@ -246,7 +246,9 @@ REST_FRAMEWORK = {
         "user": "18000/day",
         "anon": "10/hour",
     },
+    "DEFAULT_PAGINATION_CLASS": "kependudukan.pagination.StandardResultsSetPagination",
 }
+
 
 APPEND_SLASH = False
 

@@ -254,7 +254,7 @@ class AdminAPIEndpointsTestCase(APITestCase):
         # 1. List
         response = self.client.get("/api/admin/warga-updates/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(len(response.json()["results"]), 1)
 
         # 2. Approve update request
         response = self.client.post(
@@ -373,7 +373,7 @@ class AdminAPIEndpointsTestCase(APITestCase):
         # 1. List
         response = self.client.get("/api/admin/penandatangan/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(len(response.json()["results"]), 1)
 
         # 2. Create
         data = {
@@ -404,3 +404,137 @@ class AdminAPIEndpointsTestCase(APITestCase):
         response = self.client.delete(f"/api/admin/penandatangan/{created_pt.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Penandatangan.objects.filter(nama="Pak RT B Updated").exists())
+
+    def test_admin_endpoint_status_filtering(self):
+        """Verify status query parameter filters responses correctly."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # Create approved counterparts for filtering check
+        TransaksiIuranBulanan.objects.create(
+            kompleks=self.kompleks_a,
+            periode_bulan=2,
+            periode_tahun=2026,
+            total_bayar=100000,
+            status="APPROVED",
+        )
+        WargaUpdateRequest.objects.create(
+            warga=self.warga_b,
+            requested_by=self.warga_b,
+            kompleks=self.kompleks_b,
+            is_new_warga=False,
+            data_changes={"nama_lengkap": "Approved Update"},
+            status="APPROVED",
+        )
+        Surat.objects.create(
+            warga=self.warga_b,
+            jenis_surat="KETERANGAN_DOMISILI",
+            keperluan="Approved Surat",
+            status="APPROVED",
+        )
+        Kendaraan.objects.create(
+            pemilik=self.warga_b,
+            jenis_kendaraan="MOTOR",
+            plat_nomor="D5555OK",
+            status="APPROVED",
+        )
+
+        filter_test_cases = [
+            ("/api/admin/warga-updates/", 1),
+            ("/api/admin/surat/", 1),
+            ("/api/admin/kendaraan/", 1),
+            ("/api/iuran/", 1),
+        ]
+
+        for path, expected_pending_count in filter_test_cases:
+            # Test filtering status=PENDING
+            response = self.client.get(path, {"status": "PENDING"})
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            results = response.json()["results"]
+            self.assertEqual(
+                len(results),
+                expected_pending_count,
+                f"Pending count check failed for {path}",
+            )
+            for item in results:
+                self.assertEqual(item["status"], "PENDING")
+
+            # Test filtering status=APPROVED
+            response_approved = self.client.get(path, {"status": "APPROVED"})
+            self.assertEqual(response_approved.status_code, status.HTTP_200_OK)
+            results_approved = response_approved.json()["results"]
+            self.assertEqual(
+                len(results_approved),
+                1,
+                f"Approved count check failed for {path}",
+            )
+            for item in results_approved:
+                self.assertEqual(item["status"], "APPROVED")
+
+    def test_admin_dashboard_endpoint(self):
+        """Verify AdminDashboardViewSet returns correct aggregation, counts, and lists of pending entities."""
+        # 1. Access checks
+        # Anonymous
+        self.client.force_authenticate(user=None)
+        response_anon = self.client.get("/api/admin/dashboard/")
+        self.assertEqual(response_anon.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Citizen (Warga)
+        self.client.force_authenticate(user=self.citizen_user_a)
+        response_citizen = self.client.get("/api/admin/dashboard/")
+        self.assertEqual(response_citizen.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Admin (Staff)
+        self.client.force_authenticate(user=self.admin_user)
+
+        # Create additional test data:
+        # 1. An approved iuran payment for the current year (should be counted)
+        from django.utils import timezone
+
+        current_year = timezone.now().year
+        TransaksiIuranBulanan.objects.create(
+            kompleks=self.kompleks_a,
+            periode_bulan=3,
+            periode_tahun=current_year,
+            total_bayar=150000,
+            status="APPROVED",
+        )
+        # 2. A pending iuran payment for the current year (should NOT be counted in total_iuran but in pending_counts)
+        TransaksiIuranBulanan.objects.create(
+            kompleks=self.kompleks_b,
+            periode_bulan=4,
+            periode_tahun=current_year,
+            total_bayar=200000,
+            status="PENDING",
+        )
+
+        response = self.client.get("/api/admin/dashboard/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        # Verify total iuran current year (only APPROVED, not PENDING)
+        # We had:
+        # self.iuran_pending (status=PENDING, current year 2026, total_bayar=100000) -> not counted
+        # new approved (total_bayar=150000) -> counted
+        # new pending (total_bayar=200000) -> not counted
+        # So it should be 150000.
+        self.assertEqual(data["total_iuran_current_year"], 150000)
+
+        # Verify pending counts
+        # We have iuran pending: self.iuran_pending, and new pending iuran -> total 2.
+        # Warga updates: self.update_req_pending -> total 1.
+        # Surat: self.surat_pending -> total 1.
+        # Kendaraan: self.kendaraan_pending -> total 1.
+        self.assertEqual(data["pending_counts"]["iuran"], 2)
+        self.assertEqual(data["pending_counts"]["warga_updates"], 1)
+        self.assertEqual(data["pending_counts"]["surat"], 1)
+        self.assertEqual(data["pending_counts"]["kendaraan"], 1)
+
+        # Verify pending lists structure and contents
+        self.assertEqual(len(data["pending_list"]["iuran"]), 2)
+        self.assertEqual(len(data["pending_list"]["warga_updates"]), 1)
+        self.assertEqual(len(data["pending_list"]["surat"]), 1)
+        self.assertEqual(len(data["pending_list"]["kendaraan"]), 1)
+
+        # Verify details of a serialized object
+        self.assertEqual(data["pending_list"]["surat"][0]["keperluan"], "Mengurus KTP")
+        self.assertEqual(data["pending_list"]["kendaraan"][0]["plat_nomor"], "B1234ABC")

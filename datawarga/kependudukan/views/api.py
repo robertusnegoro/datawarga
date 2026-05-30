@@ -534,7 +534,13 @@ class iuranViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
 
     def get_queryset(self):
-        return _get_allowed_iuran_queryset(self.request.user, super().get_queryset())
+        queryset = _get_allowed_iuran_queryset(
+            self.request.user, super().get_queryset()
+        )
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param.upper())
+        return queryset
 
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
@@ -1100,6 +1106,13 @@ class WargaUpdateRequestViewSet(viewsets.ModelViewSet):
     serializer_class = WargaUpdateRequestSerializer
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param.upper())
+        return queryset
+
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
         from kependudukan.services.warga_service import approve_warga_update_request
@@ -1141,6 +1154,13 @@ class AdminSuratViewSet(viewsets.ModelViewSet):
     queryset = Surat.objects.all().order_by("-tanggal_surat")
     serializer_class = SuratRequestSerializer
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param.upper())
+        return queryset
 
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
@@ -1194,6 +1214,13 @@ class AdminKendaraanViewSet(viewsets.ModelViewSet):
     serializer_class = KendaraanRequestSerializer
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param.upper())
+        return queryset
+
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
         from kependudukan.services.warga_service import approve_kendaraan
@@ -1241,3 +1268,76 @@ class PenandatanganViewSet(viewsets.ModelViewSet):
     queryset = Penandatangan.objects.all().order_by("nama")
     serializer_class = PenandatanganSerializer
     permission_classes = [IsAuthenticated, IsAdminOrPetugas]
+
+
+class AdminDashboardViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated, IsAdminOrPetugas]
+
+    def list(self, request):
+        from django.db.models import Sum
+        from django.utils import timezone
+        from kependudukan.models import (
+            TransaksiIuranBulanan,
+            Kendaraan,
+            Surat,
+            WargaUpdateRequest,
+        )
+        from kependudukan.serializers import (
+            iuranSerializer,
+            KendaraanRequestSerializer,
+            SuratRequestSerializer,
+            WargaUpdateRequestSerializer,
+        )
+
+        current_year = timezone.now().year
+
+        # 1. Calculate current year total approved iuran income
+        total_iuran = (
+            TransaksiIuranBulanan.objects.filter(
+                periode_tahun=current_year, status="APPROVED"
+            ).aggregate(total=Sum("total_bayar"))["total"]
+            or 0
+        )
+
+        # 2. Get pending querysets
+        pending_iurans = TransaksiIuranBulanan.objects.filter(
+            status="PENDING"
+        ).order_by("id")
+        pending_kendaraans = Kendaraan.objects.filter(status="PENDING").order_by("id")
+        pending_surats = Surat.objects.filter(status="PENDING").order_by(
+            "-tanggal_surat"
+        )
+        pending_warga_updates = WargaUpdateRequest.objects.filter(
+            status="PENDING"
+        ).order_by("-created_at")
+
+        # 3. Calculate counts
+        pending_counts = {
+            "iuran": pending_iurans.count(),
+            "kendaraan": pending_kendaraans.count(),
+            "surat": pending_surats.count(),
+            "warga_updates": pending_warga_updates.count(),
+        }
+
+        # 4. Serialize pending lists
+        context = {"request": request}
+        pending_list = {
+            "iuran": iuranSerializer(pending_iurans, many=True, context=context).data,
+            "kendaraan": KendaraanRequestSerializer(
+                pending_kendaraans, many=True, context=context
+            ).data,
+            "surat": SuratRequestSerializer(
+                pending_surats, many=True, context=context
+            ).data,
+            "warga_updates": WargaUpdateRequestSerializer(
+                pending_warga_updates, many=True, context=context
+            ).data,
+        }
+
+        return Response(
+            {
+                "total_iuran_current_year": total_iuran,
+                "pending_counts": pending_counts,
+                "pending_list": pending_list,
+            }
+        )

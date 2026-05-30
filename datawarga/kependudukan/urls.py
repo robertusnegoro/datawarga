@@ -44,6 +44,12 @@ router.register(
     api_view.PenandatanganViewSet,
     basename="admin-penandatangan",
 )
+router.register(
+    r"admin/dashboard",
+    api_view.AdminDashboardViewSet,
+    basename="admin-dashboard",
+)
+
 
 schema_view = get_schema_view(
     openapi.Info(
