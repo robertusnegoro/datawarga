@@ -439,8 +439,23 @@ def pdfWargaReport(request):
         return render(request, "sheet-link.html", {"spreadsheet_url": spreadsheet_url})
 
 
-@login_required
 def protected_serve(request, path, document_root=None, show_indexes=False):
+    if not request.user.is_authenticated:
+        try:
+            from rest_framework_simplejwt.authentication import JWTAuthentication
+            auth_res = JWTAuthentication().authenticate(request)
+            if auth_res is not None:
+                user, token = auth_res
+                request.user = user
+        except Exception as e:
+            logger.exception("JWT auth failed in protected_serve")
+
+    if not request.user.is_authenticated:
+        if "HTTP_AUTHORIZATION" in request.META or request.headers.get("Authorization"):
+            return HttpResponse("Unauthorized", status=401)
+        from django.contrib.auth.views import redirect_to_login
+        return redirect_to_login(request.get_full_path(), settings.LOGIN_URL)
+
     return serve(request, path, document_root, show_indexes)
 
 
