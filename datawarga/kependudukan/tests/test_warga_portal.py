@@ -590,3 +590,22 @@ class WargaAPIEndpointsTestCase(APITestCase):
                 kompleks=self.kompleks, periode_bulan=9, periode_tahun=2026
             ).exists()
         )
+
+    def test_warga_choices_endpoint(self):
+        """
+        Verify GET /api/warga/choices/ endpoint returns the correct fields and choice items.
+        """
+        response = self.client.get("/api/warga/choices/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("status_keluarga", data)
+        self.assertIn("agama", data)
+        self.assertIn("pekerjaan", data)
+        self.assertIn("status_kawin", data)
+        self.assertIn("status_tinggal", data)
+        self.assertIn("jenis_kelamin", data)
+
+        # Verify specific choices structure
+        status_keluarga_vals = [item["value"] for item in data["status_keluarga"]]
+        self.assertIn("SUAMI", status_keluarga_vals)
+        self.assertIn("ISTRI", status_keluarga_vals)

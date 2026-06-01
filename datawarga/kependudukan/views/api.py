@@ -111,6 +111,7 @@ class wargaViewSet(viewsets.ModelViewSet):
             "me_surat",
             "me_kendaraan",
             "me_iuran",
+            "choices",
         ]:
             return queryset
         return _get_allowed_warga_queryset(user, queryset)
@@ -123,6 +124,7 @@ class wargaViewSet(viewsets.ModelViewSet):
             "me_surat",
             "me_kendaraan",
             "me_iuran",
+            "choices",
         ]:
             return [IsAuthenticated()]
         return [IsAuthenticated(), IsAdminOrPetugas()]
@@ -526,6 +528,76 @@ class wargaViewSet(viewsets.ModelViewSet):
             queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="choices")
+    def choices(self, request):
+        correlation_id = str(uuid.uuid4())
+        user = request.user
+        start_time = time.time()
+
+        logger.info(
+            "Operation started",
+            extra={
+                "operation": "warga_get_choices",
+                "userId": user.id,
+                "correlationId": correlation_id,
+            },
+        )
+
+        try:
+            data = {
+                "status_keluarga": [
+                    {"value": choice[0], "label": choice[1]}
+                    for choice in Warga.STATUS_KELUARGA
+                ],
+                "agama": [
+                    {"value": choice[0], "label": choice[1]}
+                    for choice in Warga.RELIGIONS
+                ],
+                "pekerjaan": [
+                    {"value": choice[0], "label": choice[1]}
+                    for choice in Warga.PEKERJAAN
+                ],
+                "status_kawin": [
+                    {"value": choice[0], "label": choice[1]}
+                    for choice in Warga.STATUS_KAWIN
+                ],
+                "status_tinggal": [
+                    {"value": choice[0], "label": choice[1]}
+                    for choice in Warga.STATUS_TINGGAL
+                ],
+                "jenis_kelamin": [
+                    {"value": choice[0], "label": choice[1]}
+                    for choice in Warga.JENIS_KELAMIN
+                ],
+            }
+            duration = int((time.time() - start_time) * 1000)
+            logger.info(
+                "Operation success",
+                extra={
+                    "operation": "warga_get_choices",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                },
+            )
+            return Response(data)
+        except Exception as e:
+            duration = int((time.time() - start_time) * 1000)
+            logger.error(
+                "Operation failure",
+                extra={
+                    "operation": "warga_get_choices",
+                    "userId": user.id,
+                    "correlationId": correlation_id,
+                    "duration": duration,
+                    "error": str(e),
+                },
+            )
+            return Response(
+                {"error": "Gagal mengambil data pilihan."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class iuranViewSet(viewsets.ModelViewSet):

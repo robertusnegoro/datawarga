@@ -35,11 +35,60 @@ class kompleksSerializer(serializers.ModelSerializer):
 
 
 class wargaSerializer(serializers.ModelSerializer):
-    kompleks = kompleksSerializer()
+    kompleks = kompleksSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Warga
         fields = "__all__"
+
+    def create(self, validated_data):
+        kompleks_data = validated_data.pop("kompleks", None)
+        kompleks_instance = None
+
+        kompleks_id = None
+        if kompleks_data and "id" in kompleks_data:
+            kompleks_id = kompleks_data["id"]
+        elif isinstance(self.initial_data, dict) and "kompleks" in self.initial_data:
+            kompleks_raw = self.initial_data["kompleks"]
+            if isinstance(kompleks_raw, dict):
+                kompleks_id = kompleks_raw.get("id")
+
+        if kompleks_id:
+            try:
+                kompleks_instance = Kompleks.objects.get(pk=kompleks_id)
+            except Kompleks.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"kompleks": f"Kompleks dengan ID {kompleks_id} tidak ditemukan."}
+                )
+
+        warga = Warga.objects.create(kompleks=kompleks_instance, **validated_data)
+        return warga
+
+    def update(self, instance, validated_data):
+        validated_data.pop("kompleks", None)
+
+        if isinstance(self.initial_data, dict) and "kompleks" in self.initial_data:
+            kompleks_raw = self.initial_data["kompleks"]
+            if kompleks_raw is None:
+                instance.kompleks = None
+            elif isinstance(kompleks_raw, dict):
+                kompleks_id = kompleks_raw.get("id")
+                if kompleks_id:
+                    try:
+                        instance.kompleks = Kompleks.objects.get(pk=kompleks_id)
+                    except Kompleks.DoesNotExist:
+                        raise serializers.ValidationError(
+                            {
+                                "kompleks": f"Kompleks dengan ID {kompleks_id} tidak ditemukan."
+                            }
+                        )
+                else:
+                    instance.kompleks = None
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class iuranSerializer(serializers.ModelSerializer):

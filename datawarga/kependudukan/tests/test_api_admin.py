@@ -544,3 +544,39 @@ class AdminAPIEndpointsTestCase(APITestCase):
         # Verify details of a serialized object
         self.assertEqual(data["pending_list"]["surat"][0]["keperluan"], "Mengurus KTP")
         self.assertEqual(data["pending_list"]["kendaraan"][0]["plat_nomor"], "B1234ABC")
+
+    def test_warga_api_create_with_nested_kompleks(self):
+        """Verify admin can create warga with nested kompleks object."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        payload = {
+            "nama_lengkap": "New Warga API",
+            "nik": "1234567890123456",
+            "agama": "ISLAM",
+            "jenis_kelamin": "LAKI-LAKI",
+            "kompleks": {"id": self.kompleks_a.id},
+        }
+        response = self.client.post("/api/warga/", data=payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Verify created in DB
+        warga = Warga.objects.get(nik="1234567890123456")
+        self.assertEqual(warga.nama_lengkap, "New Warga API")
+        self.assertEqual(warga.kompleks, self.kompleks_a)
+
+    def test_warga_api_update_with_nested_kompleks(self):
+        """Verify admin can update warga complexes and fields with nested kompleks object."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        payload = {
+            "nama_lengkap": "Warga A Updated via API",
+            "kompleks": {"id": self.kompleks_b.id},
+        }
+        response = self.client.patch(
+            f"/api/warga/{self.warga_a.id}/", data=payload, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.warga_a.refresh_from_db()
+        self.assertEqual(self.warga_a.nama_lengkap, "Warga A Updated via API")
+        self.assertEqual(self.warga_a.kompleks, self.kompleks_b)
