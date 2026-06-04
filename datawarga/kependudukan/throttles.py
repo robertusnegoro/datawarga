@@ -14,4 +14,4 @@ class BotUserRateThrottle(UserRateThrottle):
 class KtpScanRateThrottle(UserRateThrottle):
     """Rate limit for AI-powered KTP scan to prevent abuse of expensive AI calls."""
 
-    rate = "5/minute"
+    rate = "1000/minute"
